@@ -10,7 +10,7 @@ using System.Resources;
 [assembly: AssemblyDescription("Extend KeePass with RDP connection options")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("iSnackyCracky")]
-[assembly: AssemblyProduct("KeePassRDP Plugin")]
+[assembly: AssemblyProduct("KeePass Plugin")]
 [assembly: AssemblyCopyright("Copyright ©2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -19,6 +19,6 @@ using System.Resources;
 [assembly: Guid("404935cb-8f30-4801-a3e6-6a88ad963544")]
 
 // Version informationr(
-[assembly: AssemblyVersion("1.5.1.134")]
-[assembly: AssemblyFileVersion("1.5.1.134")]
+[assembly: AssemblyVersion("1.5.1.144")]
+[assembly: AssemblyFileVersion("1.5.1.144")]
 
