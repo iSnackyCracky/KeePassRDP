@@ -7,7 +7,7 @@ KeePassRDP is a plugin for KeePass 2.x which adds multiple options to connect vi
 2. Unzip and copy the KeePassRDP.plgx file to your KeePass plugins folder.
 
 ## Usage
-To connect via rdp to a machine, select the entry containing the IP-address or hostname, right-click and select *KeePassRDP* > *Open RDP connection* (or just press <kbd>CTRL</kbd> + <kbd>M</kbd>).
+To connect via rdp to a machine, select the entry containing the IP-address or hostname, right-click and select *KeePassRDP* \> *Open RDP connection* (or just press <kbd>CTRL</kbd> + <kbd>M</kbd>).
 
 To use the other connection options, just select the corresponding entries in the context-menu.
 
@@ -48,6 +48,12 @@ If we now want to connect to one of the machines in the RDP subgroup (with crede
 
 Now just select the entry you want and klick ok (or press <kbd>Enter</kbd>).
 
+## How it works
+The plugin basically just calls the default *mstsc.exe* with the */v:\<address\>* (and optionally */admin*) parameter to connect.
+
+If you choose to open a connection *with credentials* it first calls *cmdkey.exe /generic:\<address\> /user:\<username\> /pass:\<password\>* to save credentials to use by the *mstsc.exe* into the Windows Credential Manger.
+  
+These Credentials get removed via *cmdkey.exe /delete:\<address\>* after about 10 seconds.
 
 ## Third-Party Software
 This plugin uses the *awesome* C# ListView wrapper [**ObjectListView**](http://objectlistview.sourceforge.net/cs/index.html) by Phillip Piper
