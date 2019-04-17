@@ -20,7 +20,7 @@ namespace KeePassRDP
 
         public override string UpdateUrl
         {
-            get { return "https://gitlab.com/iSnackyCracky/KeePassRDP/raw/master/KeePassRDP.ver"; }
+            get { return "https://raw.githubusercontent.com/iSnackyCracky/KeePassRDP/master/KeePassRDP.ver"; }
         }
 
         public override bool Initialize(IPluginHost host)
