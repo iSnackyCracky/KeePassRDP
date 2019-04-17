@@ -200,8 +200,8 @@ namespace KeePassRDP
             {
                 string title = pe.Strings.ReadSafe(PwDefs.TitleField);
 
-                string rePre = "(domain|domänen|lokaler)";
-                string rePost = "(admin|user|administrator|benutzer)";
+                string rePre = "(domain|domänen|local|lokaler)";
+                string rePost = "(admin|user|administrator|benutzer|nutzer)";
                 string re = ".*" + rePre + ".*" + rePost + ".*";
 
                 if (Regex.IsMatch(title, re, RegexOptions.IgnoreCase) && !Regex.IsMatch(title, ".*\\[rdpignore\\].*", RegexOptions.IgnoreCase))

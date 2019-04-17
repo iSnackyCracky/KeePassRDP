@@ -30,12 +30,12 @@
         {
             this.olvEntries = new BrightIdeasSoftware.ObjectListView();
             this.olvColUsername = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
+            this.olvColPath = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
             this.olvColTitle = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
             this.olvColNotes = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
             this.olvColUidHash = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
             this.cmdOk = new System.Windows.Forms.Button();
             this.cmdCancel = new System.Windows.Forms.Button();
-            this.olvColPath = ((BrightIdeasSoftware.OLVColumn)(new BrightIdeasSoftware.OLVColumn()));
             ((System.ComponentModel.ISupportInitialize)(this.olvEntries)).BeginInit();
             this.SuspendLayout();
             // 
@@ -73,15 +73,22 @@
             this.olvColUsername.AspectName = "Username";
             this.olvColUsername.DisplayIndex = 2;
             this.olvColUsername.IsEditable = false;
-            this.olvColUsername.Text = "Benutzername";
+            this.olvColUsername.Text = "User Name";
             this.olvColUsername.Width = 200;
+            // 
+            // olvColPath
+            // 
+            this.olvColPath.AspectName = "Path";
+            this.olvColPath.DisplayIndex = 0;
+            this.olvColPath.Text = "Path";
+            this.olvColPath.Width = 150;
             // 
             // olvColTitle
             // 
             this.olvColTitle.AspectName = "Title";
             this.olvColTitle.DisplayIndex = 1;
             this.olvColTitle.IsEditable = false;
-            this.olvColTitle.Text = "Titel";
+            this.olvColTitle.Text = "Title";
             this.olvColTitle.Width = 90;
             // 
             // olvColNotes
@@ -89,7 +96,7 @@
             this.olvColNotes.AspectName = "Notes";
             this.olvColNotes.FillsFreeSpace = true;
             this.olvColNotes.IsEditable = false;
-            this.olvColNotes.Text = "Notizen";
+            this.olvColNotes.Text = "Notes";
             // 
             // olvColUidHash
             // 
@@ -123,13 +130,6 @@
             this.cmdCancel.UseVisualStyleBackColor = true;
             this.cmdCancel.Click += new System.EventHandler(this.cmdCancel_Click);
             // 
-            // olvColPath
-            // 
-            this.olvColPath.AspectName = "Path";
-            this.olvColPath.DisplayIndex = 0;
-            this.olvColPath.Text = "Pfad";
-            this.olvColPath.Width = 150;
-            // 
             // CredentialPickerForm
             // 
             this.AcceptButton = this.cmdOk;
@@ -143,7 +143,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "CredentialPickerForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Account auswählen";
+            this.Text = "Select account";
             this.Load += new System.EventHandler(this.CredentialPickerForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.olvEntries)).EndInit();
             this.ResumeLayout(false);
