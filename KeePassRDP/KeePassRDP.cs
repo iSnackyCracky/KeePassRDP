@@ -200,7 +200,7 @@ namespace KeePassRDP
             {
                 string title = pe.Strings.ReadSafe(PwDefs.TitleField);
 
-                string rePre = "(domain|domänen|local|lokaler)";
+                string rePre = "(domain|domänen|local|lokaler|windows)";
                 string rePost = "(admin|user|administrator|benutzer|nutzer)";
                 string re = ".*" + rePre + ".*" + rePost + ".*";
 
