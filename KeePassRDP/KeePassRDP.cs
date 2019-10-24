@@ -11,13 +11,8 @@ namespace KeePassRDP
     public sealed class KeePassRDPExt : Plugin
     {
         private IPluginHost m_host = null;
-        private ToolStripSeparator m_tsSeperator = null;
-        private ToolStripMenuItem m_tsmiKeePassRDP = null;
-        private ToolStripMenuItem m_tsmiOpenRDP = null;
-        private ToolStripMenuItem m_tsmiOpenRDPAdmin = null;
-        private ToolStripMenuItem m_tsmiOpenRDPNoCred = null;
-        private ToolStripMenuItem m_tsmiOpenRDPNoCredAdmin = null;
-
+        //private ToolStripSeparator m_tsSeperator = null;
+       
         public override string UpdateUrl
         {
             get { return "https://raw.githubusercontent.com/iSnackyCracky/KeePassRDP/master/KeePassRDP.ver"; }
@@ -29,63 +24,61 @@ namespace KeePassRDP
             if (host == null) return false;
             m_host = host;
 
-            // create m_cmsMenu as reference to the context-menu
-            ToolStripItemCollection m_cmsMenu = m_host.MainWindow.EntryContextMenu.Items;
-
-            // add a separator to the menu
-            m_tsSeperator = new ToolStripSeparator();
-            m_cmsMenu.Add(m_tsSeperator);
-
-            // add the KeePassRDP menu entry
-            m_tsmiKeePassRDP = new ToolStripMenuItem();
-            m_tsmiKeePassRDP.Text = "KeePassRDP";
-            m_cmsMenu.Add(m_tsmiKeePassRDP);
-            
-            // add the OpenRDP menu entry
-            m_tsmiOpenRDP = new ToolStripMenuItem();
-            m_tsmiOpenRDP.ShortcutKeys = Keys.Control | Keys.M;
-            m_tsmiOpenRDP.ShowShortcutKeys = true;
-            m_tsmiOpenRDP.Text = "Open RDP connection";
-            m_tsmiOpenRDP.Click += OnOpenRDP_Click;
-            m_tsmiKeePassRDP.DropDownItems.Add(m_tsmiOpenRDP);
-
-            // add the OpenRDPAdmin menu entry
-            m_tsmiOpenRDPAdmin = new ToolStripMenuItem();
-            m_tsmiOpenRDPAdmin.ShortcutKeys = Keys.Control | Keys.Alt | Keys.M;
-            m_tsmiOpenRDPAdmin.ShowShortcutKeys = true;
-            m_tsmiOpenRDPAdmin.Text = "Open RDP connection (/admin)";
-            m_tsmiOpenRDPAdmin.Click += OnOpenRDPAdmin_Click;
-            m_tsmiKeePassRDP.DropDownItems.Add(m_tsmiOpenRDPAdmin);
-
-            // add the OpenRDPNoCred menu entry
-            m_tsmiOpenRDPNoCred = new ToolStripMenuItem();
-            m_tsmiOpenRDPNoCred.Text = "Open RDP connection without credentials";
-            m_tsmiOpenRDPNoCred.Click += OnOpenRDPNoCred_Click;
-            m_tsmiKeePassRDP.DropDownItems.Add(m_tsmiOpenRDPNoCred);
-
-            // add the OpenRDPNoCredAdmin menu entry
-            m_tsmiOpenRDPNoCredAdmin = new ToolStripMenuItem();
-            m_tsmiOpenRDPNoCredAdmin.Text = "Open RDP connection without credentials (/admin)";
-            m_tsmiOpenRDPNoCredAdmin.Click += OnOpenRDPNoCredAdmin_Click;
-            m_tsmiKeePassRDP.DropDownItems.Add(m_tsmiOpenRDPNoCredAdmin);
-
             return true;
         }
 
         public override void Terminate()
         {
-            // clean up the context-menu
-            ToolStripItemCollection m_cmsMenu = m_host.MainWindow.EntryContextMenu.Items;
-            m_cmsMenu.Remove(m_tsSeperator);
-            m_tsmiOpenRDP.Click -= OnOpenRDP_Click;
-            m_cmsMenu.Remove(m_tsmiOpenRDP);
-            m_tsmiOpenRDPAdmin.Click -= OnOpenRDPAdmin_Click;
-            m_cmsMenu.Remove(m_tsmiOpenRDPAdmin);
-            m_tsmiOpenRDPNoCred.Click -= OnOpenRDPNoCred_Click;
-            m_cmsMenu.Remove(m_tsmiOpenRDPNoCred);
-            m_tsmiOpenRDPNoCredAdmin.Click -= OnOpenRDPNoCredAdmin_Click;
-            m_cmsMenu.Remove(m_tsmiOpenRDPNoCredAdmin);
-            m_cmsMenu.Remove(m_tsmiKeePassRDP);
+        }
+
+        public override ToolStripMenuItem GetMenuItem(PluginMenuType t)
+        {
+            // init a "null" menu item
+            ToolStripMenuItem tsmi = null;
+
+            if (t == PluginMenuType.Entry)
+            {
+                // create entry menu item
+                tsmi = new ToolStripMenuItem("KeePassRDP");
+
+                // add the OpenRDP menu entry
+                ToolStripMenuItem tsmiOpenRDP = new ToolStripMenuItem();
+                tsmiOpenRDP.ShortcutKeys = Keys.Control | Keys.M;
+                tsmiOpenRDP.ShowShortcutKeys = true;
+                tsmiOpenRDP.Text = "Open RDP connection";
+                tsmiOpenRDP.Click += OnOpenRDP_Click;
+                tsmi.DropDownItems.Add(tsmiOpenRDP);
+
+                // add the OpenRDPAdmin menu entry
+                ToolStripMenuItem tsmiOpenRDPAdmin = new ToolStripMenuItem();
+                tsmiOpenRDPAdmin.ShortcutKeys = Keys.Control | Keys.Alt | Keys.M;
+                tsmiOpenRDPAdmin.ShowShortcutKeys = true;
+                tsmiOpenRDPAdmin.Text = "Open RDP connection (/admin)";
+                tsmiOpenRDPAdmin.Click += OnOpenRDPAdmin_Click;
+                tsmi.DropDownItems.Add(tsmiOpenRDPAdmin);
+
+                // add the OpenRDPNoCred menu entry
+                ToolStripMenuItem tsmiOpenRDPNoCred = new ToolStripMenuItem();
+                tsmiOpenRDPNoCred.Text = "Open RDP connection without credentials";
+                tsmiOpenRDPNoCred.Click += OnOpenRDPNoCred_Click;
+                tsmi.DropDownItems.Add(tsmiOpenRDPNoCred);
+
+                // add the OpenRDPNoCredAdmin menu entry
+                ToolStripMenuItem tsmiOpenRDPNoCredAdmin = new ToolStripMenuItem();
+                tsmiOpenRDPNoCredAdmin.Text = "Open RDP connection without credentials (/admin)";
+                tsmiOpenRDPNoCredAdmin.Click += OnOpenRDPNoCredAdmin_Click;
+                tsmi.DropDownItems.Add(tsmiOpenRDPNoCredAdmin);
+
+                // disable the entry menu when no database is opened
+                tsmi.DropDownOpening += delegate (object sender, EventArgs e)
+                {
+                    PwDatabase pd = m_host.Database;
+                    bool dbOpen = ((pd != null) && pd.IsOpen);
+                    tsmi.Enabled = dbOpen;
+                };
+            }
+
+            return tsmi;
         }
 
         private void OnOpenRDP_Click(object sender, EventArgs e)
