@@ -57,6 +57,12 @@
       <DependentUpon>CredentialPickerForm.cs</DependentUpon>
     </Compile>
     <Compile Include="KeePassRDP.cs" />
+    <Compile Include="KPROptionsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="KPROptionsForm.Designer.cs">
+      <DependentUpon>KPROptionsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -65,6 +71,9 @@
   <ItemGroup>
     <EmbeddedResource Include="CredentialPickerForm.resx">
       <DependentUpon>CredentialPickerForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="KPROptionsForm.resx">
+      <DependentUpon>KPROptionsForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

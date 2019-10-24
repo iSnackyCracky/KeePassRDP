@@ -11,12 +11,14 @@ namespace KeePassRDP
     public sealed class KeePassRDPExt : Plugin
     {
         private IPluginHost m_host = null;
-        //private ToolStripSeparator m_tsSeperator = null;
        
         public override string UpdateUrl
         {
             get { return "https://raw.githubusercontent.com/iSnackyCracky/KeePassRDP/master/KeePassRDP.ver"; }
         }
+
+        // initialize KeePassRDP options (settings)
+        private bool mstscUseFullscreen;
 
         public override bool Initialize(IPluginHost host)
         {
@@ -24,11 +26,16 @@ namespace KeePassRDP
             if (host == null) return false;
             m_host = host;
 
+            // get KeePassRDP options from CustomConfig
+            mstscUseFullscreen = m_host.CustomConfig.GetBool("mstscUseFullscreen", false);
+
             return true;
         }
 
         public override void Terminate()
         {
+            // save KeePassRDP options to CustomConfig
+            m_host.CustomConfig.SetBool("mstscUseFullscreen", mstscUseFullscreen);
         }
 
         public override ToolStripMenuItem GetMenuItem(PluginMenuType t)
@@ -77,8 +84,28 @@ namespace KeePassRDP
                     tsmi.Enabled = dbOpen;
                 };
             }
+            else if (t == PluginMenuType.Main)
+            {
+                // create the main menu options item
+                tsmi = new ToolStripMenuItem("KeePassRDP Options");
+                tsmi.Click += OnKPROptions_Click;
+            }
 
             return tsmi;
+        }
+
+        private void OnKPROptions_Click(object sender, EventArgs e)
+        {
+            // initialize options form
+            KPROptionsForm frmKPROptions = new KPROptionsForm();
+            frmKPROptions.mstscUseFullscreen = mstscUseFullscreen;
+
+            DialogResult res = frmKPROptions.ShowDialog();
+
+            if (res == DialogResult.OK)
+            {
+                mstscUseFullscreen = frmKPROptions.mstscUseFullscreen;
+            }
         }
 
         private void OnOpenRDP_Click(object sender, EventArgs e)
@@ -227,6 +254,10 @@ namespace KeePassRDP
                 if (useAdmin)
                 {
                     rdpProcess.StartInfo.Arguments += " /admin";
+                }
+                if(mstscUseFullscreen)
+                {
+                    rdpProcess.StartInfo.Arguments += " /f";
                 }
                 rdpProcess.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
                 rdpProcess.Start();
