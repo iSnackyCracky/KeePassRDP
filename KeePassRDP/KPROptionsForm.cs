@@ -14,8 +14,26 @@ namespace KeePassRDP
 
         public bool mstscUseFullscreen
         {
-            get { return chkMstscFullscreen.Checked; }
-            set { chkMstscFullscreen.Checked = value; }
+            get { return chkMstscUseFullscreen.Checked; }
+            set { chkMstscUseFullscreen.Checked = value; }
+        }
+
+        public bool mstscUseAdmin
+        {
+            get { return chkMstscUseAdmin.Checked; }
+            set { chkMstscUseAdmin.Checked = value; }
+        }
+
+        public bool mstscUseSpan
+        {
+            get { return chkMstscUseSpan.Checked; }
+            set { chkMstscUseSpan.Checked = value; }
+        }
+
+        public bool mstscUseMultimon
+        {
+            get { return chkMstscUseMultimon.Checked; }
+            set { chkMstscUseMultimon.Checked = value; }
         }
 
         public KPROptionsForm()
@@ -23,9 +41,5 @@ namespace KeePassRDP
             InitializeComponent();
         }
 
-        private void cmdOk_Click(object sender, EventArgs e)
-        {
-
-        }
     }
 }
