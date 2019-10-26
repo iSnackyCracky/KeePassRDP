@@ -247,7 +247,7 @@ namespace KeePassRDP
             return rdpAccountEntries;
         }
 
-        private void connectRDPtoKeePassEntry(PwEntry pe, bool tmpMstscUseAdmin = false, bool useCreds = false)
+        private void connectRDPtoKeePassEntry(PwEntry pe, bool tmpMstscUseAdmin = false, bool tmpUseCreds = false)
         {
             String URL = stripURL(pe.Strings.ReadSafe(PwDefs.UrlField));
             if (!String.IsNullOrEmpty(URL))
@@ -255,7 +255,7 @@ namespace KeePassRDP
                 Process credProcess = new Process();
                 Process rdpProcess = new Process();
                 // if selected, save credentials into the Windows Credential Manager
-                if (useCreds)
+                if (tmpUseCreds)
                 {
                     credProcess.StartInfo.FileName = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\cmdkey.exe");
                     credProcess.StartInfo.Arguments = "/generic:" + stripURL(URL, true) + " /user:" + pe.Strings.ReadSafe(PwDefs.UserNameField) + " /pass:" + pe.Strings.ReadSafe(PwDefs.PasswordField);
@@ -285,7 +285,7 @@ namespace KeePassRDP
                 rdpProcess.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
                 rdpProcess.Start();
                 // remove credentials from Windows Credential Manger (after about 10 seconds)
-                if (useCreds)
+                if (tmpUseCreds)
                 {
                     credProcess.StartInfo.Arguments = "/delete:" + URL;
                     credProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;

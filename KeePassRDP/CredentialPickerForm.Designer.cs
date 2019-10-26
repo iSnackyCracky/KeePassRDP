@@ -56,12 +56,14 @@
             this.olvColNotes});
             this.olvEntries.FullRowSelect = true;
             this.olvEntries.GridLines = true;
-            this.olvEntries.Location = new System.Drawing.Point(12, 12);
+            this.olvEntries.HideSelection = false;
+            this.olvEntries.Location = new System.Drawing.Point(18, 18);
+            this.olvEntries.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.olvEntries.MultiSelect = false;
             this.olvEntries.Name = "olvEntries";
             this.olvEntries.SelectAllOnControlA = false;
             this.olvEntries.ShowGroups = false;
-            this.olvEntries.Size = new System.Drawing.Size(586, 214);
+            this.olvEntries.Size = new System.Drawing.Size(877, 327);
             this.olvEntries.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.olvEntries.TabIndex = 0;
             this.olvEntries.UseCompatibleStateImageBehavior = false;
@@ -110,9 +112,10 @@
             // 
             this.cmdOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cmdOk.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.cmdOk.Location = new System.Drawing.Point(442, 232);
+            this.cmdOk.Location = new System.Drawing.Point(663, 357);
+            this.cmdOk.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cmdOk.Name = "cmdOk";
-            this.cmdOk.Size = new System.Drawing.Size(75, 23);
+            this.cmdOk.Size = new System.Drawing.Size(112, 35);
             this.cmdOk.TabIndex = 1;
             this.cmdOk.Text = "&Ok";
             this.cmdOk.UseVisualStyleBackColor = true;
@@ -122,9 +125,10 @@
             // 
             this.cmdCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cmdCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cmdCancel.Location = new System.Drawing.Point(523, 232);
+            this.cmdCancel.Location = new System.Drawing.Point(784, 357);
+            this.cmdCancel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cmdCancel.Name = "cmdCancel";
-            this.cmdCancel.Size = new System.Drawing.Size(75, 23);
+            this.cmdCancel.Size = new System.Drawing.Size(112, 35);
             this.cmdCancel.TabIndex = 2;
             this.cmdCancel.Text = "&Cancel";
             this.cmdCancel.UseVisualStyleBackColor = true;
@@ -133,17 +137,18 @@
             // CredentialPickerForm
             // 
             this.AcceptButton = this.cmdOk;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cmdCancel;
-            this.ClientSize = new System.Drawing.Size(610, 267);
+            this.ClientSize = new System.Drawing.Size(915, 411);
             this.Controls.Add(this.cmdCancel);
             this.Controls.Add(this.cmdOk);
             this.Controls.Add(this.olvEntries);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "CredentialPickerForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Select account";
+            this.Text = "KeePassRDP Credential picker";
             this.Load += new System.EventHandler(this.CredentialPickerForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.olvEntries)).EndInit();
             this.ResumeLayout(false);

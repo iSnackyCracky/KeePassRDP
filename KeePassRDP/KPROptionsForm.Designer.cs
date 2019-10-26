@@ -142,6 +142,7 @@
             this.Controls.Add(this.cmdOk);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "KPROptionsForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "KeePassRDP Options";
             this.grpMstscParams.ResumeLayout(false);
             this.grpMstscParams.PerformLayout();
