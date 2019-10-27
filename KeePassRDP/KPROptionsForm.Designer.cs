@@ -38,14 +38,20 @@
             this.chkMstscUseAdmin = new System.Windows.Forms.CheckBox();
             this.chkMstscUseFullscreen = new System.Windows.Forms.CheckBox();
             this.ttMstscParams = new System.Windows.Forms.ToolTip(this.components);
+            this.numWidth = new System.Windows.Forms.NumericUpDown();
+            this.lblWidth = new System.Windows.Forms.Label();
+            this.lblHeight = new System.Windows.Forms.Label();
+            this.numHeight = new System.Windows.Forms.NumericUpDown();
             this.grpMstscParams.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numWidth)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numHeight)).BeginInit();
             this.SuspendLayout();
             // 
             // cmdCancel
             // 
             this.cmdCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cmdCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cmdCancel.Location = new System.Drawing.Point(189, 246);
+            this.cmdCancel.Location = new System.Drawing.Point(145, 239);
             this.cmdCancel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cmdCancel.Name = "cmdCancel";
             this.cmdCancel.Size = new System.Drawing.Size(112, 35);
@@ -57,7 +63,7 @@
             // 
             this.cmdOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cmdOk.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.cmdOk.Location = new System.Drawing.Point(69, 246);
+            this.cmdOk.Location = new System.Drawing.Point(25, 239);
             this.cmdOk.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cmdOk.Name = "cmdOk";
             this.cmdOk.Size = new System.Drawing.Size(112, 35);
@@ -67,13 +73,17 @@
             // 
             // grpMstscParams
             // 
+            this.grpMstscParams.Controls.Add(this.lblHeight);
+            this.grpMstscParams.Controls.Add(this.numHeight);
+            this.grpMstscParams.Controls.Add(this.lblWidth);
+            this.grpMstscParams.Controls.Add(this.numWidth);
             this.grpMstscParams.Controls.Add(this.chkMstscUseMultimon);
             this.grpMstscParams.Controls.Add(this.chkMstscUseSpan);
             this.grpMstscParams.Controls.Add(this.chkMstscUseAdmin);
             this.grpMstscParams.Controls.Add(this.chkMstscUseFullscreen);
             this.grpMstscParams.Location = new System.Drawing.Point(13, 12);
             this.grpMstscParams.Name = "grpMstscParams";
-            this.grpMstscParams.Size = new System.Drawing.Size(288, 148);
+            this.grpMstscParams.Size = new System.Drawing.Size(244, 219);
             this.grpMstscParams.TabIndex = 5;
             this.grpMstscParams.TabStop = false;
             this.grpMstscParams.Text = "mstsc.exe parameters";
@@ -87,8 +97,9 @@
             this.chkMstscUseMultimon.TabIndex = 3;
             this.chkMstscUseMultimon.Text = "Use all &monitors - /multimon";
             this.ttMstscParams.SetToolTip(this.chkMstscUseMultimon, "mstsc.exe /multimon\r\nConfigures the Remote Desktop Services session monitor layou" +
-        "t to be identical to the current client-side configuration.");
+        "t\r\nto be identical to the current client-side configuration.");
             this.chkMstscUseMultimon.UseVisualStyleBackColor = true;
+            this.chkMstscUseMultimon.CheckedChanged += new System.EventHandler(this.checkSizeEnable);
             // 
             // chkMstscUseSpan
             // 
@@ -100,6 +111,7 @@
             this.chkMstscUseSpan.Text = "Use &spanning - /span";
             this.ttMstscParams.SetToolTip(this.chkMstscUseSpan, resources.GetString("chkMstscUseSpan.ToolTip"));
             this.chkMstscUseSpan.UseVisualStyleBackColor = true;
+            this.chkMstscUseSpan.CheckedChanged += new System.EventHandler(this.checkSizeEnable);
             // 
             // chkMstscUseAdmin
             // 
@@ -122,6 +134,7 @@
             this.chkMstscUseFullscreen.Text = "Use &fullscreen - /f";
             this.ttMstscParams.SetToolTip(this.chkMstscUseFullscreen, "mstsc.exe /f\r\nStarts Remote Desktop Connection in full-screen mode.");
             this.chkMstscUseFullscreen.UseVisualStyleBackColor = true;
+            this.chkMstscUseFullscreen.CheckedChanged += new System.EventHandler(this.checkSizeEnable);
             // 
             // ttMstscParams
             // 
@@ -130,13 +143,47 @@
             this.ttMstscParams.ReshowDelay = 100;
             this.ttMstscParams.ToolTipTitle = "mstsc.exe Parameter";
             // 
+            // numWidth
+            // 
+            this.numWidth.Location = new System.Drawing.Point(98, 145);
+            this.numWidth.Name = "numWidth";
+            this.numWidth.Size = new System.Drawing.Size(137, 26);
+            this.numWidth.TabIndex = 4;
+            this.ttMstscParams.SetToolTip(this.numWidth, "/w:<width>\r\nSpecifies the width of the Remote Desktop window.\r\n0 = not set");
+            // 
+            // lblWidth
+            // 
+            this.lblWidth.AutoSize = true;
+            this.lblWidth.Location = new System.Drawing.Point(6, 147);
+            this.lblWidth.Name = "lblWidth";
+            this.lblWidth.Size = new System.Drawing.Size(82, 20);
+            this.lblWidth.TabIndex = 5;
+            this.lblWidth.Text = "Width - /w:";
+            // 
+            // lblHeight
+            // 
+            this.lblHeight.AutoSize = true;
+            this.lblHeight.Location = new System.Drawing.Point(6, 179);
+            this.lblHeight.Name = "lblHeight";
+            this.lblHeight.Size = new System.Drawing.Size(86, 20);
+            this.lblHeight.TabIndex = 7;
+            this.lblHeight.Text = "Height - /h:";
+            // 
+            // numHeight
+            // 
+            this.numHeight.Location = new System.Drawing.Point(98, 177);
+            this.numHeight.Name = "numHeight";
+            this.numHeight.Size = new System.Drawing.Size(137, 26);
+            this.numHeight.TabIndex = 6;
+            this.ttMstscParams.SetToolTip(this.numHeight, "/h:<height>\r\nSpecifies the height of the Remote Desktop window.\r\n0 = not set");
+            // 
             // KPROptionsForm
             // 
             this.AcceptButton = this.cmdOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cmdCancel;
-            this.ClientSize = new System.Drawing.Size(314, 295);
+            this.ClientSize = new System.Drawing.Size(270, 288);
             this.Controls.Add(this.grpMstscParams);
             this.Controls.Add(this.cmdCancel);
             this.Controls.Add(this.cmdOk);
@@ -144,8 +191,11 @@
             this.Name = "KPROptionsForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "KeePassRDP Options";
+            this.Load += new System.EventHandler(this.KPROptionsForm_Load);
             this.grpMstscParams.ResumeLayout(false);
             this.grpMstscParams.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numWidth)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numHeight)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -160,5 +210,9 @@
         private System.Windows.Forms.CheckBox chkMstscUseSpan;
         private System.Windows.Forms.CheckBox chkMstscUseAdmin;
         private System.Windows.Forms.ToolTip ttMstscParams;
+        private System.Windows.Forms.Label lblHeight;
+        private System.Windows.Forms.NumericUpDown numHeight;
+        private System.Windows.Forms.Label lblWidth;
+        private System.Windows.Forms.NumericUpDown numWidth;
     }
 }
