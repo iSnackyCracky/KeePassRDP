@@ -57,6 +57,7 @@
       <DependentUpon>CredentialPickerForm.cs</DependentUpon>
     </Compile>
     <Compile Include="KeePassRDP.cs" />
+    <Compile Include="KprConfig.cs" />
     <Compile Include="KPROptionsForm.cs">
       <SubType>Form</SubType>
     </Compile>

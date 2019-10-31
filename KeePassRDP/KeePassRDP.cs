@@ -18,10 +18,10 @@ namespace KeePassRDP
         }
 
         // initialize KeePassRDP options (settings)
-        private bool mstscUseFullscreen;
-        private bool mstscUseAdmin;
-        private bool mstscUseSpan;
-        private bool mstscUseMultimon;
+        //private bool mstscUseFullscreen;
+        //private bool mstscUseAdmin;
+        //private bool mstscUseSpan;
+        //private bool mstscUseMultimon;
 
         public override bool Initialize(IPluginHost host)
         {
@@ -29,22 +29,11 @@ namespace KeePassRDP
             if (host == null) return false;
             m_host = host;
 
-            // get KeePassRDP options from CustomConfig
-            mstscUseFullscreen = m_host.CustomConfig.GetBool("KPR_mstscUseFullscreen", false);
-            mstscUseAdmin = m_host.CustomConfig.GetBool("KPR_mstscUseAdmin", false);
-            mstscUseSpan = m_host.CustomConfig.GetBool("KPR_mstscUseSpan", false);
-            mstscUseMultimon = m_host.CustomConfig.GetBool("KPR_mstscUseMultimon", false);
-
             return true;
         }
 
         public override void Terminate()
         {
-            // save KeePassRDP options to CustomConfig
-            m_host.CustomConfig.SetBool("KPR_mstscUseFullscreen", mstscUseFullscreen);
-            m_host.CustomConfig.SetBool("KPR_mstscUseAdmin", mstscUseAdmin);
-            m_host.CustomConfig.SetBool("KPR_mstscUseSpan", mstscUseSpan);
-            m_host.CustomConfig.SetBool("KPR_mstscUseMultimon", mstscUseMultimon);
         }
 
         public override ToolStripMenuItem GetMenuItem(PluginMenuType t)
@@ -106,20 +95,13 @@ namespace KeePassRDP
         private void OnKPROptions_Click(object sender, EventArgs e)
         {
             // initialize options form
-            KPROptionsForm frmKPROptions = new KPROptionsForm();
-            frmKPROptions.mstscUseFullscreen = mstscUseFullscreen;
-            frmKPROptions.mstscUseAdmin = mstscUseAdmin;
-            frmKPROptions.mstscUseSpan = mstscUseSpan;
-            frmKPROptions.mstscUseMultimon = mstscUseMultimon;
+            KPROptionsForm frmKPROptions = new KPROptionsForm(new KprConfig(m_host.CustomConfig));
+
 
             DialogResult res = frmKPROptions.ShowDialog();
 
             if (res == DialogResult.OK)
             {
-                mstscUseFullscreen = frmKPROptions.mstscUseFullscreen;
-                mstscUseAdmin = frmKPROptions.mstscUseAdmin;
-                mstscUseSpan = frmKPROptions.mstscUseSpan;
-                mstscUseMultimon = frmKPROptions.mstscUseMultimon;
             }
         }
 
@@ -249,9 +231,12 @@ namespace KeePassRDP
 
         private void connectRDPtoKeePassEntry(PwEntry pe, bool tmpMstscUseAdmin = false, bool tmpUseCreds = false)
         {
-            String URL = stripURL(pe.Strings.ReadSafe(PwDefs.UrlField));
-            if (!String.IsNullOrEmpty(URL))
+            string URL = stripURL(pe.Strings.ReadSafe(PwDefs.UrlField));
+            if (!string.IsNullOrEmpty(URL))
             {
+                // instantiate config Object to get configured options
+                KprConfig kprConfig = new KprConfig(m_host.CustomConfig);
+
                 Process credProcess = new Process();
                 Process rdpProcess = new Process();
                 // if selected, save credentials into the Windows Credential Manager
@@ -266,21 +251,29 @@ namespace KeePassRDP
                 // start RDP / mstsc.exe
                 rdpProcess.StartInfo.FileName = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\mstsc.exe");
                 rdpProcess.StartInfo.Arguments = "/v:" + URL;
-                if (tmpMstscUseAdmin || mstscUseAdmin)
+                if (tmpMstscUseAdmin || kprConfig.MstscUseAdmin)
                 {
                     rdpProcess.StartInfo.Arguments += " /admin";
                 }
-                if(mstscUseFullscreen)
+                if(kprConfig.MstscUseFullscreen)
                 {
                     rdpProcess.StartInfo.Arguments += " /f";
                 }
-                if(mstscUseSpan)
+                if(kprConfig.MstscUseSpan)
                 {
                     rdpProcess.StartInfo.Arguments += " /span";
                 }
-                if(mstscUseMultimon)
+                if(kprConfig.MstscUseMultimon)
                 {
                     rdpProcess.StartInfo.Arguments += " /multimon";
+                }
+                if(kprConfig.MstscWidth > 0)
+                {
+                    rdpProcess.StartInfo.Arguments += " /w:" + kprConfig.MstscWidth;
+                }
+                if(kprConfig.MstscHeight > 0)
+                {
+                    rdpProcess.StartInfo.Arguments += " /h:" + kprConfig.MstscHeight;
                 }
                 rdpProcess.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
                 rdpProcess.Start();
