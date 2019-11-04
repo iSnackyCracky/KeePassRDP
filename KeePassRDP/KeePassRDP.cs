@@ -205,70 +205,62 @@ namespace KeePassRDP
                     connPwEntry = SelectCred(connPwEntry);
                 }
 
-                string URL = StripUrl(connPwEntry.Strings.ReadSafe(PwDefs.UrlField));
+                if (!(connPwEntry == null)) {
+                    string URL = StripUrl(connPwEntry.Strings.ReadSafe(PwDefs.UrlField));
 
-                if (!String.IsNullOrEmpty(URL) && !(connPwEntry == null))
-                {
-                    // instantiate config Object to get configured options
-                    var kprConfig = new KprConfig(m_host.CustomConfig);
+                    if (!String.IsNullOrEmpty(URL)) {
+                        // instantiate config Object to get configured options
+                        var kprConfig = new KprConfig(m_host.CustomConfig);
 
-                    var credProcess = new Process();
-                    var rdpProcess = new Process();
+                        var credProcess = new Process();
+                        var rdpProcess = new Process();
 
-                    // if selected, save credentials into the Windows Credential Manager
-                    if (tmpUseCreds)
-                    {
-                        credProcess.StartInfo.FileName = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\cmdkey.exe");
-                        credProcess.StartInfo.Arguments = "/generic:" + StripUrl(URL, true) + " /user:" + connPwEntry.Strings.ReadSafe(PwDefs.UserNameField) + " /pass:" + connPwEntry.Strings.ReadSafe(PwDefs.PasswordField);
-                        credProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                        credProcess.Start();
-                        System.Threading.Thread.Sleep(300);
-                    }
+                        // if selected, save credentials into the Windows Credential Manager
+                        if (tmpUseCreds) {
+                            credProcess.StartInfo.FileName = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\cmdkey.exe");
+                            credProcess.StartInfo.Arguments = "/generic:" + StripUrl(URL, true) + " /user:" + connPwEntry.Strings.ReadSafe(PwDefs.UserNameField) + " /pass:" + connPwEntry.Strings.ReadSafe(PwDefs.PasswordField);
+                            credProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                            credProcess.Start();
+                            System.Threading.Thread.Sleep(300);
+                        }
 
-                    // start RDP / mstsc.exe
-                    rdpProcess.StartInfo.FileName = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\mstsc.exe");
-                    rdpProcess.StartInfo.Arguments = "/v:" + URL;
-                    if (tmpMstscUseAdmin || kprConfig.MstscUseAdmin)
-                    {
-                        rdpProcess.StartInfo.Arguments += " /admin";
-                    }
-                    if (kprConfig.MstscUseFullscreen)
-                    {
-                        rdpProcess.StartInfo.Arguments += " /f";
-                    }
-                    if (kprConfig.MstscUseSpan)
-                    {
-                        rdpProcess.StartInfo.Arguments += " /span";
-                    }
-                    if (kprConfig.MstscUseMultimon)
-                    {
-                        rdpProcess.StartInfo.Arguments += " /multimon";
-                    }
-                    if (kprConfig.MstscWidth > 0)
-                    {
-                        rdpProcess.StartInfo.Arguments += " /w:" + kprConfig.MstscWidth;
-                    }
-                    if (kprConfig.MstscHeight > 0)
-                    {
-                        rdpProcess.StartInfo.Arguments += " /h:" + kprConfig.MstscHeight;
-                    }
-                    rdpProcess.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
-                    rdpProcess.Start();
+                        // start RDP / mstsc.exe
+                        rdpProcess.StartInfo.FileName = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\mstsc.exe");
+                        rdpProcess.StartInfo.Arguments = "/v:" + URL;
+                        if (tmpMstscUseAdmin || kprConfig.MstscUseAdmin) {
+                            rdpProcess.StartInfo.Arguments += " /admin";
+                        }
+                        if (kprConfig.MstscUseFullscreen) {
+                            rdpProcess.StartInfo.Arguments += " /f";
+                        }
+                        if (kprConfig.MstscUseSpan) {
+                            rdpProcess.StartInfo.Arguments += " /span";
+                        }
+                        if (kprConfig.MstscUseMultimon) {
+                            rdpProcess.StartInfo.Arguments += " /multimon";
+                        }
+                        if (kprConfig.MstscWidth > 0) {
+                            rdpProcess.StartInfo.Arguments += " /w:" + kprConfig.MstscWidth;
+                        }
+                        if (kprConfig.MstscHeight > 0) {
+                            rdpProcess.StartInfo.Arguments += " /h:" + kprConfig.MstscHeight;
+                        }
+                        rdpProcess.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
+                        rdpProcess.Start();
 
-                    // remove credentials from Windows Credential Manger (after about 10 seconds)
-                    if (tmpUseCreds)
-                    {
-                        credProcess.StartInfo.Arguments = "/delete:" + StripUrl(URL, true);
-                        credProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                        // create a timer to remove the credentials after a given time
-                        // could use System.Threading.Sleep, but this would halt the whole KeePass precess for its duration
-                        var t = new System.Timers.Timer
-                        {
-                            Interval = 9500, // timer triggers after 9.5 seconds
-                            AutoReset = false // timer should only trigger once
-                        };
-                        t.Elapsed += (sender, e) => TimerElapsed(sender, e, credProcess);
-                        t.Start(); // start the timer
+                        // remove credentials from Windows Credential Manger (after about 10 seconds)
+                        if (tmpUseCreds) {
+                            credProcess.StartInfo.Arguments = "/delete:" + StripUrl(URL, true);
+                            credProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                            // create a timer to remove the credentials after a given time
+                            // could use System.Threading.Sleep, but this would halt the whole KeePass precess for its duration
+                            var t = new System.Timers.Timer {
+                                Interval = 9500, // timer triggers after 9.5 seconds
+                                AutoReset = false // timer should only trigger once
+                            };
+                            t.Elapsed += (sender, e) => TimerElapsed(sender, e, credProcess);
+                            t.Start(); // start the timer
+                        }
                     }
                 }
             }
