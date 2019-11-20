@@ -19,7 +19,7 @@ namespace KeePassRDP
             InitializeComponent();
         }
 
-        private void checkSizeEnable(object sender, EventArgs e)
+        private void checkMstscSizeEnable(object sender, EventArgs e)
         {
             bool enable = true;
             if(chkMstscUseFullscreen.Checked || chkMstscUseMultimon.Checked || chkMstscUseSpan.Checked)
@@ -40,6 +40,7 @@ namespace KeePassRDP
             numMstscHeight.Maximum = Screen.PrimaryScreen.Bounds.Height;
 
             // set form elements to match previously saved options
+            chkKeepassShowResolvedReferences.Checked = _config.KeePassShowResolvedReferences;
             chkMstscUseFullscreen.Checked = _config.MstscUseFullscreen;
             chkMstscUseAdmin.Checked = _config.MstscUseAdmin;
             chkMstscUseSpan.Checked = _config.MstscUseSpan;
@@ -66,12 +67,13 @@ namespace KeePassRDP
                 numMstscHeight.Value = mstscHeight;
             }
 
-            checkSizeEnable(null, EventArgs.Empty);
+            checkMstscSizeEnable(null, EventArgs.Empty);
         }
 
         private void cmdOk_Click(object sender, EventArgs e)
         {
             // save configuration
+            _config.KeePassShowResolvedReferences = chkKeepassShowResolvedReferences.Checked;
             _config.MstscUseFullscreen = chkMstscUseFullscreen.Checked;
             _config.MstscUseAdmin = chkMstscUseAdmin.Checked;
             _config.MstscUseSpan = chkMstscUseSpan.Checked;

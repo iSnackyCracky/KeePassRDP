@@ -5,8 +5,10 @@ using System.Windows.Forms;
 
 using KeePass.Plugins;
 using KeePass.UI;
+using KeePass.Util.Spr;
 using KeePassLib;
 using KeePassLib.Collections;
+using KeePassLib.Security;
 
 namespace KeePassRDP
 {
@@ -125,6 +127,7 @@ namespace KeePassRDP
         {
             // create result for later use, see below
             DialogResult res = DialogResult.OK;
+            var retPE = pe;
 
             // if selected entry is in a subgroup called "RDP", specified entries get collected and showed to the user for selection (see the RegEx in getDomainAccounts)
             if (InRdpSubgroup(pe))
@@ -145,7 +148,7 @@ namespace KeePassRDP
                 if (rdpAccountEntries.UCount >= 1)
                 {
                     // create a selection dialog with the matching entries
-                    var frmCredPick = new CredentialPickerForm
+                    var frmCredPick = new CredentialPickerForm(new KprConfig(m_host.CustomConfig), m_host.Database)
                     {
                         rdpAccountEntries = rdpAccountEntries,
                         connPE = pe
@@ -156,15 +159,21 @@ namespace KeePassRDP
                     if (res == DialogResult.OK)
                     {
                         // use the selected PwEntry and reset the selected value of the dialog
-                        pe = frmCredPick.returnPE;
+                        retPE = frmCredPick.returnPE;
                         frmCredPick.returnPE = null;
                     }
                 }
             }
 
+            // resolve References in entry fields
+            //retPE.Strings.Set(PwDefs.UserNameField, new ProtectedString(true, Util.ResolveReferences(retPE, m_host.Database, PwDefs.UserNameField)));
+            //retPE.Strings.Set(PwDefs.PasswordField, new ProtectedString(true, Util.ResolveReferences(retPE, m_host.Database, PwDefs.PasswordField)));
+            //retPE.Strings.Set(PwDefs.UrlField, new ProtectedString(true, Util.ResolveReferences(retPE, m_host.Database, PwDefs.UrlField)));
+            string url = Util.ResolveReferences(retPE, m_host.Database, PwDefs.UrlField);
+
             if (res == DialogResult.OK)
             {
-                return pe;
+                return retPE;
             }
             else
             {

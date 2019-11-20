@@ -9,6 +9,7 @@ namespace KeePassRDP
     public class KprConfig
     {
         private readonly AceCustomConfig _config;
+        const string KeePassShowResolvedReferencesKey = "KPR_keepassShowResolvedReferences";
         const string MstscUseFullscreenKey = "KPR_mstscUseFullscreen";
         const string MstscUseAdminKey = "KPR_mstscUseAdmin";
         const string MstscUseSpanKey = "KPR_mstscUseSpan";
@@ -19,6 +20,12 @@ namespace KeePassRDP
         public KprConfig(AceCustomConfig config)
         {
             _config = config;
+        }
+
+        public bool KeePassShowResolvedReferences
+        {
+            get { return _config.GetBool(KeePassShowResolvedReferencesKey, true); }
+            set { _config.SetBool(KeePassShowResolvedReferencesKey, value); }
         }
 
         public bool MstscUseFullscreen

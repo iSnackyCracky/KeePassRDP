@@ -42,20 +42,24 @@
             this.chkMstscUseAdmin = new System.Windows.Forms.CheckBox();
             this.chkMstscUseFullscreen = new System.Windows.Forms.CheckBox();
             this.ttMstscParams = new System.Windows.Forms.ToolTip(this.components);
+            this.grpGeneral = new System.Windows.Forms.GroupBox();
+            this.chkKeepassShowResolvedReferences = new System.Windows.Forms.CheckBox();
+            this.ttGeneralOptions = new System.Windows.Forms.ToolTip(this.components);
             this.grpMstscParams.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMstscHeight)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numMstscWidth)).BeginInit();
+            this.grpGeneral.SuspendLayout();
             this.SuspendLayout();
             // 
             // cmdCancel
             // 
             this.cmdCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cmdCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cmdCancel.Location = new System.Drawing.Point(145, 239);
+            this.cmdCancel.Location = new System.Drawing.Point(388, 240);
             this.cmdCancel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cmdCancel.Name = "cmdCancel";
-            this.cmdCancel.Size = new System.Drawing.Size(112, 35);
-            this.cmdCancel.TabIndex = 4;
+            this.cmdCancel.Size = new System.Drawing.Size(119, 35);
+            this.cmdCancel.TabIndex = 1;
             this.cmdCancel.Text = "&Cancel";
             this.cmdCancel.UseVisualStyleBackColor = true;
             // 
@@ -63,11 +67,11 @@
             // 
             this.cmdOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cmdOk.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.cmdOk.Location = new System.Drawing.Point(25, 239);
+            this.cmdOk.Location = new System.Drawing.Point(262, 240);
             this.cmdOk.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cmdOk.Name = "cmdOk";
-            this.cmdOk.Size = new System.Drawing.Size(112, 35);
-            this.cmdOk.TabIndex = 3;
+            this.cmdOk.Size = new System.Drawing.Size(119, 35);
+            this.cmdOk.TabIndex = 1;
             this.cmdOk.Text = "&Ok";
             this.cmdOk.UseVisualStyleBackColor = true;
             this.cmdOk.Click += new System.EventHandler(this.cmdOk_Click);
@@ -82,10 +86,10 @@
             this.grpMstscParams.Controls.Add(this.chkMstscUseSpan);
             this.grpMstscParams.Controls.Add(this.chkMstscUseAdmin);
             this.grpMstscParams.Controls.Add(this.chkMstscUseFullscreen);
-            this.grpMstscParams.Location = new System.Drawing.Point(13, 12);
+            this.grpMstscParams.Location = new System.Drawing.Point(269, 12);
             this.grpMstscParams.Name = "grpMstscParams";
-            this.grpMstscParams.Size = new System.Drawing.Size(244, 219);
-            this.grpMstscParams.TabIndex = 5;
+            this.grpMstscParams.Size = new System.Drawing.Size(245, 220);
+            this.grpMstscParams.TabIndex = 1;
             this.grpMstscParams.TabStop = false;
             this.grpMstscParams.Text = "mstsc.exe parameters";
             // 
@@ -134,7 +138,7 @@
             this.ttMstscParams.SetToolTip(this.chkMstscUseMultimon, "mstsc.exe /multimon\r\nConfigures the Remote Desktop Services session monitor layou" +
         "t\r\nto be identical to the current client-side configuration.");
             this.chkMstscUseMultimon.UseVisualStyleBackColor = true;
-            this.chkMstscUseMultimon.CheckedChanged += new System.EventHandler(this.checkSizeEnable);
+            this.chkMstscUseMultimon.CheckedChanged += new System.EventHandler(this.checkMstscSizeEnable);
             // 
             // chkMstscUseSpan
             // 
@@ -146,7 +150,7 @@
             this.chkMstscUseSpan.Text = "Use &spanning - /span";
             this.ttMstscParams.SetToolTip(this.chkMstscUseSpan, resources.GetString("chkMstscUseSpan.ToolTip"));
             this.chkMstscUseSpan.UseVisualStyleBackColor = true;
-            this.chkMstscUseSpan.CheckedChanged += new System.EventHandler(this.checkSizeEnable);
+            this.chkMstscUseSpan.CheckedChanged += new System.EventHandler(this.checkMstscSizeEnable);
             // 
             // chkMstscUseAdmin
             // 
@@ -169,7 +173,7 @@
             this.chkMstscUseFullscreen.Text = "Use &fullscreen - /f";
             this.ttMstscParams.SetToolTip(this.chkMstscUseFullscreen, "mstsc.exe /f\r\nStarts Remote Desktop Connection in full-screen mode.");
             this.chkMstscUseFullscreen.UseVisualStyleBackColor = true;
-            this.chkMstscUseFullscreen.CheckedChanged += new System.EventHandler(this.checkSizeEnable);
+            this.chkMstscUseFullscreen.CheckedChanged += new System.EventHandler(this.checkMstscSizeEnable);
             // 
             // ttMstscParams
             // 
@@ -178,13 +182,43 @@
             this.ttMstscParams.ReshowDelay = 100;
             this.ttMstscParams.ToolTipTitle = "mstsc.exe Parameter";
             // 
+            // grpGeneral
+            // 
+            this.grpGeneral.Controls.Add(this.chkKeepassShowResolvedReferences);
+            this.grpGeneral.Location = new System.Drawing.Point(12, 12);
+            this.grpGeneral.Name = "grpGeneral";
+            this.grpGeneral.Size = new System.Drawing.Size(245, 63);
+            this.grpGeneral.TabIndex = 0;
+            this.grpGeneral.TabStop = false;
+            this.grpGeneral.Text = "General options";
+            // 
+            // chkKeepassShowResolvedReferences
+            // 
+            this.chkKeepassShowResolvedReferences.AutoSize = true;
+            this.chkKeepassShowResolvedReferences.Location = new System.Drawing.Point(6, 25);
+            this.chkKeepassShowResolvedReferences.Name = "chkKeepassShowResolvedReferences";
+            this.chkKeepassShowResolvedReferences.Size = new System.Drawing.Size(225, 24);
+            this.chkKeepassShowResolvedReferences.TabIndex = 1;
+            this.chkKeepassShowResolvedReferences.Text = "Show resolved References";
+            this.ttGeneralOptions.SetToolTip(this.chkKeepassShowResolvedReferences, "Enable or disable visibility of resolved References.\r\nThis only affects the crede" +
+        "ntial picker.\r\nReferences get always resolved for the RDP connection data.");
+            this.chkKeepassShowResolvedReferences.UseVisualStyleBackColor = true;
+            // 
+            // ttGeneralOptions
+            // 
+            this.ttGeneralOptions.AutoPopDelay = 10000;
+            this.ttGeneralOptions.InitialDelay = 500;
+            this.ttGeneralOptions.ReshowDelay = 100;
+            this.ttGeneralOptions.ToolTipTitle = "General options";
+            // 
             // KPROptionsForm
             // 
             this.AcceptButton = this.cmdOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cmdCancel;
-            this.ClientSize = new System.Drawing.Size(270, 288);
+            this.ClientSize = new System.Drawing.Size(522, 288);
+            this.Controls.Add(this.grpGeneral);
             this.Controls.Add(this.grpMstscParams);
             this.Controls.Add(this.cmdCancel);
             this.Controls.Add(this.cmdOk);
@@ -197,6 +231,8 @@
             this.grpMstscParams.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMstscHeight)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numMstscWidth)).EndInit();
+            this.grpGeneral.ResumeLayout(false);
+            this.grpGeneral.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -215,5 +251,8 @@
         private System.Windows.Forms.NumericUpDown numMstscHeight;
         private System.Windows.Forms.Label lblWidth;
         private System.Windows.Forms.NumericUpDown numMstscWidth;
+        private System.Windows.Forms.GroupBox grpGeneral;
+        private System.Windows.Forms.CheckBox chkKeepassShowResolvedReferences;
+        private System.Windows.Forms.ToolTip ttGeneralOptions;
     }
 }

@@ -9,8 +9,13 @@ namespace KeePassRDP
 {
     public partial class CredentialPickerForm : Form
     {
-        public CredentialPickerForm()
+        private readonly KprConfig _config;
+        private readonly PwDatabase _db;
+
+        public CredentialPickerForm(KprConfig config, PwDatabase db)
         {
+            _config = config;
+            _db = db;
             InitializeComponent();
         }
 
@@ -35,11 +40,21 @@ namespace KeePassRDP
             foreach (PwEntry account in rdpAccountEntries)
             {
                 // get title, username, notes and a UUID-hash from the Account...
-                string path = account.ParentGroup.GetFullPath("\\", false);
-                string title = account.Strings.ReadSafe(PwDefs.TitleField);
-                string username = account.Strings.ReadSafe(PwDefs.UserNameField);
-                string notes = account.Strings.ReadSafe(PwDefs.NotesField);
                 int uidhash = account.Uuid.GetHashCode();
+
+                string path, title, username, notes;
+                path = account.ParentGroup.GetFullPath("\\", false);
+                if(_config.KeePassShowResolvedReferences)
+                {
+                    title = Util.ResolveReferences(account, _db, PwDefs.TitleField);
+                    username = Util.ResolveReferences(account, _db, PwDefs.UserNameField);
+                    notes = Util.ResolveReferences(account, _db, PwDefs.NotesField);
+                } else
+                {
+                    title = account.Strings.ReadSafe(PwDefs.TitleField);
+                    username = account.Strings.ReadSafe(PwDefs.UserNameField);
+                    notes = account.Strings.ReadSafe(PwDefs.NotesField);
+                }
 
                 // ...and add as new AccountEntry to the list
                 AccountEntry accEntry = new AccountEntry(path, title, username, notes, uidhash);
