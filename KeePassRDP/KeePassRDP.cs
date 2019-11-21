@@ -125,12 +125,10 @@ namespace KeePassRDP
 
         private PwEntry SelectCred(PwEntry pe)
         {
-            // create result for later use, see below
-            DialogResult res = DialogResult.OK;
-            var retPE = pe;
+            var retPE = new PwEntry(true, true);
 
             // if selected entry is in a subgroup called "RDP", specified entries get collected and showed to the user for selection (see the RegEx in getDomainAccounts)
-            if (InRdpSubgroup(pe))
+            if (Util.InRdpSubgroup(pe))
             {
                 // rdpPG is the parent-group of the "RDP" group
                 PwGroup rdpPG = pe.ParentGroup.ParentGroup;
@@ -155,30 +153,28 @@ namespace KeePassRDP
                     };
 
                     // show the dialog and get the result
-                    res = frmCredPick.ShowDialog();
+                    var res = frmCredPick.ShowDialog();
                     if (res == DialogResult.OK)
                     {
                         // use the selected PwEntry and reset the selected value of the dialog
                         retPE = frmCredPick.returnPE;
-                        frmCredPick.returnPE = null;
+                        UIUtil.DestroyForm(frmCredPick);
                     }
                 }
             }
-
-            // resolve References in entry fields
-            //retPE.Strings.Set(PwDefs.UserNameField, new ProtectedString(true, Util.ResolveReferences(retPE, m_host.Database, PwDefs.UserNameField)));
-            //retPE.Strings.Set(PwDefs.PasswordField, new ProtectedString(true, Util.ResolveReferences(retPE, m_host.Database, PwDefs.PasswordField)));
-            //retPE.Strings.Set(PwDefs.UrlField, new ProtectedString(true, Util.ResolveReferences(retPE, m_host.Database, PwDefs.UrlField)));
-            string url = Util.ResolveReferences(retPE, m_host.Database, PwDefs.UrlField);
-
-            if (res == DialogResult.OK)
-            {
-                return retPE;
-            }
             else
             {
-                return null;
+                retPE.Strings.Set(PwDefs.UserNameField, pe.Strings.GetSafe(PwDefs.UserNameField));
+                retPE.Strings.Set(PwDefs.PasswordField, pe.Strings.GetSafe(PwDefs.PasswordField));
+                retPE.Strings.Set(PwDefs.UrlField, pe.Strings.GetSafe(PwDefs.UrlField));
             }
+
+            // resolve References in entry fields
+            retPE.Strings.Set(PwDefs.UserNameField, new ProtectedString(true, Util.ResolveReferences(retPE, m_host.Database, PwDefs.UserNameField)));
+            retPE.Strings.Set(PwDefs.PasswordField, new ProtectedString(true, Util.ResolveReferences(retPE, m_host.Database, PwDefs.PasswordField)));
+            retPE.Strings.Set(PwDefs.UrlField, new ProtectedString(true, Util.ResolveReferences(retPE, m_host.Database, PwDefs.UrlField)));
+
+            return retPE;
         }
 
         private PwObjectList<PwEntry> GetRdpAccountEntries(PwGroup pwg)
@@ -188,12 +184,17 @@ namespace KeePassRDP
             foreach (PwEntry pe in pwg.Entries)
             {
                 string title = pe.Strings.ReadSafe(PwDefs.TitleField);
+                bool ignore = false;
+                if (pe.Strings.Exists(Util.IgnoreEntryString) && !(pe.Strings.ReadSafe(Util.IgnoreEntryString) == Boolean.FalseString))
+                {
+                    ignore = true;
+                }
 
                 string rePre = "(domain|domänen|local|lokaler|windows)";
                 string rePost = "(admin|user|administrator|benutzer|nutzer)";
                 string re = ".*" + rePre + ".*" + rePost + ".*";
 
-                if (Regex.IsMatch(title, re, RegexOptions.IgnoreCase) && !Regex.IsMatch(title, ".*\\[rdpignore\\].*", RegexOptions.IgnoreCase))
+                if (!ignore && !Regex.IsMatch(title, ".*\\[" + Util.IgnoreEntryString + "\\].*", RegexOptions.IgnoreCase) && Regex.IsMatch(title, re, RegexOptions.IgnoreCase))
                 {
                     rdpAccountEntries.Add(pe);
                 }
@@ -297,16 +298,6 @@ namespace KeePassRDP
             return text;
         }
 
-        /// <summary>
-        /// Checks if the ParentGroup of a PwEntry is named "RDP".
-        /// </summary>
-        /// <param name="pe"></param>
-        /// <returns></returns>
-        private bool InRdpSubgroup(PwEntry pe)
-        {
-            PwGroup pg = pe.ParentGroup;
-            return pg.Name == "RDP";
-        }
 
         private void TimerElapsed(object source, System.Timers.ElapsedEventArgs e, Process proc)
         {
