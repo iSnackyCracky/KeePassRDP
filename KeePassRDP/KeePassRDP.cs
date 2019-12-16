@@ -184,17 +184,13 @@ namespace KeePassRDP
             foreach (PwEntry pe in pwg.Entries)
             {
                 string title = pe.Strings.ReadSafe(PwDefs.TitleField);
-                bool ignore = false;
-                if (pe.Strings.Exists(Util.IgnoreEntryString) && !(pe.Strings.ReadSafe(Util.IgnoreEntryString) == Boolean.FalseString))
-                {
-                    ignore = true;
-                }
+                bool ignore = Util.IsEntryIgnored(pe);
 
                 string rePre = "(domain|domänen|local|lokaler|windows)";
                 string rePost = "(admin|user|administrator|benutzer|nutzer)";
                 string re = ".*" + rePre + ".*" + rePost + ".*";
 
-                if (!ignore && !Regex.IsMatch(title, ".*\\[" + Util.IgnoreEntryString + "\\].*", RegexOptions.IgnoreCase) && Regex.IsMatch(title, re, RegexOptions.IgnoreCase))
+                if (!ignore && Regex.IsMatch(title, re, RegexOptions.IgnoreCase))
                 {
                     rdpAccountEntries.Add(pe);
                 }

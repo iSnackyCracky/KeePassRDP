@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 using KeePass;
 using KeePass.Util.Spr;
@@ -36,6 +37,29 @@ namespace KeePassRDP
         {
             var ctx = new SprContext(pe, pd, SprCompileFlags.All);
             return SprEngine.Compile(pe.Strings.ReadSafe(field), ctx);
+        }
+
+        /// <summary>
+        /// Checks if a given PwEntry has the "rdpignore-flag" set
+        /// </summary>
+        /// <param name="pe"></param>
+        /// <returns></returns>
+        public static bool IsEntryIgnored(PwEntry pe)
+        {
+            // Does a CustomField "rdpignore" exist and is the value NOT set to "false"?
+            if (pe.Strings.Exists(IgnoreEntryString) && !(pe.Strings.ReadSafe(IgnoreEntryString) == Boolean.FalseString))
+            {
+                return true;
+            }
+            // Does the entry title contain "[rdpignore]"?
+            else if (Regex.IsMatch(pe.Strings.ReadSafe(PwDefs.TitleField), ".*\\[" + IgnoreEntryString + "\\].*", RegexOptions.IgnoreCase))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }
