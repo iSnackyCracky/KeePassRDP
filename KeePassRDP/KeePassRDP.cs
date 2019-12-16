@@ -80,12 +80,21 @@ namespace KeePassRDP
                 tsmiOpenRDPNoCredAdmin.Click += OnOpenRDPNoCredAdmin_Click;
                 tsmi.DropDownItems.Add(tsmiOpenRDPNoCredAdmin);
 
+                // add the IgnoreCredEntry menu entry
+                var tsmiIgnoreCredEntry = new ToolStripMenuItem
+                {
+                    Text = "Ignore these credentials"
+                };
+                tsmiIgnoreCredEntry.Click += OnIgnoreCredEntry_Click;
+                tsmi.DropDownItems.Add(tsmiIgnoreCredEntry);
+
                 // disable the entry menu when no database is opened
                 tsmi.DropDownOpening += delegate (object sender, EventArgs e)
                 {
                     var pd = m_host.Database;
                     bool dbOpen = ((pd != null) && pd.IsOpen);
                     tsmi.Enabled = dbOpen;
+                    tsmiIgnoreCredEntry.Checked = Util.IsEntryIgnored(m_host.MainWindow.GetSelectedEntry(true, true));
                 };
             }
             else if (t == PluginMenuType.Main)
@@ -121,6 +130,22 @@ namespace KeePassRDP
         private void OnOpenRDPNoCredAdmin_Click(object sender, EventArgs e)
         {
             ConnectRDPtoKeePassEntry(true);
+        }
+
+        private void OnIgnoreCredEntry_Click(object sender, EventArgs e)
+        {
+            Util.ToggleEntryIgnored(m_host.MainWindow.GetSelectedEntry(true, true));
+            var f = (MethodInvoker)delegate
+            {
+                m_host.MainWindow.UpdateUI(false, null, false, null, true, null, true);
+            };
+            if (m_host.MainWindow.InvokeRequired)
+            {
+                m_host.MainWindow.Invoke(f);
+            } else
+            {
+                f.Invoke();
+            }
         }
 
         private PwEntry SelectCred(PwEntry pe)
@@ -170,9 +195,9 @@ namespace KeePassRDP
             }
 
             // resolve References in entry fields
-            retPE.Strings.Set(PwDefs.UserNameField, new ProtectedString(true, Util.ResolveReferences(retPE, m_host.Database, PwDefs.UserNameField)));
+            retPE.Strings.Set(PwDefs.UserNameField, new ProtectedString(false, Util.ResolveReferences(retPE, m_host.Database, PwDefs.UserNameField)));
             retPE.Strings.Set(PwDefs.PasswordField, new ProtectedString(true, Util.ResolveReferences(retPE, m_host.Database, PwDefs.PasswordField)));
-            retPE.Strings.Set(PwDefs.UrlField, new ProtectedString(true, Util.ResolveReferences(retPE, m_host.Database, PwDefs.UrlField)));
+            retPE.Strings.Set(PwDefs.UrlField, new ProtectedString(false, Util.ResolveReferences(retPE, m_host.Database, PwDefs.UrlField)));
 
             return retPE;
         }

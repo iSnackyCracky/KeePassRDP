@@ -180,7 +180,7 @@
             this.ttMstscParams.AutoPopDelay = 10000;
             this.ttMstscParams.InitialDelay = 500;
             this.ttMstscParams.ReshowDelay = 100;
-            this.ttMstscParams.ToolTipTitle = "mstsc.exe Parameter";
+            this.ttMstscParams.ToolTipTitle = "mstsc.exe parameter";
             // 
             // grpGeneral
             // 

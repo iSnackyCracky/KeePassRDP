@@ -47,7 +47,7 @@ namespace KeePassRDP
         public static bool IsEntryIgnored(PwEntry pe)
         {
             // Does a CustomField "rdpignore" exist and is the value NOT set to "false"?
-            if (pe.Strings.Exists(IgnoreEntryString) && !(pe.Strings.ReadSafe(IgnoreEntryString) == Boolean.FalseString))
+            if (pe.Strings.Exists(IgnoreEntryString) && !(pe.Strings.ReadSafe(IgnoreEntryString).ToLower() == Boolean.FalseString.ToLower()))
             {
                 return true;
             }
@@ -59,6 +59,44 @@ namespace KeePassRDP
             else
             {
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Toggles the "rdpignore-flag" of a given PwEntry
+        /// </summary>
+        /// <param name="pe"></param>
+        public static void ToggleEntryIgnored(PwEntry pe)
+        {
+            var pTrue = new ProtectedString(false, Boolean.TrueString.ToLower());
+            var pFalse = new ProtectedString(false, Boolean.FalseString.ToLower());
+
+            // Does a CustomField "rdpignore" exist?
+            if (pe.Strings.Exists(IgnoreEntryString))
+            {
+                // Is the CustomField value set to "false"?
+                if (pe.Strings.ReadSafe(IgnoreEntryString).ToLower() == Boolean.FalseString.ToLower())
+                {
+                    // Then set it to "true".
+                    pe.Strings.Set(IgnoreEntryString, pTrue);
+                } else
+                {
+                    // Else set it to "false" now.
+                    pe.Strings.Set(IgnoreEntryString, pFalse);
+                }
+            }
+            // Does the entry title contain "[rdpignore]"?
+            else if (Regex.IsMatch(pe.Strings.ReadSafe(PwDefs.TitleField), ".*\\[" + IgnoreEntryString + "\\].*", RegexOptions.IgnoreCase))
+            {
+                // Then remove the flag from the title.
+                string newTitle = Regex.Replace(pe.Strings.ReadSafe(PwDefs.TitleField), "\\[" + IgnoreEntryString + "\\]", "", RegexOptions.IgnoreCase);
+                pe.Strings.Set(PwDefs.TitleField, new ProtectedString(false, newTitle));
+            }
+            // Else the entry currently has no "rdpignore-flags" set
+            else
+            {
+                // So set the CustomField with "true" value.
+                pe.Strings.Set(IgnoreEntryString, pTrue);
             }
         }
     }
