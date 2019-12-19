@@ -7,18 +7,19 @@ KeePassRDP is a plugin for KeePass 2.x which adds multiple options to connect vi
 2. Unzip and copy the KeePassRDP.plgx file to your KeePass plugins folder.
 
 ## Usage
-To connect via rdp to a machine, select the entry containing the IP-address or hostname, right-click and select *KeePassRDP* \> *Open RDP connection* (or just press <kbd>CTRL</kbd> + <kbd>M</kbd>).
+To connect via RDP to a machine, select the entry containing the IP-address or hostname, right-click and select *KeePassRDP* \> *Open RDP connection* (or just press <kbd>CTRL</kbd> + <kbd>M</kbd>).
 
 To use the other connection options, just select the corresponding entries in the context-menu.
 
 ## Features
 - Connect to host via RDP
-- Connect to host via RDP admin session (mstsc.exe /admin parameter)
+- Connect to host via RDP admin session (`mstsc.exe /admin` parameter)
+- Customize `mstsc.exe` parameters (`/f`, `/span`, `/multimon`, `/w`, `/h`)
 - Gather and show possible Windows or domain credentials when the connection entry is inside a group called "RDP" (see below for details)
 
 
 ### RDP subgroup / folder
-This is how I use the extension for on a daily basis (I work for an MSP where we store credentials for customer domains or machines inside KeePass):
+This is how I use the extension on a daily basis (I work for an MSP where we store credentials for customer domains or machines inside KeePass):
 
 Our KeePass Database is structured like this:
 
@@ -42,18 +43,19 @@ The customer group itself contains the account-entries in this case (they can al
 
 ![cusotmer example entries](https://isnackycracky.github.io/KeePassRDP/img/customer_entries.jpg)
 
-If we now want to connect to one of the machines in the RDP subgroup (with credential usage), just select the machine-entry, press <kbd>CTRL</kbd> + <kbd>M</kbd> and KeePassRDP shows you a dialog with viable account-entries (with titles like e.g. *domain-admin*, *local user*, ...) it always ignores entries where the title contains **[rdpignore]**
+If we now want to connect to one of the machines in the RDP subgroup (with credential usage), just select the machine-entry, press <kbd>CTRL</kbd> + <kbd>M</kbd> and KeePassRDP shows you a dialog with viable account-entries (with titles like e.g. *domain-admin*, *local user*, ...) it always ignores entries where the title contains **[rdpignore]** or where a custom field named **rdpignore** is created with a value not equal to *false* (not case-sensitive).
+This "ignore-flag" can be toggled via the KeePassRDP context menu since v1.9.0.
 
 ![credential selection dialog](https://isnackycracky.github.io/KeePassRDP/img/credential_picker.jpg)
 
 Now just select the entry you want and klick ok (or press <kbd>Enter</kbd>).
 
 ## How it works
-The plugin basically just calls the default *mstsc.exe* with the */v:\<address\>* (and optionally */admin*) parameter to connect.
+The plugin basically just calls the default `mstsc.exe` with the `/v:<address>` (and optionally other) parameter(s) to connect.
 
-If you choose to open a connection *with credentials* it first calls *cmdkey.exe /generic:\<address\> /user:\<username\> /pass:\<password\>* to save credentials to use by the *mstsc.exe* into the Windows Credential Manger.
+If you choose to open a connection *with credentials* it first calls `cmdkey.exe /generic:<address> /user:<username> /pass:<password>` to save credentials into the Windows Credential Manager for usage by the `mstsc.exe` process.
   
-These Credentials get removed via *cmdkey.exe /delete:\<address\>* after about 10 seconds.
+These Credentials get removed via `cmdkey.exe /delete:<address>` after about 10 seconds.
 
 ## Third-Party Software
 This plugin uses the *awesome* C# ListView wrapper [**ObjectListView**](http://objectlistview.sourceforge.net/cs/index.html) by Phillip Piper
