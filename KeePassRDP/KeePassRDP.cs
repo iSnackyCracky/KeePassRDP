@@ -3,9 +3,9 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Windows.Forms;
 
+using KeePass.Ecas;
 using KeePass.Plugins;
 using KeePass.UI;
-using KeePass.Util.Spr;
 using KeePassLib;
 using KeePassLib.Collections;
 using KeePassLib.Security;
@@ -27,11 +27,28 @@ namespace KeePassRDP
             if (host == null) return false;
             m_host = host;
 
+            m_host.MainWindow.AddCustomToolBarButton(Util.ToolbarConnectBtnId, "💻", "Connect to entry via RDP using credentials.");
+            m_host.TriggerSystem.RaisingEvent += TriggerSystem_RaisingEvent;
+
             return true;
+        }
+
+        private void TriggerSystem_RaisingEvent(object sender, EcasRaisingEventArgs e)
+        {
+            EcasPropertyDictionary dict = e.Properties;
+            if (dict == null) { Debug.Assert(false); return; }
+
+            string command = dict.Get<String>(EcasProperty.CommandID);
+
+            if (command != null && command.Equals(Util.ToolbarConnectBtnId))
+            {
+                ConnectRDPtoKeePassEntry(false, true);
+            }
         }
 
         public override void Terminate()
         {
+            m_host.MainWindow.RemoveCustomToolBarButton(Util.ToolbarConnectBtnId);
         }
 
         public override ToolStripMenuItem GetMenuItem(PluginMenuType t)

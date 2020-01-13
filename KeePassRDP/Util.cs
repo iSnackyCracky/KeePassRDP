@@ -14,6 +14,7 @@ namespace KeePassRDP
     public static class Util
     {
         public const string IgnoreEntryString = "rdpignore";
+        public const string ToolbarConnectBtnId = "KprConnect";
 
         /// <summary>
         /// Checks if the ParentGroup of a PwEntry is named "RDP".
