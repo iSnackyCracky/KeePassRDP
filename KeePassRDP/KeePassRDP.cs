@@ -82,36 +82,24 @@ namespace KeePassRDP
                 tsmi.DropDownItems.Add(tsmiOpenRDPAdmin);
 
                 // add the OpenRDPNoCred menu entry
-                var tsmiOpenRDPNoCred = new ToolStripMenuItem
-                {
-                    Text = "Open RDP connection without credentials"
-                };
+                var tsmiOpenRDPNoCred = new ToolStripMenuItem("Open RDP connection without credentials");
                 tsmiOpenRDPNoCred.Click += OnOpenRDPNoCred_Click;
                 tsmi.DropDownItems.Add(tsmiOpenRDPNoCred);
 
                 // add the OpenRDPNoCredAdmin menu entry
-                var tsmiOpenRDPNoCredAdmin = new ToolStripMenuItem
-                {
-                    Text = "Open RDP connection without credentials (/admin)"
-                };
+                var tsmiOpenRDPNoCredAdmin = new ToolStripMenuItem("Open RDP connection without credentials (/admin)");
                 tsmiOpenRDPNoCredAdmin.Click += OnOpenRDPNoCredAdmin_Click;
                 tsmi.DropDownItems.Add(tsmiOpenRDPNoCredAdmin);
 
                 // add the IgnoreCredEntry menu entry
-                var tsmiIgnoreCredEntry = new ToolStripMenuItem
-                {
-                    Text = "Ignore these credentials"
-                };
+                var tsmiIgnoreCredEntry = new ToolStripMenuItem("Ignore these credentials");
                 tsmiIgnoreCredEntry.Click += OnIgnoreCredEntry_Click;
                 tsmi.DropDownItems.Add(tsmiIgnoreCredEntry);
 
                 // disable the entry menu when no database is opened
                 tsmi.DropDownOpening += delegate (object sender, EventArgs e)
                 {
-                    var pd = m_host.Database;
-                    bool dbOpen = ((pd != null) && pd.IsOpen);
-                    tsmi.Enabled = dbOpen;
-                    tsmiIgnoreCredEntry.Checked = Util.IsEntryIgnored(m_host.MainWindow.GetSelectedEntry(true, true));
+                    if (IsValid(m_host, false)) tsmiIgnoreCredEntry.Checked = Util.IsEntryIgnored(m_host.MainWindow.GetSelectedEntry(true, true));
                 };
             }
             else if (t == PluginMenuType.Main)
@@ -151,17 +139,20 @@ namespace KeePassRDP
 
         private void OnIgnoreCredEntry_Click(object sender, EventArgs e)
         {
-            Util.ToggleEntryIgnored(m_host.MainWindow.GetSelectedEntry(true, true));
-            var f = (MethodInvoker)delegate
+            if (IsValid(m_host))
             {
-                m_host.MainWindow.UpdateUI(false, null, false, null, true, null, true);
-            };
-            if (m_host.MainWindow.InvokeRequired)
-            {
-                m_host.MainWindow.Invoke(f);
-            } else
-            {
-                f.Invoke();
+                Util.ToggleEntryIgnored(m_host.MainWindow.GetSelectedEntry(true, true));
+                var f = (MethodInvoker)delegate
+                {
+                    m_host.MainWindow.UpdateUI(false, null, false, null, true, null, true);
+                };
+                if (m_host.MainWindow.InvokeRequired)
+                {
+                    m_host.MainWindow.Invoke(f);
+                } else
+                {
+                    f.Invoke();
+                }
             }
         }
 
@@ -343,16 +334,16 @@ namespace KeePassRDP
         }
 
         // Check if action is a valid operation
-        private bool IsValid(IPluginHost host)
+        private bool IsValid(IPluginHost host, bool showMsg = true)
         {
             if (!host.Database.IsOpen)
             {
-                MessageBox.Show("You have to open a KeePass Database first", "KeePassRDP");
+                if (showMsg) MessageBox.Show("You have to open a KeePass Database first", "KeePassRDP");
                 return false;
             }
             if (host.MainWindow.GetSelectedEntry(true, true) == null)
             {
-                MessageBox.Show("You have to select an Entry first", "KeePassRDP");
+                if (showMsg) MessageBox.Show("You have to select an Entry first", "KeePassRDP");
                 return false;
             }
             return true;
