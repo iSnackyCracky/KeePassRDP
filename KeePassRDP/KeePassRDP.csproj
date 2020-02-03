@@ -30,8 +30,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CredentialManagement, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\CredentialManagement.1.0.2\lib\net35\CredentialManagement.dll</HintPath>
+    <Reference Include="CredentialManagement">
+      <HintPath>ext\CredentialManagement.dll</HintPath>
     </Reference>
     <Reference Include="KeePass">
       <HintPath>..\KeePass.exe</HintPath>
@@ -80,9 +80,6 @@
     <EmbeddedResource Include="KPROptionsForm.resx">
       <DependentUpon>KPROptionsForm.cs</DependentUpon>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
