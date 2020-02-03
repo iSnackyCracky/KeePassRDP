@@ -3,6 +3,8 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using System.Windows.Forms;
 
+using CredentialManagement;
+
 using KeePass.Ecas;
 using KeePass.Plugins;
 using KeePass.UI;
@@ -187,7 +189,7 @@ namespace KeePassRDP
 
                     // show the dialog and get the result
                     var res = frmCredPick.ShowDialog();
-                    if (res == DialogResult.OK)
+                    if (res == System.Windows.Forms.DialogResult.OK)
                     {
                         // use the selected PwEntry and reset the selected value of the dialog
                         retPE = frmCredPick.returnPE;
@@ -251,15 +253,21 @@ namespace KeePassRDP
                         // instantiate config Object to get configured options
                         var kprConfig = new KprConfig(m_host.CustomConfig);
 
-                        var credProcess = new Process();
                         var rdpProcess = new Process();
+                        Credential cred = null;
 
                         // if selected, save credentials into the Windows Credential Manager
                         if (tmpUseCreds) {
-                            credProcess.StartInfo.FileName = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\cmdkey.exe");
-                            credProcess.StartInfo.Arguments = "/generic:" + StripUrl(URL, true) + " /user:" + connPwEntry.Strings.ReadSafe(PwDefs.UserNameField) + " /pass:" + connPwEntry.Strings.ReadSafe(PwDefs.PasswordField);
-                            credProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                            credProcess.Start();
+
+                            cred = new Credential
+                            {
+                                Target = "TERMSRV/" + StripUrl(URL, true),
+                                Username = connPwEntry.Strings.ReadSafe(PwDefs.UserNameField),
+                                Password = connPwEntry.Strings.ReadSafe(PwDefs.PasswordField),
+                                PersistanceType = PersistanceType.Session,
+                                Type = CredentialType.DomainPassword
+                            };
+                            cred.Save();
                             System.Threading.Thread.Sleep(300);
                         }
 
@@ -289,15 +297,13 @@ namespace KeePassRDP
 
                         // remove credentials from Windows Credential Manger (after about 10 seconds)
                         if (tmpUseCreds) {
-                            credProcess.StartInfo.Arguments = "/delete:" + StripUrl(URL, true);
-                            credProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                             // create a timer to remove the credentials after a given time
                             // could use System.Threading.Sleep, but this would halt the whole KeePass precess for its duration
                             var t = new System.Timers.Timer {
                                 Interval = 9500, // timer triggers after 9.5 seconds
                                 AutoReset = false // timer should only trigger once
                             };
-                            t.Elapsed += (sender, e) => TimerElapsed(sender, e, credProcess);
+                            t.Elapsed += (sender, e) => TimerElapsed(sender, e, cred);
                             t.Start(); // start the timer
                         }
                     }
@@ -328,9 +334,9 @@ namespace KeePassRDP
         }
 
 
-        private void TimerElapsed(object source, System.Timers.ElapsedEventArgs e, Process proc)
+        private void TimerElapsed(object source, System.Timers.ElapsedEventArgs e, Credential cred)
         {
-            proc.Start();
+            cred.Delete();
         }
 
         // Check if action is a valid operation
