@@ -162,7 +162,7 @@ namespace KeePassRDP
         {
             var retPE = new PwEntry(true, true);
 
-            // if selected entry is in a subgroup called "RDP", specified entries get collected and showed to the user for selection (see the RegEx in getDomainAccounts)
+            // if selected entry is in a subgroup called "RDP", specified entries get collected and showed to the user for selection (see the RegEx in GetRdpAccountEntries)
             if (Util.InRdpSubgroup(pe))
             {
                 // rdpPG is the parent-group of the "RDP" group
@@ -195,6 +195,14 @@ namespace KeePassRDP
                         retPE = frmCredPick.returnPE;
                         UIUtil.DestroyForm(frmCredPick);
                     }
+                }
+                // if no matching entries were found...
+                else
+                {
+                    // fall back to using the currently selected entry
+                    retPE.Strings.Set(PwDefs.UserNameField, pe.Strings.GetSafe(PwDefs.UserNameField));
+                    retPE.Strings.Set(PwDefs.PasswordField, pe.Strings.GetSafe(PwDefs.PasswordField));
+                    retPE.Strings.Set(PwDefs.UrlField, pe.Strings.GetSafe(PwDefs.UrlField));
                 }
             }
             else
