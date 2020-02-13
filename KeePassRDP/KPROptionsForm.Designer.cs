@@ -45,17 +45,21 @@
             this.grpGeneral = new System.Windows.Forms.GroupBox();
             this.chkKeepassShowResolvedReferences = new System.Windows.Forms.CheckBox();
             this.ttGeneralOptions = new System.Windows.Forms.ToolTip(this.components);
+            this.grpCredentials = new System.Windows.Forms.GroupBox();
+            this.chkCredVaultUseWindows = new System.Windows.Forms.CheckBox();
+            this.ttCredentialOptions = new System.Windows.Forms.ToolTip(this.components);
             this.grpMstscParams.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMstscHeight)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numMstscWidth)).BeginInit();
             this.grpGeneral.SuspendLayout();
+            this.grpCredentials.SuspendLayout();
             this.SuspendLayout();
             // 
             // cmdCancel
             // 
             this.cmdCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cmdCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cmdCancel.Location = new System.Drawing.Point(388, 240);
+            this.cmdCancel.Location = new System.Drawing.Point(392, 240);
             this.cmdCancel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cmdCancel.Name = "cmdCancel";
             this.cmdCancel.Size = new System.Drawing.Size(119, 35);
@@ -67,7 +71,7 @@
             // 
             this.cmdOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cmdOk.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.cmdOk.Location = new System.Drawing.Point(262, 240);
+            this.cmdOk.Location = new System.Drawing.Point(266, 240);
             this.cmdOk.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cmdOk.Name = "cmdOk";
             this.cmdOk.Size = new System.Drawing.Size(119, 35);
@@ -78,6 +82,7 @@
             // 
             // grpMstscParams
             // 
+            this.grpMstscParams.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.grpMstscParams.Controls.Add(this.lblHeight);
             this.grpMstscParams.Controls.Add(this.numMstscHeight);
             this.grpMstscParams.Controls.Add(this.lblWidth);
@@ -86,7 +91,7 @@
             this.grpMstscParams.Controls.Add(this.chkMstscUseSpan);
             this.grpMstscParams.Controls.Add(this.chkMstscUseAdmin);
             this.grpMstscParams.Controls.Add(this.chkMstscUseFullscreen);
-            this.grpMstscParams.Location = new System.Drawing.Point(269, 12);
+            this.grpMstscParams.Location = new System.Drawing.Point(273, 12);
             this.grpMstscParams.Name = "grpMstscParams";
             this.grpMstscParams.Size = new System.Drawing.Size(245, 220);
             this.grpMstscParams.TabIndex = 1;
@@ -187,7 +192,7 @@
             this.grpGeneral.Controls.Add(this.chkKeepassShowResolvedReferences);
             this.grpGeneral.Location = new System.Drawing.Point(12, 12);
             this.grpGeneral.Name = "grpGeneral";
-            this.grpGeneral.Size = new System.Drawing.Size(245, 63);
+            this.grpGeneral.Size = new System.Drawing.Size(255, 63);
             this.grpGeneral.TabIndex = 0;
             this.grpGeneral.TabStop = false;
             this.grpGeneral.Text = "General options";
@@ -211,13 +216,42 @@
             this.ttGeneralOptions.ReshowDelay = 100;
             this.ttGeneralOptions.ToolTipTitle = "General options";
             // 
+            // grpCredentials
+            // 
+            this.grpCredentials.Controls.Add(this.chkCredVaultUseWindows);
+            this.grpCredentials.Location = new System.Drawing.Point(12, 81);
+            this.grpCredentials.Name = "grpCredentials";
+            this.grpCredentials.Size = new System.Drawing.Size(255, 63);
+            this.grpCredentials.TabIndex = 2;
+            this.grpCredentials.TabStop = false;
+            this.grpCredentials.Text = "Credential options";
+            // 
+            // chkCredVaultUseWindows
+            // 
+            this.chkCredVaultUseWindows.AutoSize = true;
+            this.chkCredVaultUseWindows.Location = new System.Drawing.Point(6, 25);
+            this.chkCredVaultUseWindows.Name = "chkCredVaultUseWindows";
+            this.chkCredVaultUseWindows.Size = new System.Drawing.Size(244, 24);
+            this.chkCredVaultUseWindows.TabIndex = 1;
+            this.chkCredVaultUseWindows.Text = "Store as Windows credentials";
+            this.ttCredentialOptions.SetToolTip(this.chkCredVaultUseWindows, resources.GetString("chkCredVaultUseWindows.ToolTip"));
+            this.chkCredVaultUseWindows.UseVisualStyleBackColor = true;
+            // 
+            // ttCredentialOptions
+            // 
+            this.ttCredentialOptions.AutoPopDelay = 10000;
+            this.ttCredentialOptions.InitialDelay = 500;
+            this.ttCredentialOptions.ReshowDelay = 100;
+            this.ttCredentialOptions.ToolTipTitle = "Credential options";
+            // 
             // KPROptionsForm
             // 
             this.AcceptButton = this.cmdOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cmdCancel;
-            this.ClientSize = new System.Drawing.Size(522, 288);
+            this.ClientSize = new System.Drawing.Size(526, 288);
+            this.Controls.Add(this.grpCredentials);
             this.Controls.Add(this.grpGeneral);
             this.Controls.Add(this.grpMstscParams);
             this.Controls.Add(this.cmdCancel);
@@ -233,6 +267,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.numMstscWidth)).EndInit();
             this.grpGeneral.ResumeLayout(false);
             this.grpGeneral.PerformLayout();
+            this.grpCredentials.ResumeLayout(false);
+            this.grpCredentials.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -254,5 +290,8 @@
         private System.Windows.Forms.GroupBox grpGeneral;
         private System.Windows.Forms.CheckBox chkKeepassShowResolvedReferences;
         private System.Windows.Forms.ToolTip ttGeneralOptions;
+        private System.Windows.Forms.GroupBox grpCredentials;
+        private System.Windows.Forms.CheckBox chkCredVaultUseWindows;
+        private System.Windows.Forms.ToolTip ttCredentialOptions;
     }
 }

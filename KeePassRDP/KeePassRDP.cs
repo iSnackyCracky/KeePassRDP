@@ -269,11 +269,10 @@ namespace KeePassRDP
 
                             cred = new Credential
                             {
-                                Target = "TERMSRV/" + StripUrl(URL, true),
                                 Username = connPwEntry.Strings.ReadSafe(PwDefs.UserNameField),
                                 Password = connPwEntry.Strings.ReadSafe(PwDefs.PasswordField),
-                                PersistanceType = PersistanceType.Session,
-                                Type = CredentialType.DomainPassword
+                                Target = kprConfig.CredVaultUseWindows ? "TERMSRV/" + StripUrl(URL, true) : StripUrl(URL, true),
+                                Type = kprConfig.CredVaultUseWindows ? CredentialType.DomainPassword : CredentialType.Generic
                             };
                             cred.Save();
                             System.Threading.Thread.Sleep(300);

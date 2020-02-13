@@ -41,6 +41,7 @@ namespace KeePassRDP
 
             // set form elements to match previously saved options
             chkKeepassShowResolvedReferences.Checked = _config.KeePassShowResolvedReferences;
+            chkCredVaultUseWindows.Checked = _config.CredVaultUseWindows;
             chkMstscUseFullscreen.Checked = _config.MstscUseFullscreen;
             chkMstscUseAdmin.Checked = _config.MstscUseAdmin;
             chkMstscUseSpan.Checked = _config.MstscUseSpan;
@@ -74,6 +75,7 @@ namespace KeePassRDP
         {
             // save configuration
             _config.KeePassShowResolvedReferences = chkKeepassShowResolvedReferences.Checked;
+            _config.CredVaultUseWindows = chkCredVaultUseWindows.Checked;
             _config.MstscUseFullscreen = chkMstscUseFullscreen.Checked;
             _config.MstscUseAdmin = chkMstscUseAdmin.Checked;
             _config.MstscUseSpan = chkMstscUseSpan.Checked;
