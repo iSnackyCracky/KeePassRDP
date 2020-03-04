@@ -48,22 +48,29 @@
             this.grpCredentials = new System.Windows.Forms.GroupBox();
             this.chkCredVaultUseWindows = new System.Windows.Forms.CheckBox();
             this.ttCredentialOptions = new System.Windows.Forms.ToolTip(this.components);
+            this.txtCredPickHeight = new System.Windows.Forms.Label();
+            this.numCredPickHeight = new System.Windows.Forms.NumericUpDown();
+            this.txtCredPickWidth = new System.Windows.Forms.Label();
+            this.numCredPickWidth = new System.Windows.Forms.NumericUpDown();
+            this.chkCredPickRememberSize = new System.Windows.Forms.CheckBox();
             this.grpMstscParams.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMstscHeight)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numMstscWidth)).BeginInit();
             this.grpGeneral.SuspendLayout();
             this.grpCredentials.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numCredPickHeight)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numCredPickWidth)).BeginInit();
             this.SuspendLayout();
             // 
             // cmdCancel
             // 
             this.cmdCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cmdCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cmdCancel.Location = new System.Drawing.Point(392, 240);
+            this.cmdCancel.Location = new System.Drawing.Point(492, 243);
             this.cmdCancel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cmdCancel.Name = "cmdCancel";
             this.cmdCancel.Size = new System.Drawing.Size(119, 35);
-            this.cmdCancel.TabIndex = 1;
+            this.cmdCancel.TabIndex = 4;
             this.cmdCancel.Text = "&Cancel";
             this.cmdCancel.UseVisualStyleBackColor = true;
             // 
@@ -71,11 +78,11 @@
             // 
             this.cmdOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cmdOk.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.cmdOk.Location = new System.Drawing.Point(266, 240);
+            this.cmdOk.Location = new System.Drawing.Point(366, 243);
             this.cmdOk.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.cmdOk.Name = "cmdOk";
             this.cmdOk.Size = new System.Drawing.Size(119, 35);
-            this.cmdOk.TabIndex = 1;
+            this.cmdOk.TabIndex = 3;
             this.cmdOk.Text = "&Ok";
             this.cmdOk.UseVisualStyleBackColor = true;
             this.cmdOk.Click += new System.EventHandler(this.cmdOk_Click);
@@ -91,9 +98,9 @@
             this.grpMstscParams.Controls.Add(this.chkMstscUseSpan);
             this.grpMstscParams.Controls.Add(this.chkMstscUseAdmin);
             this.grpMstscParams.Controls.Add(this.chkMstscUseFullscreen);
-            this.grpMstscParams.Location = new System.Drawing.Point(273, 12);
+            this.grpMstscParams.Location = new System.Drawing.Point(318, 12);
             this.grpMstscParams.Name = "grpMstscParams";
-            this.grpMstscParams.Size = new System.Drawing.Size(245, 220);
+            this.grpMstscParams.Size = new System.Drawing.Size(296, 220);
             this.grpMstscParams.TabIndex = 1;
             this.grpMstscParams.TabStop = false;
             this.grpMstscParams.Text = "mstsc.exe parameters";
@@ -104,15 +111,15 @@
             this.lblHeight.Location = new System.Drawing.Point(6, 179);
             this.lblHeight.Name = "lblHeight";
             this.lblHeight.Size = new System.Drawing.Size(86, 20);
-            this.lblHeight.TabIndex = 7;
+            this.lblHeight.TabIndex = 6;
             this.lblHeight.Text = "Height - /h:";
             // 
             // numMstscHeight
             // 
             this.numMstscHeight.Location = new System.Drawing.Point(98, 177);
             this.numMstscHeight.Name = "numMstscHeight";
-            this.numMstscHeight.Size = new System.Drawing.Size(137, 26);
-            this.numMstscHeight.TabIndex = 6;
+            this.numMstscHeight.Size = new System.Drawing.Size(192, 26);
+            this.numMstscHeight.TabIndex = 7;
             this.ttMstscParams.SetToolTip(this.numMstscHeight, "/h:<height>\r\nSpecifies the height of the Remote Desktop window.\r\n0 = not set");
             // 
             // lblWidth
@@ -121,15 +128,15 @@
             this.lblWidth.Location = new System.Drawing.Point(6, 147);
             this.lblWidth.Name = "lblWidth";
             this.lblWidth.Size = new System.Drawing.Size(82, 20);
-            this.lblWidth.TabIndex = 5;
+            this.lblWidth.TabIndex = 4;
             this.lblWidth.Text = "Width - /w:";
             // 
             // numMstscWidth
             // 
             this.numMstscWidth.Location = new System.Drawing.Point(98, 145);
             this.numMstscWidth.Name = "numMstscWidth";
-            this.numMstscWidth.Size = new System.Drawing.Size(137, 26);
-            this.numMstscWidth.TabIndex = 4;
+            this.numMstscWidth.Size = new System.Drawing.Size(192, 26);
+            this.numMstscWidth.TabIndex = 5;
             this.ttMstscParams.SetToolTip(this.numMstscWidth, "/w:<width>\r\nSpecifies the width of the Remote Desktop window.\r\n0 = not set");
             // 
             // chkMstscUseMultimon
@@ -189,10 +196,15 @@
             // 
             // grpGeneral
             // 
+            this.grpGeneral.Controls.Add(this.chkCredPickRememberSize);
+            this.grpGeneral.Controls.Add(this.txtCredPickHeight);
             this.grpGeneral.Controls.Add(this.chkKeepassShowResolvedReferences);
+            this.grpGeneral.Controls.Add(this.numCredPickHeight);
+            this.grpGeneral.Controls.Add(this.txtCredPickWidth);
+            this.grpGeneral.Controls.Add(this.numCredPickWidth);
             this.grpGeneral.Location = new System.Drawing.Point(12, 12);
             this.grpGeneral.Name = "grpGeneral";
-            this.grpGeneral.Size = new System.Drawing.Size(255, 63);
+            this.grpGeneral.Size = new System.Drawing.Size(296, 152);
             this.grpGeneral.TabIndex = 0;
             this.grpGeneral.TabStop = false;
             this.grpGeneral.Text = "General options";
@@ -203,10 +215,10 @@
             this.chkKeepassShowResolvedReferences.Location = new System.Drawing.Point(6, 25);
             this.chkKeepassShowResolvedReferences.Name = "chkKeepassShowResolvedReferences";
             this.chkKeepassShowResolvedReferences.Size = new System.Drawing.Size(225, 24);
-            this.chkKeepassShowResolvedReferences.TabIndex = 1;
+            this.chkKeepassShowResolvedReferences.TabIndex = 0;
             this.chkKeepassShowResolvedReferences.Text = "Show resolved References";
-            this.ttGeneralOptions.SetToolTip(this.chkKeepassShowResolvedReferences, "Enable or disable visibility of resolved References.\r\nThis only affects the crede" +
-        "ntial picker.\r\nReferences get always resolved for the RDP connection data.");
+            this.ttGeneralOptions.SetToolTip(this.chkKeepassShowResolvedReferences, "Enable or disable visibility of resolved References.\r\nThis only affects the CredP" +
+        "icker.\r\nReferences get always resolved for the RDP connection data.");
             this.chkKeepassShowResolvedReferences.UseVisualStyleBackColor = true;
             // 
             // ttGeneralOptions
@@ -219,9 +231,9 @@
             // grpCredentials
             // 
             this.grpCredentials.Controls.Add(this.chkCredVaultUseWindows);
-            this.grpCredentials.Location = new System.Drawing.Point(12, 81);
+            this.grpCredentials.Location = new System.Drawing.Point(12, 169);
             this.grpCredentials.Name = "grpCredentials";
-            this.grpCredentials.Size = new System.Drawing.Size(255, 63);
+            this.grpCredentials.Size = new System.Drawing.Size(296, 63);
             this.grpCredentials.TabIndex = 2;
             this.grpCredentials.TabStop = false;
             this.grpCredentials.Text = "Credential options";
@@ -232,7 +244,7 @@
             this.chkCredVaultUseWindows.Location = new System.Drawing.Point(6, 25);
             this.chkCredVaultUseWindows.Name = "chkCredVaultUseWindows";
             this.chkCredVaultUseWindows.Size = new System.Drawing.Size(244, 24);
-            this.chkCredVaultUseWindows.TabIndex = 1;
+            this.chkCredVaultUseWindows.TabIndex = 0;
             this.chkCredVaultUseWindows.Text = "Store as Windows credentials";
             this.ttCredentialOptions.SetToolTip(this.chkCredVaultUseWindows, resources.GetString("chkCredVaultUseWindows.ToolTip"));
             this.chkCredVaultUseWindows.UseVisualStyleBackColor = true;
@@ -244,13 +256,57 @@
             this.ttCredentialOptions.ReshowDelay = 100;
             this.ttCredentialOptions.ToolTipTitle = "Credential options";
             // 
+            // txtCredPickHeight
+            // 
+            this.txtCredPickHeight.AutoSize = true;
+            this.txtCredPickHeight.Location = new System.Drawing.Point(6, 118);
+            this.txtCredPickHeight.Name = "txtCredPickHeight";
+            this.txtCredPickHeight.Size = new System.Drawing.Size(138, 20);
+            this.txtCredPickHeight.TabIndex = 4;
+            this.txtCredPickHeight.Text = "CredPicker height:";
+            // 
+            // numCredPickHeight
+            // 
+            this.numCredPickHeight.Location = new System.Drawing.Point(143, 116);
+            this.numCredPickHeight.Name = "numCredPickHeight";
+            this.numCredPickHeight.Size = new System.Drawing.Size(137, 26);
+            this.numCredPickHeight.TabIndex = 5;
+            // 
+            // txtCredPickWidth
+            // 
+            this.txtCredPickWidth.AutoSize = true;
+            this.txtCredPickWidth.Location = new System.Drawing.Point(6, 86);
+            this.txtCredPickWidth.Name = "txtCredPickWidth";
+            this.txtCredPickWidth.Size = new System.Drawing.Size(131, 20);
+            this.txtCredPickWidth.TabIndex = 2;
+            this.txtCredPickWidth.Text = "CredPicker width:";
+            // 
+            // numCredPickWidth
+            // 
+            this.numCredPickWidth.Location = new System.Drawing.Point(143, 84);
+            this.numCredPickWidth.Name = "numCredPickWidth";
+            this.numCredPickWidth.Size = new System.Drawing.Size(137, 26);
+            this.numCredPickWidth.TabIndex = 3;
+            // 
+            // chkCredPickRememberSize
+            // 
+            this.chkCredPickRememberSize.AutoSize = true;
+            this.chkCredPickRememberSize.Location = new System.Drawing.Point(6, 55);
+            this.chkCredPickRememberSize.Name = "chkCredPickRememberSize";
+            this.chkCredPickRememberSize.Size = new System.Drawing.Size(227, 24);
+            this.chkCredPickRememberSize.TabIndex = 1;
+            this.chkCredPickRememberSize.Text = "Remember CredPicker size";
+            this.ttGeneralOptions.SetToolTip(this.chkCredPickRememberSize, "Always remembers the last CredPicker window size.\r\nIf you can alwas set the size " +
+        "using the values below.");
+            this.chkCredPickRememberSize.UseVisualStyleBackColor = true;
+            // 
             // KPROptionsForm
             // 
             this.AcceptButton = this.cmdOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cmdCancel;
-            this.ClientSize = new System.Drawing.Size(526, 288);
+            this.ClientSize = new System.Drawing.Size(626, 291);
             this.Controls.Add(this.grpCredentials);
             this.Controls.Add(this.grpGeneral);
             this.Controls.Add(this.grpMstscParams);
@@ -269,6 +325,8 @@
             this.grpGeneral.PerformLayout();
             this.grpCredentials.ResumeLayout(false);
             this.grpCredentials.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numCredPickHeight)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numCredPickWidth)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -293,5 +351,10 @@
         private System.Windows.Forms.GroupBox grpCredentials;
         private System.Windows.Forms.CheckBox chkCredVaultUseWindows;
         private System.Windows.Forms.ToolTip ttCredentialOptions;
+        private System.Windows.Forms.Label txtCredPickHeight;
+        private System.Windows.Forms.NumericUpDown numCredPickHeight;
+        private System.Windows.Forms.Label txtCredPickWidth;
+        private System.Windows.Forms.NumericUpDown numCredPickWidth;
+        private System.Windows.Forms.CheckBox chkCredPickRememberSize;
     }
 }

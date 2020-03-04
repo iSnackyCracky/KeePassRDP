@@ -28,6 +28,11 @@ namespace KeePassRDP
         
         private void CredentialPickerForm_Load(object sender, EventArgs e)
         {
+            // set window size
+            Width = Convert.ToInt32(_config.CredPickerWidth);
+            Height = Convert.ToInt32(_config.CredPickerHeight);
+            CenterToParent();
+
             loadListEntries();
             olvEntries.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
         }
@@ -74,7 +79,7 @@ namespace KeePassRDP
         private void cmdOk_Click(object sender, EventArgs e)
         {
             // set returnPE to the selected account
-            createReturnPE(); 
+            confirmDialog(); 
 
             // Form schließen
             Close();
@@ -84,7 +89,7 @@ namespace KeePassRDP
         private void olvEntries_ItemActivate(object sender, EventArgs e)
         {
             // set returnPE to the selected account
-            createReturnPE();
+            confirmDialog();
 
             // return dialog result OK
             DialogResult = DialogResult.OK;
@@ -92,8 +97,15 @@ namespace KeePassRDP
             Close();
         }
 
-        private void createReturnPE()
+        private void confirmDialog()
         {
+            // save window Size
+            if (_config.CredPickerRememberSize)
+            {
+                _config.CredPickerWidth = Convert.ToUInt64(Width);
+                _config.CredPickerHeight = Convert.ToUInt64(Height);
+            }
+
             try
             {
                 // create returnPwEntry
