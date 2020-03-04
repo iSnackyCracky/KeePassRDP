@@ -31,7 +31,7 @@ namespace KeePassRDP
 
         public bool CredVaultUseWindows
         {
-            get { return _config.GetBool(CredVaultUseWindowsKey, false); }
+            get { return _config.GetBool(CredVaultUseWindowsKey, true); }
             set { _config.SetBool(CredVaultUseWindowsKey, value); }
         }
 

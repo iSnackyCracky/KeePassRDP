@@ -136,6 +136,6 @@ To span across monitors, the monitors must be arranged to form a rectangle.</val
     <value>Save credentials to the Windows Vault as "Windows credentials" instead of "Generic credentials"
 This may cause issues when used from a domain member as it then tries to make use of NTLM-Auth,
 which is probably prohibited for external machines.
-It is recommended to enable this, if you don't experience any issues using it.</value>
+It is recommended to keep this enabled, if you don't experience issues using it.</value>
   </data>
 </root>
