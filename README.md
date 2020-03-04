@@ -57,5 +57,7 @@ If you choose to open a connection *with credentials* it first calls `cmdkey.exe
   
 These Credentials get removed via `cmdkey.exe /delete:<address>` after about 10 seconds.
 
-## Third-Party Software
-This plugin uses the *awesome* C# ListView wrapper [**ObjectListView**](http://objectlistview.sourceforge.net/cs/index.html) by Phillip Piper
+## Third-party Software
+This plugin uses the following third-party libraries:
+- the *awesome* "ListView" wrapper [**ObjectListView**](http://objectlistview.sourceforge.net/cs/index.html) by Phillip Piper
+- the *awesome* "Windows Credential Management API" wrapper [**CredentialManagement**](https://github.com/ilyalozovyy/credentialmanagement) by [iLya Lozovyy](https://github.com/ilyalozovyy)
