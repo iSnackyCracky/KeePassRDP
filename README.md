@@ -48,14 +48,14 @@ This "ignore-flag" can be toggled via the KeePassRDP context menu since v1.9.0.
 
 ![credential selection dialog](https://isnackycracky.github.io/KeePassRDP/img/credential_picker.jpg)
 
-Now just select the entry you want and klick ok (or press <kbd>Enter</kbd>).
+Now just select the entry you want and click ok (or press <kbd>Enter</kbd>).
 
 ## How it works
 The plugin basically just calls the default `mstsc.exe` with the `/v:<address>` (and optionally other) parameter(s) to connect.
 
-If you choose to open a connection *with credentials* it first calls `cmdkey.exe /generic:<address> /user:<username> /pass:<password>` to save credentials into the Windows Credential Manager for usage by the `mstsc.exe` process.
-  
-These Credentials get removed via `cmdkey.exe /delete:<address>` after about 10 seconds.
+If you choose to open a connection *with credentials* it stores the credentials into the Windows Credential Manager ("Vault") for usage by the `mstsc.exe` process.
+
+These Credentials then get removed again after about 10 seconds.
 
 ## Third-party Software
 This plugin uses the following third-party libraries:
