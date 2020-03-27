@@ -1,3 +1,5 @@
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/iSnackyCracky/KeePassRDP?style=flat-square) ![GitHub All Releases](https://img.shields.io/github/downloads/iSnackyCracky/KeePassRDP/total?style=flat-square)
+
 # KeePassRDP
 ## Overview
 KeePassRDP is a plugin for KeePass 2.x which adds multiple options to connect via RDP to the URL of an entry.
