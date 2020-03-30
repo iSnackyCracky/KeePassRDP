@@ -1,4 +1,4 @@
-<img alt="latest release" src="https://img.shields.io/github/v/release/iSnackyCracky/KeePassRDP?style=flat-square"> <img alt="downloads (all releases)" src="https://img.shields.io/github/downloads/iSnackyCracky/KeePassRDP/total?style=flat-square">
+[<img alt="latest release" src="https://img.shields.io/github/v/release/iSnackyCracky/KeePassRDP?style=flat-square">](https://github.com/iSnackyCracky/KeePassRDP/releases/latest) <img alt="downloads (all releases)" src="https://img.shields.io/github/downloads/iSnackyCracky/KeePassRDP/total?style=flat-square">
 
 # KeePassRDP
 ## Overview
