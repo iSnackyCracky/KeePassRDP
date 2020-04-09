@@ -262,12 +262,12 @@ namespace KeePassRDP
                         var kprConfig = new KprConfig(m_host.CustomConfig);
 
                         var rdpProcess = new Process();
-                        Credential cred = null;
+                        CredentialManagement.Credential cred = null;
 
                         // if selected, save credentials into the Windows Credential Manager
                         if (tmpUseCreds) {
 
-                            cred = new Credential
+                            cred = new CredentialManagement.Credential
                             {
                                 Username = connPwEntry.Strings.ReadSafe(PwDefs.UserNameField),
                                 Password = connPwEntry.Strings.ReadSafe(PwDefs.PasswordField),
@@ -341,7 +341,7 @@ namespace KeePassRDP
         }
 
 
-        private void TimerElapsed(object source, System.Timers.ElapsedEventArgs e, Credential cred)
+        private void TimerElapsed(object source, System.Timers.ElapsedEventArgs e, CredentialManagement.Credential cred)
         {
             cred.Delete();
         }

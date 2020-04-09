@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccountEntry.cs" />
+    <Compile Include="Credential.cs" />
     <Compile Include="CredentialPickerForm.cs">
       <SubType>Form</SubType>
     </Compile>
