@@ -113,7 +113,7 @@ goto end
 
 :release
 if not exist "$(SolutionDir)7z.exe" goto missingsz
-powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -Command 'cd "$(SolutionDir)"; &amp; "$(SolutionDir)make_release.ps1"'
+powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -Command "&amp; {cd $(SolutionDir); $(SolutionDir)make_release.ps1}"
 goto end
 
 
