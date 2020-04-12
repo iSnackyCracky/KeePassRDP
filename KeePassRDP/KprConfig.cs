@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using KeePass.App.Configuration;
+﻿using KeePass.App.Configuration;
 
 namespace KeePassRDP
 {
@@ -23,10 +19,7 @@ namespace KeePassRDP
         const string CredPickerWidthKey = "KPR_credPickerWidth";
         const string CredPickerHeightKey = "KPR_credPickerHeight";
 
-        public KprConfig(AceCustomConfig config)
-        {
-            _config = config;
-        }
+        public KprConfig(AceCustomConfig config) { _config = config; }
 
         public bool KeePassShowResolvedReferences
         {

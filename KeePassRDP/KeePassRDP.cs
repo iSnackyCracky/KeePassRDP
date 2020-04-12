@@ -1,16 +1,14 @@
-﻿using System;
-using System.Text.RegularExpressions;
-using System.Diagnostics;
-using System.Windows.Forms;
-
-using CredentialManagement;
-
+﻿using CredentialManagement;
 using KeePass.Ecas;
 using KeePass.Plugins;
 using KeePass.UI;
 using KeePassLib;
 using KeePassLib.Collections;
 using KeePassLib.Security;
+using System;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
+using System.Windows.Forms;
 
 namespace KeePassRDP
 {
@@ -19,15 +17,12 @@ namespace KeePassRDP
         private IPluginHost m_host = null;
         private CredentialManager _credManager = null;
 
-        public override string UpdateUrl
-        {
-            get { return "https://raw.githubusercontent.com/iSnackyCracky/KeePassRDP/master/KeePassRDP.ver"; }
-        }
+        public override string UpdateUrl { get { return "https://raw.githubusercontent.com/iSnackyCracky/KeePassRDP/master/KeePassRDP.ver"; } }
 
         public override bool Initialize(IPluginHost host)
         {
             Debug.Assert(host != null);
-            if (host == null) return false;
+            if (host == null) { return false; }
             m_host = host;
 
             m_host.MainWindow.AddCustomToolBarButton(Util.ToolbarConnectBtnId, "💻", "Connect to entry via RDP using credentials.");
@@ -105,7 +100,7 @@ namespace KeePassRDP
                 // disable the entry menu when no database is opened
                 tsmi.DropDownOpening += delegate (object sender, EventArgs e)
                 {
-                    if (IsValid(m_host, false)) tsmiIgnoreCredEntry.Checked = Util.IsEntryIgnored(m_host.MainWindow.GetSelectedEntry(true, true));
+                    if (IsValid(m_host, false)) { tsmiIgnoreCredEntry.Checked = Util.IsEntryIgnored(m_host.MainWindow.GetSelectedEntry(true, true)); }
                 };
             }
             else if (t == PluginMenuType.Main)
@@ -118,47 +113,24 @@ namespace KeePassRDP
             return tsmi;
         }
 
-        private void OnKPROptions_Click(object sender, EventArgs e)
-        {
-            UIUtil.ShowDialogAndDestroy(new KPROptionsForm(new KprConfig(m_host.CustomConfig)));
-        }
+        private void OnKPROptions_Click(object sender, EventArgs e) { UIUtil.ShowDialogAndDestroy(new KPROptionsForm(new KprConfig(m_host.CustomConfig))); }
 
-        private void OnOpenRDP_Click(object sender, EventArgs e)
-        {
-            ConnectRDPtoKeePassEntry(false, true);
-        }
+        private void OnOpenRDP_Click(object sender, EventArgs e) { ConnectRDPtoKeePassEntry(false, true); }
 
-        private void OnOpenRDPAdmin_Click(object sender, EventArgs e)
-        {
-            ConnectRDPtoKeePassEntry(true, true);
-        }
-        
-        private void OnOpenRDPNoCred_Click(object sender, EventArgs e)
-        {
-            ConnectRDPtoKeePassEntry();
-        }
-        
-        private void OnOpenRDPNoCredAdmin_Click(object sender, EventArgs e)
-        {
-            ConnectRDPtoKeePassEntry(true);
-        }
+        private void OnOpenRDPAdmin_Click(object sender, EventArgs e) { ConnectRDPtoKeePassEntry(true, true); }
+
+        private void OnOpenRDPNoCred_Click(object sender, EventArgs e) { ConnectRDPtoKeePassEntry(); }
+
+        private void OnOpenRDPNoCredAdmin_Click(object sender, EventArgs e) { ConnectRDPtoKeePassEntry(true); }
 
         private void OnIgnoreCredEntry_Click(object sender, EventArgs e)
         {
             if (IsValid(m_host))
             {
                 Util.ToggleEntryIgnored(m_host.MainWindow.GetSelectedEntry(true, true));
-                var f = (MethodInvoker)delegate
-                {
-                    m_host.MainWindow.UpdateUI(false, null, false, null, true, null, true);
-                };
-                if (m_host.MainWindow.InvokeRequired)
-                {
-                    m_host.MainWindow.Invoke(f);
-                } else
-                {
-                    f.Invoke();
-                }
+                var f = (MethodInvoker)delegate { m_host.MainWindow.UpdateUI(false, null, false, null, true, null, true); };
+                if (m_host.MainWindow.InvokeRequired) { m_host.MainWindow.Invoke(f); }
+                else { f.Invoke(); }
             }
         }
 
@@ -176,10 +148,7 @@ namespace KeePassRDP
                 PwObjectList<PwEntry> rdpAccountEntries = GetRdpAccountEntries(rdpPG);
 
                 // extend the rdpAccountEntries list with matching entries in 1-level-subgroups of rdpPG
-                foreach (PwGroup subPwG in rdpPG.Groups)
-                {
-                    rdpAccountEntries.Add(GetRdpAccountEntries(subPwG));
-                }
+                foreach (PwGroup subPwG in rdpPG.Groups) { rdpAccountEntries.Add(GetRdpAccountEntries(subPwG)); }
 
                 // if matching entries were found...
                 if (rdpAccountEntries.UCount >= 1)
@@ -237,10 +206,7 @@ namespace KeePassRDP
                 string rePost = "(admin|user|administrator|benutzer|nutzer)";
                 string re = ".*" + rePre + ".*" + rePost + ".*";
 
-                if (!ignore && Regex.IsMatch(title, re, RegexOptions.IgnoreCase))
-                {
-                    rdpAccountEntries.Add(pe);
-                }
+                if (!ignore && Regex.IsMatch(title, re, RegexOptions.IgnoreCase)) { rdpAccountEntries.Add(pe); }
             }
             return rdpAccountEntries;
         }
@@ -253,15 +219,14 @@ namespace KeePassRDP
                 var connPwEntry = m_host.MainWindow.GetSelectedEntry(true, true);
 
                 // get credentials for connection
-                if (tmpUseCreds)
+                if (tmpUseCreds) { connPwEntry = SelectCred(connPwEntry); }
+
+                if (!(connPwEntry == null))
                 {
-                    connPwEntry = SelectCred(connPwEntry);
-                }
+                    string URL = Util.StripUrl(connPwEntry.Strings.ReadSafe(PwDefs.UrlField));
 
-                if (!(connPwEntry == null)) {
-                    string URL = StripUrl(connPwEntry.Strings.ReadSafe(PwDefs.UrlField));
-
-                    if (!String.IsNullOrEmpty(URL)) {
+                    if (!String.IsNullOrEmpty(URL))
+                    {
                         // instantiate config Object to get configured options
                         var kprConfig = new KprConfig(m_host.CustomConfig);
 
@@ -289,36 +254,17 @@ namespace KeePassRDP
                         // start RDP / mstsc.exe
                         rdpProcess.StartInfo.FileName = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\mstsc.exe");
                         rdpProcess.StartInfo.Arguments = "/v:" + URL;
-                        if (tmpMstscUseAdmin || kprConfig.MstscUseAdmin) {
-                            rdpProcess.StartInfo.Arguments += " /admin";
-                        }
-                        if (kprConfig.MstscUseFullscreen) {
-                            rdpProcess.StartInfo.Arguments += " /f";
-                        }
-                        if (kprConfig.MstscUseSpan) {
-                            rdpProcess.StartInfo.Arguments += " /span";
-                        }
-                        if (kprConfig.MstscUseMultimon) {
-                            rdpProcess.StartInfo.Arguments += " /multimon";
-                        }
-                        if (kprConfig.MstscWidth > 0) {
-                            rdpProcess.StartInfo.Arguments += " /w:" + kprConfig.MstscWidth;
-                        }
-                        if (kprConfig.MstscHeight > 0) {
-                            rdpProcess.StartInfo.Arguments += " /h:" + kprConfig.MstscHeight;
-                        }
+                        if (tmpMstscUseAdmin || kprConfig.MstscUseAdmin) { rdpProcess.StartInfo.Arguments += " /admin"; }
+                        if (kprConfig.MstscUseFullscreen) { rdpProcess.StartInfo.Arguments += " /f"; }
+                        if (kprConfig.MstscUseSpan) { rdpProcess.StartInfo.Arguments += " /span"; }
+                        if (kprConfig.MstscUseMultimon) { rdpProcess.StartInfo.Arguments += " /multimon"; }
+                        if (kprConfig.MstscWidth > 0) { rdpProcess.StartInfo.Arguments += " /w:" + kprConfig.MstscWidth; }
+                        if (kprConfig.MstscHeight > 0) { rdpProcess.StartInfo.Arguments += " /h:" + kprConfig.MstscHeight; }
                         rdpProcess.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
                         rdpProcess.Start();
                     }
                 }
             }
-        }
-
-
-
-        private void TimerElapsed(object source, System.Timers.ElapsedEventArgs e, Credential cred)
-        {
-            cred.Delete();
         }
 
         // Check if action is a valid operation
@@ -336,6 +282,6 @@ namespace KeePassRDP
             }
             return true;
         }
-        
+
     }
 }

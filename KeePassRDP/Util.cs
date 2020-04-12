@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-
-using KeePass;
-using KeePass.Util.Spr;
+﻿using KeePass.Util.Spr;
 using KeePassLib;
 using KeePassLib.Security;
+using System;
+using System.Text.RegularExpressions;
 
 namespace KeePassRDP
 {
@@ -34,7 +29,7 @@ namespace KeePassRDP
         /// <param name="pd"></param>
         /// <param name="field"></param>
         /// <returns></returns>
-        public static string ResolveReferences (PwEntry pe, PwDatabase pd, string field)
+        public static string ResolveReferences(PwEntry pe, PwDatabase pd, string field)
         {
             var ctx = new SprContext(pe, pd, SprCompileFlags.All);
             return SprEngine.Compile(pe.Strings.ReadSafe(field), ctx);
@@ -48,19 +43,10 @@ namespace KeePassRDP
         public static bool IsEntryIgnored(PwEntry pe)
         {
             // Does a CustomField "rdpignore" exist and is the value NOT set to "false"?
-            if (pe.Strings.Exists(IgnoreEntryString) && !(pe.Strings.ReadSafe(IgnoreEntryString).ToLower() == Boolean.FalseString.ToLower()))
-            {
-                return true;
-            }
+            if (pe.Strings.Exists(IgnoreEntryString) && !(pe.Strings.ReadSafe(IgnoreEntryString).ToLower() == Boolean.FalseString.ToLower())) { return true; }
             // Does the entry title contain "[rdpignore]"?
-            else if (Regex.IsMatch(pe.Strings.ReadSafe(PwDefs.TitleField), ".*\\[" + IgnoreEntryString + "\\].*", RegexOptions.IgnoreCase))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            else if (Regex.IsMatch(pe.Strings.ReadSafe(PwDefs.TitleField), ".*\\[" + IgnoreEntryString + "\\].*", RegexOptions.IgnoreCase)) { return true; }
+            else { return false; }
         }
 
         /// <summary>
@@ -78,10 +64,7 @@ namespace KeePassRDP
             text = Regex.Replace(text, @"^(?:callto:)", String.Empty, RegexOptions.IgnoreCase);
             text = Regex.Replace(text, @"^(?:tel:)", String.Empty, RegexOptions.IgnoreCase);
             text = Regex.Replace(text, @"(?:/.*)?", String.Empty, RegexOptions.IgnoreCase);
-            if (stripPort)
-            {
-                text = Regex.Replace(text, @"(?:\:[0-9]+)", String.Empty, RegexOptions.IgnoreCase);
-            }
+            if (stripPort) { text = Regex.Replace(text, @"(?:\:[0-9]+)", String.Empty, RegexOptions.IgnoreCase); }
             return text;
         }
 
@@ -99,15 +82,8 @@ namespace KeePassRDP
             if (pe.Strings.Exists(IgnoreEntryString))
             {
                 // Is the CustomField value set to "false"?
-                if (pe.Strings.ReadSafe(IgnoreEntryString).ToLower() == Boolean.FalseString.ToLower())
-                {
-                    // Then set it to "true".
-                    pe.Strings.Set(IgnoreEntryString, pTrue);
-                } else
-                {
-                    // Else set it to "false" now.
-                    pe.Strings.Set(IgnoreEntryString, pFalse);
-                }
+                if (pe.Strings.ReadSafe(IgnoreEntryString).ToLower() == Boolean.FalseString.ToLower()) { pe.Strings.Set(IgnoreEntryString, pTrue); }
+                else { pe.Strings.Set(IgnoreEntryString, pFalse); }
             }
             // Does the entry title contain "[rdpignore]"?
             else if (Regex.IsMatch(pe.Strings.ReadSafe(PwDefs.TitleField), ".*\\[" + IgnoreEntryString + "\\].*", RegexOptions.IgnoreCase))
