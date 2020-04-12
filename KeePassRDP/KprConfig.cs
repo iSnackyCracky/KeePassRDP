@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using KeePass.App.Configuration;
+﻿using KeePass.App.Configuration;
 
 namespace KeePassRDP
 {
@@ -11,6 +7,7 @@ namespace KeePassRDP
         private readonly AceCustomConfig _config;
         const string KeePassShowResolvedReferencesKey = "KPR_keepassShowResolvedReferences";
         const string CredVaultUseWindowsKey = "KPR_credVaultUseWindows";
+        const string CredVaultTtlKey = "KPR_credVaultTtl";
         const string MstscUseFullscreenKey = "KPR_mstscUseFullscreen";
         const string MstscUseAdminKey = "KPR_mstscUseAdmin";
         const string MstscUseSpanKey = "KPR_mstscUseSpan";
@@ -22,10 +19,7 @@ namespace KeePassRDP
         const string CredPickerWidthKey = "KPR_credPickerWidth";
         const string CredPickerHeightKey = "KPR_credPickerHeight";
 
-        public KprConfig(AceCustomConfig config)
-        {
-            _config = config;
-        }
+        public KprConfig(AceCustomConfig config) { _config = config; }
 
         public bool KeePassShowResolvedReferences
         {
@@ -37,6 +31,12 @@ namespace KeePassRDP
         {
             get { return _config.GetBool(CredVaultUseWindowsKey, true); }
             set { _config.SetBool(CredVaultUseWindowsKey, value); }
+        }
+
+        public ulong CredVaultTtl
+        {
+            get { return _config.GetULong(CredVaultTtlKey, 10); }
+            set { _config.SetULong(CredVaultTtlKey, value); }
         }
 
         public bool MstscUseFullscreen

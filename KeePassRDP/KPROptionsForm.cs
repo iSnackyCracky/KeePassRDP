@@ -1,10 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace KeePassRDP
@@ -22,10 +16,7 @@ namespace KeePassRDP
         private void checkMstscSizeEnable(object sender, EventArgs e)
         {
             bool enable = true;
-            if(chkMstscUseFullscreen.Checked || chkMstscUseMultimon.Checked || chkMstscUseSpan.Checked)
-            {
-                enable = false;
-            }
+            if (chkMstscUseFullscreen.Checked || chkMstscUseMultimon.Checked || chkMstscUseSpan.Checked) { enable = false; }
 
             lblWidth.Enabled = enable;
             numMstscWidth.Enabled = enable;
@@ -53,42 +44,42 @@ namespace KeePassRDP
             decimal mstscHeight = Convert.ToDecimal(_config.MstscHeight);
             decimal credPickWidth = Convert.ToDecimal(_config.CredPickerWidth);
             decimal credPickHeight = Convert.ToDecimal(_config.CredPickerHeight);
+            decimal credVaultTtl = Convert.ToDecimal(_config.CredVaultTtl);
 
             // if previously saved width or height now exceed maximum (primary screen resolution) reset to max
             if (mstscWidth > numMstscWidth.Maximum)
             {
                 numMstscWidth.Value = numMstscWidth.Maximum;
                 _config.MstscWidth = Convert.ToUInt64(numMstscWidth.Value);
-            } else
-            {
-                numMstscWidth.Value = mstscWidth;
             }
+            else { numMstscWidth.Value = mstscWidth; }
 
             if (mstscHeight > numMstscHeight.Maximum)
             {
                 numMstscHeight.Value = numMstscHeight.Maximum;
                 _config.MstscHeight = Convert.ToUInt64(numMstscHeight.Value);
-            } else
-            {
-                numMstscHeight.Value = mstscHeight;
             }
+            else { numMstscHeight.Value = mstscHeight; }
 
             if (credPickWidth > numCredPickWidth.Maximum)
             {
                 numCredPickWidth.Value = numCredPickWidth.Maximum;
                 _config.CredPickerWidth = Convert.ToUInt64(numCredPickWidth.Value);
-            } else
-            {
-                numCredPickWidth.Value = credPickWidth;
             }
+            else { numCredPickWidth.Value = credPickWidth; }
             if (credPickHeight > numCredPickHeight.Maximum)
             {
                 numCredPickHeight.Value = numCredPickHeight.Maximum;
                 _config.CredPickerHeight = Convert.ToUInt64(numCredPickHeight.Value);
-            } else
-            {
-                numCredPickHeight.Value = credPickHeight;
             }
+            else { numCredPickHeight.Value = credPickHeight; }
+
+            if (credVaultTtl > numCredVaultTtl.Maximum)
+            {
+                numCredVaultTtl.Value = numCredVaultTtl.Maximum;
+                _config.CredVaultTtl = Convert.ToUInt64(numCredVaultTtl.Value);
+            }
+            else { numCredVaultTtl.Value = credVaultTtl; }
 
             checkMstscSizeEnable(null, EventArgs.Empty);
         }
@@ -101,6 +92,7 @@ namespace KeePassRDP
             _config.CredPickerWidth = Convert.ToUInt64(numCredPickWidth.Value);
             _config.CredPickerHeight = Convert.ToUInt64(numCredPickHeight.Value);
             _config.CredVaultUseWindows = chkCredVaultUseWindows.Checked;
+            _config.CredVaultTtl = Convert.ToUInt64(numCredVaultTtl.Value);
             _config.MstscUseFullscreen = chkMstscUseFullscreen.Checked;
             _config.MstscUseAdmin = chkMstscUseAdmin.Checked;
             _config.MstscUseSpan = chkMstscUseSpan.Checked;

@@ -29,6 +29,15 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'DebugPLGX|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\DebugPLGX\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="CredentialManagement">
       <HintPath>ext\CredentialManagement.dll</HintPath>
@@ -53,6 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccountEntry.cs" />
+    <Compile Include="CredentialManager.cs" />
     <Compile Include="CredentialPickerForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -61,6 +71,7 @@
     </Compile>
     <Compile Include="KeePassRDP.cs" />
     <Compile Include="KprConfig.cs" />
+    <Compile Include="KprCredential.cs" />
     <Compile Include="KPROptionsForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -83,7 +94,40 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>"%25ProgramFiles(x86)%25\Microsoft Visual Studio\2017\Community\Common7\IDE\TextTransform.exe" -a !!build!true "$(ProjectDir)Properties\AssemblyInfo.tt"</PreBuildEvent>
+    <PreBuildEvent>if $(ConfigurationName) == Debug "%25ProgramFiles(x86)%25\Microsoft Visual Studio\2017\Community\Common7\IDE\TextTransform.exe" -a !!build!true "$(ProjectDir)Properties\AssemblyInfo.tt"
+if $(ConfigurationName) == DebugPLGX "%25ProgramFiles(x86)%25\Microsoft Visual Studio\2017\Community\Common7\IDE\TextTransform.exe" -a !!build!true "$(ProjectDir)Properties\AssemblyInfo.tt"</PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>if $(ConfigurationName) == DebugPLGX goto plgx
+if $(ConfigurationName) == Release goto plgx
+goto end
+
+:plgx
+if not exist "$(SolutionDir)KeePass.exe" goto missingkp
+if exist "$(ProjectDir)obj" rd /S /Q "$(ProjectDir)obj"
+if exist "$(ProjectDir)bin" rd /S /Q "$(ProjectDir)bin"
+"$(SolutionDir)KeePass.exe" --plgx-create "$(SolutionDir)KeePassRDP"
+
+if $(ConfigurationName) == Release goto release
+goto end
+
+:release
+if not exist "$(SolutionDir)7z.exe" goto missingsz
+powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -Command "&amp; {cd $(SolutionDir); $(SolutionDir)make_release.ps1}"
+goto end
+
+
+:missingkp
+echo Copy KeePass.exe to "$(SolutionDir)"
+goto end
+
+:missingsz
+echo Copy 7z.exe to "$(SolutionDir)"
+goto end
+
+:end
+
+</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
