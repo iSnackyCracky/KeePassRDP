@@ -7,7 +7,7 @@ namespace KeePassRDP
         private readonly AceCustomConfig _config;
         const string KeePassShowResolvedReferencesKey = "KPR_keepassShowResolvedReferences";
         const string CredVaultUseWindowsKey = "KPR_credVaultUseWindows";
-        const string CredVaultTimeoutKey = "KPR_credVaultTimeout";
+        const string CredVaultTtlKey = "KPR_credVaultTtl";
         const string MstscUseFullscreenKey = "KPR_mstscUseFullscreen";
         const string MstscUseAdminKey = "KPR_mstscUseAdmin";
         const string MstscUseSpanKey = "KPR_mstscUseSpan";
@@ -33,10 +33,10 @@ namespace KeePassRDP
             set { _config.SetBool(CredVaultUseWindowsKey, value); }
         }
 
-        public long CredVaultTimeout
+        public ulong CredVaultTtl
         {
-            get { return _config.GetLong(CredVaultTimeoutKey, 10000); }
-            set { _config.SetLong(CredVaultTimeoutKey, value); }
+            get { return _config.GetULong(CredVaultTtlKey, 10); }
+            set { _config.SetULong(CredVaultTtlKey, value); }
         }
 
         public bool MstscUseFullscreen

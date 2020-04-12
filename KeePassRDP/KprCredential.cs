@@ -14,7 +14,7 @@ namespace KeePassRDP
             Password = password;
             Target = target;
             Type = type;
-            TTL = ttl;
+            TTL = ttl * 1000;
         }
 
         public int IncreaseTTL(int amount)

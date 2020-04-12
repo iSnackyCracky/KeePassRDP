@@ -242,7 +242,7 @@ namespace KeePassRDP
                                 connPwEntry.Strings.ReadSafe(PwDefs.PasswordField),
                                 kprConfig.CredVaultUseWindows ? "TERMSRV/" + Util.StripUrl(URL, true) : Util.StripUrl(URL, true),
                                 kprConfig.CredVaultUseWindows ? CredentialType.DomainPassword : CredentialType.Generic,
-                                Convert.ToInt32(kprConfig.CredVaultTimeout)
+                                Convert.ToInt32(kprConfig.CredVaultTtl)
                             );
 
                             // Then give the KprCredential to the CredentialManager for managing the Windows Vault.
