@@ -1,32 +1,37 @@
 ﻿using System;
-using System.Timers;
 using System.Collections.Generic;
+using System.Timers;
 
 namespace KeePassRDP
 {
     internal class CredentialManager
     {
-        private List<Credential> _credentials;
-        private Timer _timer = new Timer(1000);
+        private const int _interval = 1000;
 
         private List<KprCredential> _credentials = new List<KprCredential>();
+        private Timer _timer = new Timer(_interval);
+        private enum _ActionType
+        {
+            Add,
+            Remove
+        }
 
         public double TimerInterval
         {
             get { return _timer.Interval; }
             set { _timer.Interval = value; }
         }
-        public int CredentialCount {
-            get { return _credentials.Count; }
-        }
+        public int CredentialCount { get { return _credentials.Count; } }
 
-        public CredentialManager() { }
+        public CredentialManager() { _timer.Elapsed += OnTimer_Elapsed; }
         public CredentialManager(KprCredential credential)
         {
+            _timer.Elapsed += OnTimer_Elapsed;
             Add(credential);
         }
         public CredentialManager(List<KprCredential> credentials)
         {
+            _timer.Elapsed += OnTimer_Elapsed;
             Add(credentials);
         }
 

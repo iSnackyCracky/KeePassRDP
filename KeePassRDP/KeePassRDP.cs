@@ -17,7 +17,8 @@ namespace KeePassRDP
     public sealed class KeePassRDPExt : Plugin
     {
         private IPluginHost m_host = null;
-       
+        private CredentialManager _credManager = null;
+
         public override string UpdateUrl
         {
             get { return "https://raw.githubusercontent.com/iSnackyCracky/KeePassRDP/master/KeePassRDP.ver"; }
@@ -31,6 +32,8 @@ namespace KeePassRDP
 
             m_host.MainWindow.AddCustomToolBarButton(Util.ToolbarConnectBtnId, "💻", "Connect to entry via RDP using credentials.");
             m_host.TriggerSystem.RaisingEvent += TriggerSystem_RaisingEvent;
+
+            _credManager = new CredentialManager();
 
             return true;
         }
@@ -50,6 +53,7 @@ namespace KeePassRDP
 
         public override void Terminate()
         {
+            _credManager.RemoveAll();
             m_host.MainWindow.RemoveCustomToolBarButton(Util.ToolbarConnectBtnId);
         }
 
@@ -262,19 +266,23 @@ namespace KeePassRDP
                         var kprConfig = new KprConfig(m_host.CustomConfig);
 
                         var rdpProcess = new Process();
-                        CredentialManagement.Credential cred = null;
 
                         // if selected, save credentials into the Windows Credential Manager
-                        if (tmpUseCreds) {
+                        if (tmpUseCreds)
+                        {
 
-                            cred = new CredentialManagement.Credential
-                            {
-                                Username = connPwEntry.Strings.ReadSafe(PwDefs.UserNameField),
-                                Password = connPwEntry.Strings.ReadSafe(PwDefs.PasswordField),
-                                Target = kprConfig.CredVaultUseWindows ? "TERMSRV/" + StripUrl(URL, true) : StripUrl(URL, true),
-                                Type = kprConfig.CredVaultUseWindows ? CredentialType.DomainPassword : CredentialType.Generic
-                            };
-                            cred.Save();
+                            // First instantiate a new KprCredential object.
+                            var cred = new KprCredential(
+                                connPwEntry.Strings.ReadSafe(PwDefs.UserNameField),
+                                connPwEntry.Strings.ReadSafe(PwDefs.PasswordField),
+                                kprConfig.CredVaultUseWindows ? "TERMSRV/" + Util.StripUrl(URL, true) : Util.StripUrl(URL, true),
+                                kprConfig.CredVaultUseWindows ? CredentialType.DomainPassword : CredentialType.Generic,
+                                Convert.ToInt32(kprConfig.CredVaultTimeout)
+                            );
+
+                            // Then give the KprCredential to the CredentialManager for managing the Windows Vault.
+                            _credManager.Add(cred);
+
                             System.Threading.Thread.Sleep(300);
                         }
 
@@ -301,18 +309,6 @@ namespace KeePassRDP
                         }
                         rdpProcess.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
                         rdpProcess.Start();
-
-                        // remove credentials from Windows Credential Manger (after about 10 seconds)
-                        if (tmpUseCreds) {
-                            // create a timer to remove the credentials after a given time
-                            // could use System.Threading.Sleep, but this would halt the whole KeePass precess for its duration
-                            var t = new System.Timers.Timer {
-                                Interval = 9500, // timer triggers after 9.5 seconds
-                                AutoReset = false // timer should only trigger once
-                            };
-                            t.Elapsed += (sender, e) => TimerElapsed(sender, e, cred);
-                            t.Start(); // start the timer
-                        }
                     }
                 }
             }
@@ -341,7 +337,7 @@ namespace KeePassRDP
         }
 
 
-        private void TimerElapsed(object source, System.Timers.ElapsedEventArgs e, CredentialManagement.Credential cred)
+        private void TimerElapsed(object source, System.Timers.ElapsedEventArgs e, Credential cred)
         {
             cred.Delete();
         }
