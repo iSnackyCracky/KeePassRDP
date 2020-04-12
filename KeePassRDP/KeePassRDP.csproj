@@ -53,7 +53,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccountEntry.cs" />
-    <Compile Include="Credential.cs" />
     <Compile Include="CredentialManager.cs" />
     <Compile Include="CredentialPickerForm.cs">
       <SubType>Form</SubType>
@@ -63,6 +62,7 @@
     </Compile>
     <Compile Include="KeePassRDP.cs" />
     <Compile Include="KprConfig.cs" />
+    <Compile Include="KprCredential.cs" />
     <Compile Include="KPROptionsForm.cs">
       <SubType>Form</SubType>
     </Compile>
