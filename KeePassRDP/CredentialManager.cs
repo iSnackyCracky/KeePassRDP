@@ -70,7 +70,7 @@ namespace KeePassRDP
             ManageTimer(_ActionType.Remove);
         }
 
-        public void RemoveAll() { foreach (KprCredential cred in _credentials) { Remove(cred); } }
+        public void RemoveAll() { foreach (KprCredential cred in _credentials.FindAll(x => x.IsValid)) { Remove(cred); } }
 
         private void ManageTimer(_ActionType action) { _timer.Enabled = action == _ActionType.Add || CredentialCount > 0; }
 
