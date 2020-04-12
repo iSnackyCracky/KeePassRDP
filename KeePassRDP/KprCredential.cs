@@ -4,12 +4,14 @@ namespace KeePassRDP
 {
     public class KprCredential : CredentialManagement.Credential
     {
-        public Guid GUID { get; } = new Guid();
+        public Guid GUID { get; private set; }
         public int TTL { get; private set; }
-        public bool IsValid { get; private set; } = true;
+        public bool IsValid { get; private set; }
 
         public KprCredential(string username, string password, string target, CredentialManagement.CredentialType type, int ttl)
         {
+            GUID = new Guid();
+            IsValid = true;
             Username = username;
             Password = password;
             Target = target;
