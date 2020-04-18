@@ -9,6 +9,8 @@ namespace KeePassRDP
     public static class Util
     {
         public const string IgnoreEntryString = "rdpignore";
+        public const string DefaultCredPickRegExPre = "domain|domänen|local|lokaler|windows";
+        public const string DefaultCredPickRegExPost = "admin|user|administrator|benutzer|nutzer";
         public const string ToolbarConnectBtnId = "KprConnect";
 
         /// <summary>

@@ -18,6 +18,8 @@ namespace KeePassRDP
         const string CredPickerRememberSizeKey = "KPR_credPickerRememberSize";
         const string CredPickerWidthKey = "KPR_credPickerWidth";
         const string CredPickerHeightKey = "KPR_credPickerHeight";
+        const string CredPickerRegExPreKey = "KPR_credPickerRegExPrefix";
+        const string CredPickerRegExPostKey = "KPR_credPickerRegExPostfix";
 
         public KprConfig(AceCustomConfig config) { _config = config; }
 
@@ -91,6 +93,18 @@ namespace KeePassRDP
         {
             get { return _config.GetULong(CredPickerHeightKey, 467); }
             set { _config.SetULong(CredPickerHeightKey, value); }
+        }
+
+        public string CredPickerRegExPre
+        {
+            get { return _config.GetString(CredPickerRegExPreKey, Util.DefaultCredPickRegExPre); }
+            set { _config.SetString(CredPickerRegExPreKey, value); }
+        }
+
+        public string CredPickerRegExPost
+        {
+            get { return _config.GetString(CredPickerRegExPostKey, Util.DefaultCredPickRegExPost); }
+            set { _config.SetString(CredPickerRegExPostKey, value); }
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 namespace KeePassRDP
@@ -35,6 +36,8 @@ namespace KeePassRDP
             // set form elements to match previously saved options
             chkKeepassShowResolvedReferences.Checked = _config.KeePassShowResolvedReferences;
             chkCredPickRememberSize.Checked = _config.CredPickerRememberSize;
+            if (!string.IsNullOrWhiteSpace(_config.CredPickerRegExPre)) { lstRegExPre.Items.AddRange(_config.CredPickerRegExPre.Split('|')); }
+            if (!string.IsNullOrWhiteSpace(_config.CredPickerRegExPost)) { lstRegExPost.Items.AddRange(_config.CredPickerRegExPost.Split('|')); }
             chkCredVaultUseWindows.Checked = _config.CredVaultUseWindows;
             chkMstscUseFullscreen.Checked = _config.MstscUseFullscreen;
             chkMstscUseAdmin.Checked = _config.MstscUseAdmin;
@@ -99,6 +102,43 @@ namespace KeePassRDP
             _config.MstscUseMultimon = chkMstscUseMultimon.Checked;
             _config.MstscWidth = Convert.ToUInt64(numMstscWidth.Value);
             _config.MstscHeight = Convert.ToUInt64(numMstscHeight.Value);
+
+            var regExPre = new List<string>();
+            foreach (var item in lstRegExPre.Items) { regExPre.Add(item.ToString()); }
+            var regExPost = new List<string>();
+            foreach (var item in lstRegExPost.Items) { regExPost.Add(item.ToString()); }
+
+            _config.CredPickerRegExPre = string.Join("|", regExPre);
+            _config.CredPickerRegExPost = string.Join("|", regExPost);
         }
+
+        private void cmdRegExPreAdd_Click(object sender, EventArgs e)
+        {
+            lstRegExPre.Items.Add(txtRegExPre.Text);
+            txtRegExPre.Text = string.Empty;
+        }
+        private void cmdRegExPostAdd_Click(object sender, EventArgs e)
+        {
+            lstRegExPost.Items.Add(txtRegExPost.Text);
+            txtRegExPost.Text = string.Empty;
+        }
+
+        private void cmdRegExPreRemove_Click(object sender, EventArgs e) { for (int i = lstRegExPre.SelectedItems.Count - 1; i >= 0; i--) { lstRegExPre.Items.Remove(lstRegExPre.SelectedItems[i]); } }
+        private void cmdRegExPostRemove_Click(object sender, EventArgs e) { for (int i = lstRegExPost.SelectedItems.Count - 1; i >= 0; i--) { lstRegExPost.Items.Remove(lstRegExPost.SelectedItems[i]); } }
+
+        private void lstRegExPre_SelectedIndexChanged(object sender, EventArgs e) { cmdRegExPreRemove.Enabled = lstRegExPre.SelectedItems.Count > 0; }
+        private void lstRegExPost_SelectedIndexChanged(object sender, EventArgs e) { cmdRegExPostRemove.Enabled = lstRegExPost.SelectedItems.Count > 0; }
+
+        private void cmdRegExPreReset_Click(object sender, EventArgs e)
+        {
+            lstRegExPre.Items.Clear();
+            lstRegExPre.Items.AddRange(Util.DefaultCredPickRegExPre.Split('|'));
+        }
+        private void cmdRegExPostReset_Click(object sender, EventArgs e)
+        {
+            lstRegExPost.Items.Clear();
+            lstRegExPost.Items.AddRange(Util.DefaultCredPickRegExPost.Split('|'));
+        }
+
     }
 }

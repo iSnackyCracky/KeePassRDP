@@ -16,6 +16,7 @@ namespace KeePassRDP
     {
         private IPluginHost m_host = null;
         private CredentialManager _credManager = null;
+        private KprConfig _config = null;
 
         public override string UpdateUrl { get { return "https://raw.githubusercontent.com/iSnackyCracky/KeePassRDP/master/KeePassRDP.ver"; } }
 
@@ -29,6 +30,7 @@ namespace KeePassRDP
             m_host.TriggerSystem.RaisingEvent += TriggerSystem_RaisingEvent;
 
             _credManager = new CredentialManager();
+            _config = new KprConfig(m_host.CustomConfig);
 
             return true;
         }
@@ -113,7 +115,7 @@ namespace KeePassRDP
             return tsmi;
         }
 
-        private void OnKPROptions_Click(object sender, EventArgs e) { UIUtil.ShowDialogAndDestroy(new KPROptionsForm(new KprConfig(m_host.CustomConfig))); }
+        private void OnKPROptions_Click(object sender, EventArgs e) { UIUtil.ShowDialogAndDestroy(new KPROptionsForm(_config)); }
 
         private void OnOpenRDP_Click(object sender, EventArgs e) { ConnectRDPtoKeePassEntry(false, true); }
 
@@ -154,7 +156,7 @@ namespace KeePassRDP
                 if (rdpAccountEntries.UCount >= 1)
                 {
                     // create a selection dialog with the matching entries
-                    var frmCredPick = new CredentialPickerForm(new KprConfig(m_host.CustomConfig), m_host.Database)
+                    var frmCredPick = new CredentialPickerForm(_config, m_host.Database)
                     {
                         rdpAccountEntries = rdpAccountEntries,
                         connPE = pe
@@ -202,9 +204,7 @@ namespace KeePassRDP
                 string title = pe.Strings.ReadSafe(PwDefs.TitleField);
                 bool ignore = Util.IsEntryIgnored(pe);
 
-                string rePre = "(domain|domänen|local|lokaler|windows)";
-                string rePost = "(admin|user|administrator|benutzer|nutzer)";
-                string re = ".*" + rePre + ".*" + rePost + ".*";
+                string re = ".*(" + _config.CredPickerRegExPre + ").*(" + _config.CredPickerRegExPost + ").*";
 
                 if (!ignore && Regex.IsMatch(title, re, RegexOptions.IgnoreCase)) { rdpAccountEntries.Add(pe); }
             }
@@ -227,9 +227,6 @@ namespace KeePassRDP
 
                     if (!String.IsNullOrEmpty(URL))
                     {
-                        // instantiate config Object to get configured options
-                        var kprConfig = new KprConfig(m_host.CustomConfig);
-
                         var rdpProcess = new Process();
 
                         // if selected, save credentials into the Windows Credential Manager
@@ -240,9 +237,9 @@ namespace KeePassRDP
                             var cred = new KprCredential(
                                 connPwEntry.Strings.ReadSafe(PwDefs.UserNameField),
                                 connPwEntry.Strings.ReadSafe(PwDefs.PasswordField),
-                                kprConfig.CredVaultUseWindows ? "TERMSRV/" + Util.StripUrl(URL, true) : Util.StripUrl(URL, true),
-                                kprConfig.CredVaultUseWindows ? CredentialType.DomainPassword : CredentialType.Generic,
-                                Convert.ToInt32(kprConfig.CredVaultTtl)
+                                _config.CredVaultUseWindows ? "TERMSRV/" + Util.StripUrl(URL, true) : Util.StripUrl(URL, true),
+                                _config.CredVaultUseWindows ? CredentialType.DomainPassword : CredentialType.Generic,
+                                Convert.ToInt32(_config.CredVaultTtl)
                             );
 
                             // Then give the KprCredential to the CredentialManager for managing the Windows Vault.
@@ -254,12 +251,12 @@ namespace KeePassRDP
                         // start RDP / mstsc.exe
                         rdpProcess.StartInfo.FileName = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\mstsc.exe");
                         rdpProcess.StartInfo.Arguments = "/v:" + URL;
-                        if (tmpMstscUseAdmin || kprConfig.MstscUseAdmin) { rdpProcess.StartInfo.Arguments += " /admin"; }
-                        if (kprConfig.MstscUseFullscreen) { rdpProcess.StartInfo.Arguments += " /f"; }
-                        if (kprConfig.MstscUseSpan) { rdpProcess.StartInfo.Arguments += " /span"; }
-                        if (kprConfig.MstscUseMultimon) { rdpProcess.StartInfo.Arguments += " /multimon"; }
-                        if (kprConfig.MstscWidth > 0) { rdpProcess.StartInfo.Arguments += " /w:" + kprConfig.MstscWidth; }
-                        if (kprConfig.MstscHeight > 0) { rdpProcess.StartInfo.Arguments += " /h:" + kprConfig.MstscHeight; }
+                        if (tmpMstscUseAdmin || _config.MstscUseAdmin) { rdpProcess.StartInfo.Arguments += " /admin"; }
+                        if (_config.MstscUseFullscreen) { rdpProcess.StartInfo.Arguments += " /f"; }
+                        if (_config.MstscUseSpan) { rdpProcess.StartInfo.Arguments += " /span"; }
+                        if (_config.MstscUseMultimon) { rdpProcess.StartInfo.Arguments += " /multimon"; }
+                        if (_config.MstscWidth > 0) { rdpProcess.StartInfo.Arguments += " /w:" + _config.MstscWidth; }
+                        if (_config.MstscHeight > 0) { rdpProcess.StartInfo.Arguments += " /h:" + _config.MstscHeight; }
                         rdpProcess.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
                         rdpProcess.Start();
                     }
