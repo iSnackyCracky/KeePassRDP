@@ -11,7 +11,7 @@ using System.Resources;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("iSnackyCracky")]
 [assembly: AssemblyProduct("KeePass Plugin")]
-[assembly: AssemblyCopyright("Copyright ©2019")]
+[assembly: AssemblyCopyright("Copyright © 2018-2020 iSnackyCracky")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
