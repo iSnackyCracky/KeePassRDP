@@ -48,11 +48,39 @@
             this.numCredPickWidth = new System.Windows.Forms.NumericUpDown();
             this.chkKeepassShowResolvedReferences = new System.Windows.Forms.CheckBox();
             this.ttGeneralOptions = new System.Windows.Forms.ToolTip(this.components);
-            this.label1 = new System.Windows.Forms.Label();
+            this.lblCredVaultTtl = new System.Windows.Forms.Label();
             this.numCredVaultTtl = new System.Windows.Forms.NumericUpDown();
             this.chkCredVaultUseWindows = new System.Windows.Forms.CheckBox();
             this.ttCredentialOptions = new System.Windows.Forms.ToolTip(this.components);
             this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabGeneral = new System.Windows.Forms.TabPage();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.lblOpenRdpNoCredAdminShortcut = new System.Windows.Forms.Label();
+            this.chkOpenRdpNoCredAdminCtrl = new System.Windows.Forms.CheckBox();
+            this.chkOpenRdpNoCredAdminAlt = new System.Windows.Forms.CheckBox();
+            this.chkOpenRdpNoCredAdminShift = new System.Windows.Forms.CheckBox();
+            this.txtOpenRdpNoCredAdminKey = new System.Windows.Forms.TextBox();
+            this.txtOpenRdpNoCredKey = new System.Windows.Forms.TextBox();
+            this.txtOpenRdpAdminKey = new System.Windows.Forms.TextBox();
+            this.txtOpenRdpKey = new System.Windows.Forms.TextBox();
+            this.chkOpenRdpNoCredShift = new System.Windows.Forms.CheckBox();
+            this.chkOpenRdpNoCredAlt = new System.Windows.Forms.CheckBox();
+            this.chkOpenRdpNoCredCtrl = new System.Windows.Forms.CheckBox();
+            this.lblOpenRdpNoCredShortcut = new System.Windows.Forms.Label();
+            this.lblOpenRdpAdminShortcut = new System.Windows.Forms.Label();
+            this.chkOpenRdpAdminCtrl = new System.Windows.Forms.CheckBox();
+            this.chkOpenRdpAdminAlt = new System.Windows.Forms.CheckBox();
+            this.chkOpenRdpAdminShift = new System.Windows.Forms.CheckBox();
+            this.chkOpenRdpCtrl = new System.Windows.Forms.CheckBox();
+            this.chkOpenRdpAlt = new System.Windows.Forms.CheckBox();
+            this.chkOpenRdpShift = new System.Windows.Forms.CheckBox();
+            this.lblOpenRdpShortcut = new System.Windows.Forms.Label();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
+            this.label12 = new System.Windows.Forms.Label();
+            this.grpCredentialOptions = new System.Windows.Forms.GroupBox();
             this.tabCredPicker = new System.Windows.Forms.TabPage();
             this.cmdRegExPostReset = new System.Windows.Forms.Button();
             this.cmdRegExPreReset = new System.Windows.Forms.Button();
@@ -67,46 +95,18 @@
             this.txtRegExPre = new System.Windows.Forms.TextBox();
             this.lstRegExPre = new System.Windows.Forms.ListBox();
             this.tabMstsc = new System.Windows.Forms.TabPage();
-            this.tabGeneral = new System.Windows.Forms.TabPage();
-            this.grpCredentialOptions = new System.Windows.Forms.GroupBox();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.label4 = new System.Windows.Forms.Label();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
-            this.checkBox2 = new System.Windows.Forms.CheckBox();
-            this.checkBox3 = new System.Windows.Forms.CheckBox();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.label5 = new System.Windows.Forms.Label();
-            this.checkBox4 = new System.Windows.Forms.CheckBox();
-            this.checkBox5 = new System.Windows.Forms.CheckBox();
-            this.checkBox6 = new System.Windows.Forms.CheckBox();
-            this.textBox2 = new System.Windows.Forms.TextBox();
-            this.label6 = new System.Windows.Forms.Label();
-            this.checkBox7 = new System.Windows.Forms.CheckBox();
-            this.checkBox8 = new System.Windows.Forms.CheckBox();
-            this.checkBox9 = new System.Windows.Forms.CheckBox();
-            this.textBox3 = new System.Windows.Forms.TextBox();
-            this.label7 = new System.Windows.Forms.Label();
-            this.checkBox10 = new System.Windows.Forms.CheckBox();
-            this.checkBox11 = new System.Windows.Forms.CheckBox();
-            this.checkBox12 = new System.Windows.Forms.CheckBox();
-            this.textBox4 = new System.Windows.Forms.TextBox();
-            this.label9 = new System.Windows.Forms.Label();
-            this.label10 = new System.Windows.Forms.Label();
-            this.label11 = new System.Windows.Forms.Label();
-            this.label12 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.numMstscHeight)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numMstscWidth)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numCredPickHeight)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numCredPickWidth)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numCredVaultTtl)).BeginInit();
             this.tabControl1.SuspendLayout();
-            this.tabCredPicker.SuspendLayout();
-            this.tabMstsc.SuspendLayout();
             this.tabGeneral.SuspendLayout();
-            this.grpCredentialOptions.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
+            this.grpCredentialOptions.SuspendLayout();
+            this.tabCredPicker.SuspendLayout();
+            this.tabMstsc.SuspendLayout();
             this.SuspendLayout();
             // 
             // cmdCancel
@@ -288,15 +288,15 @@
             this.ttGeneralOptions.ReshowDelay = 100;
             this.ttGeneralOptions.ToolTipTitle = "General options";
             // 
-            // label1
+            // lblCredVaultTtl
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(6, 60);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(116, 20);
-            this.label1.TabIndex = 1;
-            this.label1.Text = "Credential TTL:";
-            this.ttCredentialOptions.SetToolTip(this.label1, "Specify duration the credentials reside in the Windows Vault (in seconds).");
+            this.lblCredVaultTtl.AutoSize = true;
+            this.lblCredVaultTtl.Location = new System.Drawing.Point(6, 60);
+            this.lblCredVaultTtl.Name = "lblCredVaultTtl";
+            this.lblCredVaultTtl.Size = new System.Drawing.Size(116, 20);
+            this.lblCredVaultTtl.TabIndex = 1;
+            this.lblCredVaultTtl.Text = "Credential TTL:";
+            this.ttCredentialOptions.SetToolTip(this.lblCredVaultTtl, "Specify duration the credentials reside in the Windows Vault (in seconds).");
             // 
             // numCredVaultTtl
             // 
@@ -353,6 +353,320 @@
             this.tabControl1.SelectedIndex = 0;
             this.tabControl1.Size = new System.Drawing.Size(534, 426);
             this.tabControl1.TabIndex = 0;
+            // 
+            // tabGeneral
+            // 
+            this.tabGeneral.Controls.Add(this.groupBox1);
+            this.tabGeneral.Controls.Add(this.grpCredentialOptions);
+            this.tabGeneral.Location = new System.Drawing.Point(4, 29);
+            this.tabGeneral.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.tabGeneral.Name = "tabGeneral";
+            this.tabGeneral.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.tabGeneral.Size = new System.Drawing.Size(526, 393);
+            this.tabGeneral.TabIndex = 2;
+            this.tabGeneral.Text = "General options";
+            this.tabGeneral.UseVisualStyleBackColor = true;
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.tableLayoutPanel1);
+            this.groupBox1.Location = new System.Drawing.Point(7, 114);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(512, 232);
+            this.groupBox1.TabIndex = 1;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Keyboard shortcuts";
+            // 
+            // tableLayoutPanel1
+            // 
+            this.tableLayoutPanel1.ColumnCount = 5;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 62.42171F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 12.5261F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 12.5261F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 12.5261F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.tableLayoutPanel1.Controls.Add(this.lblOpenRdpNoCredAdminShortcut, 0, 4);
+            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpNoCredAdminCtrl, 1, 4);
+            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpNoCredAdminAlt, 2, 4);
+            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpNoCredAdminShift, 3, 4);
+            this.tableLayoutPanel1.Controls.Add(this.txtOpenRdpNoCredAdminKey, 4, 4);
+            this.tableLayoutPanel1.Controls.Add(this.txtOpenRdpNoCredKey, 4, 3);
+            this.tableLayoutPanel1.Controls.Add(this.txtOpenRdpAdminKey, 4, 2);
+            this.tableLayoutPanel1.Controls.Add(this.txtOpenRdpKey, 4, 1);
+            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpNoCredShift, 3, 3);
+            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpNoCredAlt, 2, 3);
+            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpNoCredCtrl, 1, 3);
+            this.tableLayoutPanel1.Controls.Add(this.lblOpenRdpNoCredShortcut, 0, 3);
+            this.tableLayoutPanel1.Controls.Add(this.lblOpenRdpAdminShortcut, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpAdminCtrl, 1, 2);
+            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpAdminAlt, 2, 2);
+            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpAdminShift, 3, 2);
+            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpCtrl, 1, 1);
+            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpAlt, 2, 1);
+            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpShift, 3, 1);
+            this.tableLayoutPanel1.Controls.Add(this.lblOpenRdpShortcut, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.label9, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.label10, 2, 0);
+            this.tableLayoutPanel1.Controls.Add(this.label11, 3, 0);
+            this.tableLayoutPanel1.Controls.Add(this.label12, 4, 0);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(3, 22);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 5;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(506, 207);
+            this.tableLayoutPanel1.TabIndex = 0;
+            // 
+            // lblOpenRdpNoCredAdminShortcut
+            // 
+            this.lblOpenRdpNoCredAdminShortcut.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.lblOpenRdpNoCredAdminShortcut.AutoSize = true;
+            this.lblOpenRdpNoCredAdminShortcut.Location = new System.Drawing.Point(3, 162);
+            this.lblOpenRdpNoCredAdminShortcut.Name = "lblOpenRdpNoCredAdminShortcut";
+            this.lblOpenRdpNoCredAdminShortcut.Size = new System.Drawing.Size(230, 40);
+            this.lblOpenRdpNoCredAdminShortcut.TabIndex = 19;
+            this.lblOpenRdpNoCredAdminShortcut.Text = "Open RDP Connection without Credentials (/admin)";
+            // 
+            // chkOpenRdpNoCredAdminCtrl
+            // 
+            this.chkOpenRdpNoCredAdminCtrl.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.chkOpenRdpNoCredAdminCtrl.AutoSize = true;
+            this.chkOpenRdpNoCredAdminCtrl.Location = new System.Drawing.Point(263, 172);
+            this.chkOpenRdpNoCredAdminCtrl.Name = "chkOpenRdpNoCredAdminCtrl";
+            this.chkOpenRdpNoCredAdminCtrl.Size = new System.Drawing.Size(22, 21);
+            this.chkOpenRdpNoCredAdminCtrl.TabIndex = 20;
+            this.chkOpenRdpNoCredAdminCtrl.UseVisualStyleBackColor = true;
+            // 
+            // chkOpenRdpNoCredAdminAlt
+            // 
+            this.chkOpenRdpNoCredAdminAlt.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.chkOpenRdpNoCredAdminAlt.AutoSize = true;
+            this.chkOpenRdpNoCredAdminAlt.Location = new System.Drawing.Point(313, 172);
+            this.chkOpenRdpNoCredAdminAlt.Name = "chkOpenRdpNoCredAdminAlt";
+            this.chkOpenRdpNoCredAdminAlt.Size = new System.Drawing.Size(22, 21);
+            this.chkOpenRdpNoCredAdminAlt.TabIndex = 21;
+            this.chkOpenRdpNoCredAdminAlt.UseVisualStyleBackColor = true;
+            // 
+            // chkOpenRdpNoCredAdminShift
+            // 
+            this.chkOpenRdpNoCredAdminShift.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.chkOpenRdpNoCredAdminShift.AutoSize = true;
+            this.chkOpenRdpNoCredAdminShift.Location = new System.Drawing.Point(363, 172);
+            this.chkOpenRdpNoCredAdminShift.Name = "chkOpenRdpNoCredAdminShift";
+            this.chkOpenRdpNoCredAdminShift.Size = new System.Drawing.Size(22, 21);
+            this.chkOpenRdpNoCredAdminShift.TabIndex = 22;
+            this.chkOpenRdpNoCredAdminShift.UseVisualStyleBackColor = true;
+            // 
+            // txtOpenRdpNoCredAdminKey
+            // 
+            this.txtOpenRdpNoCredAdminKey.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.txtOpenRdpNoCredAdminKey.Location = new System.Drawing.Point(402, 169);
+            this.txtOpenRdpNoCredAdminKey.Name = "txtOpenRdpNoCredAdminKey";
+            this.txtOpenRdpNoCredAdminKey.Size = new System.Drawing.Size(100, 26);
+            this.txtOpenRdpNoCredAdminKey.TabIndex = 23;
+            // 
+            // txtOpenRdpNoCredKey
+            // 
+            this.txtOpenRdpNoCredKey.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.txtOpenRdpNoCredKey.Location = new System.Drawing.Point(402, 122);
+            this.txtOpenRdpNoCredKey.Name = "txtOpenRdpNoCredKey";
+            this.txtOpenRdpNoCredKey.Size = new System.Drawing.Size(100, 26);
+            this.txtOpenRdpNoCredKey.TabIndex = 18;
+            // 
+            // txtOpenRdpAdminKey
+            // 
+            this.txtOpenRdpAdminKey.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.txtOpenRdpAdminKey.Location = new System.Drawing.Point(402, 76);
+            this.txtOpenRdpAdminKey.Name = "txtOpenRdpAdminKey";
+            this.txtOpenRdpAdminKey.Size = new System.Drawing.Size(100, 26);
+            this.txtOpenRdpAdminKey.TabIndex = 13;
+            // 
+            // txtOpenRdpKey
+            // 
+            this.txtOpenRdpKey.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.txtOpenRdpKey.Location = new System.Drawing.Point(402, 30);
+            this.txtOpenRdpKey.Name = "txtOpenRdpKey";
+            this.txtOpenRdpKey.Size = new System.Drawing.Size(100, 26);
+            this.txtOpenRdpKey.TabIndex = 8;
+            // 
+            // chkOpenRdpNoCredShift
+            // 
+            this.chkOpenRdpNoCredShift.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.chkOpenRdpNoCredShift.AutoSize = true;
+            this.chkOpenRdpNoCredShift.Location = new System.Drawing.Point(363, 124);
+            this.chkOpenRdpNoCredShift.Name = "chkOpenRdpNoCredShift";
+            this.chkOpenRdpNoCredShift.Size = new System.Drawing.Size(22, 21);
+            this.chkOpenRdpNoCredShift.TabIndex = 17;
+            this.chkOpenRdpNoCredShift.UseVisualStyleBackColor = true;
+            // 
+            // chkOpenRdpNoCredAlt
+            // 
+            this.chkOpenRdpNoCredAlt.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.chkOpenRdpNoCredAlt.AutoSize = true;
+            this.chkOpenRdpNoCredAlt.Location = new System.Drawing.Point(313, 124);
+            this.chkOpenRdpNoCredAlt.Name = "chkOpenRdpNoCredAlt";
+            this.chkOpenRdpNoCredAlt.Size = new System.Drawing.Size(22, 21);
+            this.chkOpenRdpNoCredAlt.TabIndex = 16;
+            this.chkOpenRdpNoCredAlt.UseVisualStyleBackColor = true;
+            // 
+            // chkOpenRdpNoCredCtrl
+            // 
+            this.chkOpenRdpNoCredCtrl.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.chkOpenRdpNoCredCtrl.AutoSize = true;
+            this.chkOpenRdpNoCredCtrl.Location = new System.Drawing.Point(263, 124);
+            this.chkOpenRdpNoCredCtrl.Name = "chkOpenRdpNoCredCtrl";
+            this.chkOpenRdpNoCredCtrl.Size = new System.Drawing.Size(22, 21);
+            this.chkOpenRdpNoCredCtrl.TabIndex = 15;
+            this.chkOpenRdpNoCredCtrl.UseVisualStyleBackColor = true;
+            // 
+            // lblOpenRdpNoCredShortcut
+            // 
+            this.lblOpenRdpNoCredShortcut.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.lblOpenRdpNoCredShortcut.AutoSize = true;
+            this.lblOpenRdpNoCredShortcut.Location = new System.Drawing.Point(3, 115);
+            this.lblOpenRdpNoCredShortcut.Name = "lblOpenRdpNoCredShortcut";
+            this.lblOpenRdpNoCredShortcut.Size = new System.Drawing.Size(230, 40);
+            this.lblOpenRdpNoCredShortcut.TabIndex = 14;
+            this.lblOpenRdpNoCredShortcut.Text = "Open RDP Connection without credentials";
+            // 
+            // lblOpenRdpAdminShortcut
+            // 
+            this.lblOpenRdpAdminShortcut.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.lblOpenRdpAdminShortcut.AutoSize = true;
+            this.lblOpenRdpAdminShortcut.Location = new System.Drawing.Point(3, 79);
+            this.lblOpenRdpAdminShortcut.Name = "lblOpenRdpAdminShortcut";
+            this.lblOpenRdpAdminShortcut.Size = new System.Drawing.Size(232, 20);
+            this.lblOpenRdpAdminShortcut.TabIndex = 9;
+            this.lblOpenRdpAdminShortcut.Text = "Open RDP Connection (/admin)";
+            // 
+            // chkOpenRdpAdminCtrl
+            // 
+            this.chkOpenRdpAdminCtrl.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.chkOpenRdpAdminCtrl.AutoSize = true;
+            this.chkOpenRdpAdminCtrl.Location = new System.Drawing.Point(263, 78);
+            this.chkOpenRdpAdminCtrl.Name = "chkOpenRdpAdminCtrl";
+            this.chkOpenRdpAdminCtrl.Size = new System.Drawing.Size(22, 21);
+            this.chkOpenRdpAdminCtrl.TabIndex = 10;
+            this.chkOpenRdpAdminCtrl.UseVisualStyleBackColor = true;
+            // 
+            // chkOpenRdpAdminAlt
+            // 
+            this.chkOpenRdpAdminAlt.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.chkOpenRdpAdminAlt.AutoSize = true;
+            this.chkOpenRdpAdminAlt.Location = new System.Drawing.Point(313, 78);
+            this.chkOpenRdpAdminAlt.Name = "chkOpenRdpAdminAlt";
+            this.chkOpenRdpAdminAlt.Size = new System.Drawing.Size(22, 21);
+            this.chkOpenRdpAdminAlt.TabIndex = 11;
+            this.chkOpenRdpAdminAlt.UseVisualStyleBackColor = true;
+            // 
+            // chkOpenRdpAdminShift
+            // 
+            this.chkOpenRdpAdminShift.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.chkOpenRdpAdminShift.AutoSize = true;
+            this.chkOpenRdpAdminShift.Location = new System.Drawing.Point(363, 78);
+            this.chkOpenRdpAdminShift.Name = "chkOpenRdpAdminShift";
+            this.chkOpenRdpAdminShift.Size = new System.Drawing.Size(22, 21);
+            this.chkOpenRdpAdminShift.TabIndex = 12;
+            this.chkOpenRdpAdminShift.UseVisualStyleBackColor = true;
+            // 
+            // chkOpenRdpCtrl
+            // 
+            this.chkOpenRdpCtrl.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.chkOpenRdpCtrl.AutoSize = true;
+            this.chkOpenRdpCtrl.Location = new System.Drawing.Point(263, 32);
+            this.chkOpenRdpCtrl.Name = "chkOpenRdpCtrl";
+            this.chkOpenRdpCtrl.Size = new System.Drawing.Size(22, 21);
+            this.chkOpenRdpCtrl.TabIndex = 5;
+            this.chkOpenRdpCtrl.UseVisualStyleBackColor = true;
+            // 
+            // chkOpenRdpAlt
+            // 
+            this.chkOpenRdpAlt.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.chkOpenRdpAlt.AutoSize = true;
+            this.chkOpenRdpAlt.Location = new System.Drawing.Point(313, 32);
+            this.chkOpenRdpAlt.Name = "chkOpenRdpAlt";
+            this.chkOpenRdpAlt.Size = new System.Drawing.Size(22, 21);
+            this.chkOpenRdpAlt.TabIndex = 6;
+            this.chkOpenRdpAlt.UseVisualStyleBackColor = true;
+            // 
+            // chkOpenRdpShift
+            // 
+            this.chkOpenRdpShift.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.chkOpenRdpShift.AutoSize = true;
+            this.chkOpenRdpShift.Location = new System.Drawing.Point(363, 32);
+            this.chkOpenRdpShift.Name = "chkOpenRdpShift";
+            this.chkOpenRdpShift.Size = new System.Drawing.Size(22, 21);
+            this.chkOpenRdpShift.TabIndex = 7;
+            this.chkOpenRdpShift.UseVisualStyleBackColor = true;
+            // 
+            // lblOpenRdpShortcut
+            // 
+            this.lblOpenRdpShortcut.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.lblOpenRdpShortcut.AutoSize = true;
+            this.lblOpenRdpShortcut.Location = new System.Drawing.Point(3, 33);
+            this.lblOpenRdpShortcut.Name = "lblOpenRdpShortcut";
+            this.lblOpenRdpShortcut.Size = new System.Drawing.Size(171, 20);
+            this.lblOpenRdpShortcut.TabIndex = 4;
+            this.lblOpenRdpShortcut.Text = "Open RDP Connection";
+            // 
+            // label9
+            // 
+            this.label9.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(257, 0);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(33, 20);
+            this.label9.TabIndex = 0;
+            this.label9.Text = "Ctrl";
+            // 
+            // label10
+            // 
+            this.label10.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(310, 0);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(28, 20);
+            this.label10.TabIndex = 1;
+            this.label10.Text = "Alt";
+            // 
+            // label11
+            // 
+            this.label11.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(353, 0);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(42, 20);
+            this.label11.TabIndex = 2;
+            this.label11.Text = "Shift";
+            // 
+            // label12
+            // 
+            this.label12.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(402, 0);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(35, 20);
+            this.label12.TabIndex = 3;
+            this.label12.Text = "Key";
+            // 
+            // grpCredentialOptions
+            // 
+            this.grpCredentialOptions.Controls.Add(this.chkCredVaultUseWindows);
+            this.grpCredentialOptions.Controls.Add(this.lblCredVaultTtl);
+            this.grpCredentialOptions.Controls.Add(this.numCredVaultTtl);
+            this.grpCredentialOptions.Location = new System.Drawing.Point(7, 8);
+            this.grpCredentialOptions.Name = "grpCredentialOptions";
+            this.grpCredentialOptions.Size = new System.Drawing.Size(282, 100);
+            this.grpCredentialOptions.TabIndex = 0;
+            this.grpCredentialOptions.TabStop = false;
+            this.grpCredentialOptions.Text = "Credential options";
             // 
             // tabCredPicker
             // 
@@ -538,320 +852,6 @@
             this.tabMstsc.Text = "Mstsc options";
             this.tabMstsc.UseVisualStyleBackColor = true;
             // 
-            // tabGeneral
-            // 
-            this.tabGeneral.Controls.Add(this.groupBox1);
-            this.tabGeneral.Controls.Add(this.grpCredentialOptions);
-            this.tabGeneral.Location = new System.Drawing.Point(4, 29);
-            this.tabGeneral.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tabGeneral.Name = "tabGeneral";
-            this.tabGeneral.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tabGeneral.Size = new System.Drawing.Size(526, 393);
-            this.tabGeneral.TabIndex = 2;
-            this.tabGeneral.Text = "General options";
-            this.tabGeneral.UseVisualStyleBackColor = true;
-            // 
-            // grpCredentialOptions
-            // 
-            this.grpCredentialOptions.Controls.Add(this.chkCredVaultUseWindows);
-            this.grpCredentialOptions.Controls.Add(this.label1);
-            this.grpCredentialOptions.Controls.Add(this.numCredVaultTtl);
-            this.grpCredentialOptions.Location = new System.Drawing.Point(7, 8);
-            this.grpCredentialOptions.Name = "grpCredentialOptions";
-            this.grpCredentialOptions.Size = new System.Drawing.Size(282, 100);
-            this.grpCredentialOptions.TabIndex = 0;
-            this.grpCredentialOptions.TabStop = false;
-            this.grpCredentialOptions.Text = "Credential options";
-            // 
-            // groupBox1
-            // 
-            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox1.Controls.Add(this.tableLayoutPanel1);
-            this.groupBox1.Location = new System.Drawing.Point(7, 114);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(512, 232);
-            this.groupBox1.TabIndex = 1;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Keyboard shortcuts";
-            // 
-            // tableLayoutPanel1
-            // 
-            this.tableLayoutPanel1.ColumnCount = 5;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 62.42171F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 12.5261F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 12.5261F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 12.5261F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel1.Controls.Add(this.label7, 0, 4);
-            this.tableLayoutPanel1.Controls.Add(this.checkBox10, 1, 4);
-            this.tableLayoutPanel1.Controls.Add(this.checkBox11, 2, 4);
-            this.tableLayoutPanel1.Controls.Add(this.checkBox12, 3, 4);
-            this.tableLayoutPanel1.Controls.Add(this.textBox4, 4, 4);
-            this.tableLayoutPanel1.Controls.Add(this.textBox3, 4, 3);
-            this.tableLayoutPanel1.Controls.Add(this.textBox2, 4, 2);
-            this.tableLayoutPanel1.Controls.Add(this.textBox1, 4, 1);
-            this.tableLayoutPanel1.Controls.Add(this.checkBox9, 3, 3);
-            this.tableLayoutPanel1.Controls.Add(this.checkBox8, 2, 3);
-            this.tableLayoutPanel1.Controls.Add(this.checkBox7, 1, 3);
-            this.tableLayoutPanel1.Controls.Add(this.label6, 0, 3);
-            this.tableLayoutPanel1.Controls.Add(this.label5, 0, 2);
-            this.tableLayoutPanel1.Controls.Add(this.checkBox4, 1, 2);
-            this.tableLayoutPanel1.Controls.Add(this.checkBox5, 2, 2);
-            this.tableLayoutPanel1.Controls.Add(this.checkBox6, 3, 2);
-            this.tableLayoutPanel1.Controls.Add(this.checkBox1, 1, 1);
-            this.tableLayoutPanel1.Controls.Add(this.checkBox2, 2, 1);
-            this.tableLayoutPanel1.Controls.Add(this.checkBox3, 3, 1);
-            this.tableLayoutPanel1.Controls.Add(this.label4, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.label9, 1, 0);
-            this.tableLayoutPanel1.Controls.Add(this.label10, 2, 0);
-            this.tableLayoutPanel1.Controls.Add(this.label11, 3, 0);
-            this.tableLayoutPanel1.Controls.Add(this.label12, 4, 0);
-            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(3, 22);
-            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 5;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(506, 207);
-            this.tableLayoutPanel1.TabIndex = 0;
-            // 
-            // label4
-            // 
-            this.label4.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(3, 33);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(171, 20);
-            this.label4.TabIndex = 4;
-            this.label4.Text = "Open RDP Connection";
-            // 
-            // checkBox1
-            // 
-            this.checkBox1.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(263, 32);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(22, 21);
-            this.checkBox1.TabIndex = 5;
-            this.checkBox1.UseVisualStyleBackColor = true;
-            // 
-            // checkBox2
-            // 
-            this.checkBox2.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.checkBox2.AutoSize = true;
-            this.checkBox2.Location = new System.Drawing.Point(313, 32);
-            this.checkBox2.Name = "checkBox2";
-            this.checkBox2.Size = new System.Drawing.Size(22, 21);
-            this.checkBox2.TabIndex = 6;
-            this.checkBox2.UseVisualStyleBackColor = true;
-            // 
-            // checkBox3
-            // 
-            this.checkBox3.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.checkBox3.AutoSize = true;
-            this.checkBox3.Location = new System.Drawing.Point(363, 32);
-            this.checkBox3.Name = "checkBox3";
-            this.checkBox3.Size = new System.Drawing.Size(22, 21);
-            this.checkBox3.TabIndex = 7;
-            this.checkBox3.UseVisualStyleBackColor = true;
-            // 
-            // textBox1
-            // 
-            this.textBox1.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.textBox1.Location = new System.Drawing.Point(402, 30);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(100, 26);
-            this.textBox1.TabIndex = 8;
-            // 
-            // label5
-            // 
-            this.label5.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(3, 79);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(232, 20);
-            this.label5.TabIndex = 9;
-            this.label5.Text = "Open RDP Connection (/admin)";
-            // 
-            // checkBox4
-            // 
-            this.checkBox4.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.checkBox4.AutoSize = true;
-            this.checkBox4.Location = new System.Drawing.Point(263, 78);
-            this.checkBox4.Name = "checkBox4";
-            this.checkBox4.Size = new System.Drawing.Size(22, 21);
-            this.checkBox4.TabIndex = 10;
-            this.checkBox4.UseVisualStyleBackColor = true;
-            // 
-            // checkBox5
-            // 
-            this.checkBox5.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.checkBox5.AutoSize = true;
-            this.checkBox5.Location = new System.Drawing.Point(313, 78);
-            this.checkBox5.Name = "checkBox5";
-            this.checkBox5.Size = new System.Drawing.Size(22, 21);
-            this.checkBox5.TabIndex = 11;
-            this.checkBox5.UseVisualStyleBackColor = true;
-            // 
-            // checkBox6
-            // 
-            this.checkBox6.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.checkBox6.AutoSize = true;
-            this.checkBox6.Location = new System.Drawing.Point(363, 78);
-            this.checkBox6.Name = "checkBox6";
-            this.checkBox6.Size = new System.Drawing.Size(22, 21);
-            this.checkBox6.TabIndex = 12;
-            this.checkBox6.UseVisualStyleBackColor = true;
-            // 
-            // textBox2
-            // 
-            this.textBox2.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.textBox2.Location = new System.Drawing.Point(402, 76);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(100, 26);
-            this.textBox2.TabIndex = 13;
-            // 
-            // label6
-            // 
-            this.label6.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(3, 115);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(230, 40);
-            this.label6.TabIndex = 14;
-            this.label6.Text = "Open RDP Connection without credentials";
-            // 
-            // checkBox7
-            // 
-            this.checkBox7.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.checkBox7.AutoSize = true;
-            this.checkBox7.Location = new System.Drawing.Point(263, 124);
-            this.checkBox7.Name = "checkBox7";
-            this.checkBox7.Size = new System.Drawing.Size(22, 21);
-            this.checkBox7.TabIndex = 15;
-            this.checkBox7.UseVisualStyleBackColor = true;
-            // 
-            // checkBox8
-            // 
-            this.checkBox8.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.checkBox8.AutoSize = true;
-            this.checkBox8.Location = new System.Drawing.Point(313, 124);
-            this.checkBox8.Name = "checkBox8";
-            this.checkBox8.Size = new System.Drawing.Size(22, 21);
-            this.checkBox8.TabIndex = 16;
-            this.checkBox8.UseVisualStyleBackColor = true;
-            // 
-            // checkBox9
-            // 
-            this.checkBox9.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.checkBox9.AutoSize = true;
-            this.checkBox9.Location = new System.Drawing.Point(363, 124);
-            this.checkBox9.Name = "checkBox9";
-            this.checkBox9.Size = new System.Drawing.Size(22, 21);
-            this.checkBox9.TabIndex = 17;
-            this.checkBox9.UseVisualStyleBackColor = true;
-            // 
-            // textBox3
-            // 
-            this.textBox3.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.textBox3.Location = new System.Drawing.Point(402, 122);
-            this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(100, 26);
-            this.textBox3.TabIndex = 18;
-            // 
-            // label7
-            // 
-            this.label7.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(3, 162);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(230, 40);
-            this.label7.TabIndex = 19;
-            this.label7.Text = "Open RDP Connection without Credentials (/admin)";
-            // 
-            // checkBox10
-            // 
-            this.checkBox10.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.checkBox10.AutoSize = true;
-            this.checkBox10.Location = new System.Drawing.Point(263, 172);
-            this.checkBox10.Name = "checkBox10";
-            this.checkBox10.Size = new System.Drawing.Size(22, 21);
-            this.checkBox10.TabIndex = 20;
-            this.checkBox10.UseVisualStyleBackColor = true;
-            // 
-            // checkBox11
-            // 
-            this.checkBox11.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.checkBox11.AutoSize = true;
-            this.checkBox11.Location = new System.Drawing.Point(313, 172);
-            this.checkBox11.Name = "checkBox11";
-            this.checkBox11.Size = new System.Drawing.Size(22, 21);
-            this.checkBox11.TabIndex = 21;
-            this.checkBox11.UseVisualStyleBackColor = true;
-            // 
-            // checkBox12
-            // 
-            this.checkBox12.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.checkBox12.AutoSize = true;
-            this.checkBox12.Location = new System.Drawing.Point(363, 172);
-            this.checkBox12.Name = "checkBox12";
-            this.checkBox12.Size = new System.Drawing.Size(22, 21);
-            this.checkBox12.TabIndex = 22;
-            this.checkBox12.UseVisualStyleBackColor = true;
-            // 
-            // textBox4
-            // 
-            this.textBox4.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.textBox4.Location = new System.Drawing.Point(402, 169);
-            this.textBox4.Name = "textBox4";
-            this.textBox4.Size = new System.Drawing.Size(100, 26);
-            this.textBox4.TabIndex = 23;
-            // 
-            // label9
-            // 
-            this.label9.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(257, 0);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(33, 20);
-            this.label9.TabIndex = 0;
-            this.label9.Text = "Ctrl";
-            // 
-            // label10
-            // 
-            this.label10.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(310, 0);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(28, 20);
-            this.label10.TabIndex = 1;
-            this.label10.Text = "Alt";
-            // 
-            // label11
-            // 
-            this.label11.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(353, 0);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(42, 20);
-            this.label11.TabIndex = 2;
-            this.label11.Text = "Shift";
-            // 
-            // label12
-            // 
-            this.label12.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(402, 0);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(35, 20);
-            this.label12.TabIndex = 3;
-            this.label12.Text = "Key";
-            // 
             // KPROptionsForm
             // 
             this.AcceptButton = this.cmdOk;
@@ -873,16 +873,16 @@
             ((System.ComponentModel.ISupportInitialize)(this.numCredPickWidth)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numCredVaultTtl)).EndInit();
             this.tabControl1.ResumeLayout(false);
+            this.tabGeneral.ResumeLayout(false);
+            this.groupBox1.ResumeLayout(false);
+            this.tableLayoutPanel1.ResumeLayout(false);
+            this.tableLayoutPanel1.PerformLayout();
+            this.grpCredentialOptions.ResumeLayout(false);
+            this.grpCredentialOptions.PerformLayout();
             this.tabCredPicker.ResumeLayout(false);
             this.tabCredPicker.PerformLayout();
             this.tabMstsc.ResumeLayout(false);
             this.tabMstsc.PerformLayout();
-            this.tabGeneral.ResumeLayout(false);
-            this.grpCredentialOptions.ResumeLayout(false);
-            this.grpCredentialOptions.PerformLayout();
-            this.groupBox1.ResumeLayout(false);
-            this.tableLayoutPanel1.ResumeLayout(false);
-            this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -909,7 +909,7 @@
         private System.Windows.Forms.Label txtCredPickWidth;
         private System.Windows.Forms.NumericUpDown numCredPickWidth;
         private System.Windows.Forms.CheckBox chkCredPickRememberSize;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label lblCredVaultTtl;
         private System.Windows.Forms.NumericUpDown numCredVaultTtl;
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabCredPicker;
@@ -929,26 +929,26 @@
         private System.Windows.Forms.Button cmdRegExPreReset;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.CheckBox checkBox10;
-        private System.Windows.Forms.CheckBox checkBox11;
-        private System.Windows.Forms.CheckBox checkBox12;
-        private System.Windows.Forms.TextBox textBox4;
-        private System.Windows.Forms.TextBox textBox3;
-        private System.Windows.Forms.TextBox textBox2;
-        private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.CheckBox checkBox9;
-        private System.Windows.Forms.CheckBox checkBox8;
-        private System.Windows.Forms.CheckBox checkBox7;
-        private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.CheckBox checkBox4;
-        private System.Windows.Forms.CheckBox checkBox5;
-        private System.Windows.Forms.CheckBox checkBox6;
-        private System.Windows.Forms.CheckBox checkBox1;
-        private System.Windows.Forms.CheckBox checkBox2;
-        private System.Windows.Forms.CheckBox checkBox3;
-        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label lblOpenRdpNoCredAdminShortcut;
+        private System.Windows.Forms.CheckBox chkOpenRdpNoCredAdminCtrl;
+        private System.Windows.Forms.CheckBox chkOpenRdpNoCredAdminAlt;
+        private System.Windows.Forms.CheckBox chkOpenRdpNoCredAdminShift;
+        private System.Windows.Forms.TextBox txtOpenRdpNoCredAdminKey;
+        private System.Windows.Forms.TextBox txtOpenRdpNoCredKey;
+        private System.Windows.Forms.TextBox txtOpenRdpAdminKey;
+        private System.Windows.Forms.TextBox txtOpenRdpKey;
+        private System.Windows.Forms.CheckBox chkOpenRdpNoCredShift;
+        private System.Windows.Forms.CheckBox chkOpenRdpNoCredAlt;
+        private System.Windows.Forms.CheckBox chkOpenRdpNoCredCtrl;
+        private System.Windows.Forms.Label lblOpenRdpNoCredShortcut;
+        private System.Windows.Forms.Label lblOpenRdpAdminShortcut;
+        private System.Windows.Forms.CheckBox chkOpenRdpAdminCtrl;
+        private System.Windows.Forms.CheckBox chkOpenRdpAdminAlt;
+        private System.Windows.Forms.CheckBox chkOpenRdpAdminShift;
+        private System.Windows.Forms.CheckBox chkOpenRdpCtrl;
+        private System.Windows.Forms.CheckBox chkOpenRdpAlt;
+        private System.Windows.Forms.CheckBox chkOpenRdpShift;
+        private System.Windows.Forms.Label lblOpenRdpShortcut;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.Label label11;

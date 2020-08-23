@@ -41,6 +41,12 @@ namespace KeePassRDP
         const string CredPickerRegExPreKey = "KPR_credPickerRegExPrefix";
         const string CredPickerRegExPostKey = "KPR_credPickerRegExPostfix";
 
+        const string ShortcutOpenRdpConnectionKey = "KPR_shortcutOpenRdpConnection";
+        const string ShortcutOpenRdpConnectionAdminKey = "KPR_shortcutOpenRdpConnectionAdmin";
+        const string ShortcutOpenRdpConnectionNoCredKey = "KPR_shortcutOpenRdpConnectionNoCred";
+        const string ShortcutOpenRdpConnectionNoCredAdminKey = "KPR_shortcutOpenRdpConnectionNoCredAdmin";
+        const string ShortcutIgnoreCredentialsKey = "KPR_shortcutIgnoreCredentials";
+
         public KprConfig(AceCustomConfig config) { _config = config; }
 
         public bool KeePassShowResolvedReferences
@@ -125,6 +131,32 @@ namespace KeePassRDP
         {
             get { return _config.GetString(CredPickerRegExPostKey, Util.DefaultCredPickRegExPost); }
             set { _config.SetString(CredPickerRegExPostKey, value); }
+        }
+
+        public ulong ShortcutOpenRdpConnection
+        {
+            get { return _config.GetULong(ShortcutOpenRdpConnectionKey, KprMenu.DefaultOpenRdpConnectionShortcut); }
+            set { _config.SetULong(ShortcutOpenRdpConnectionKey, value); }
+        }
+        public ulong ShortcutOpenRdpConnectionAdmin
+        {
+            get { return _config.GetULong(ShortcutOpenRdpConnectionAdminKey, KprMenu.DefaultOpenRdpConnectionAdminShortcut); }
+            set { _config.SetULong(ShortcutOpenRdpConnectionAdminKey, value); }
+        }
+        public ulong ShortcutOpenRdpConnectionNoCred
+        {
+            get { return _config.GetULong(ShortcutOpenRdpConnectionNoCredKey, 0); }
+            set { _config.SetULong(ShortcutOpenRdpConnectionNoCredKey, value); }
+        }
+        public ulong ShortcutOpenRdpConnectionNoCredAdmin
+        {
+            get { return _config.GetULong(ShortcutOpenRdpConnectionNoCredAdminKey, 0); }
+            set { _config.SetULong(ShortcutOpenRdpConnectionNoCredAdminKey, value); }
+        }
+        public ulong ShortcutIgnoreCredentials
+        {
+            get { return _config.GetULong(ShortcutIgnoreCredentialsKey, 0); }
+            set { _config.SetULong(ShortcutIgnoreCredentialsKey, value); }
         }
     }
 }

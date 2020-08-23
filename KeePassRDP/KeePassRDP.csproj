@@ -72,6 +72,7 @@
     <Compile Include="KeePassRDP.cs" />
     <Compile Include="KprConfig.cs" />
     <Compile Include="KprCredential.cs" />
+    <Compile Include="KprMenu.cs" />
     <Compile Include="KPROptionsForm.cs">
       <SubType>Form</SubType>
     </Compile>

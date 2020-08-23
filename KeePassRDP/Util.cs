@@ -23,6 +23,7 @@ using KeePassLib;
 using KeePassLib.Security;
 using System;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 
 namespace KeePassRDP
 {
@@ -120,6 +121,12 @@ namespace KeePassRDP
                 // So set the CustomField with "true" value.
                 pe.Strings.Set(IgnoreEntryString, pTrue);
             }
+        }
+
+        public static int ConvertStringToKeys(string shortcut)
+        {
+            var conv = new KeysConverter();
+            return (int)conv.ConvertFromInvariantString(shortcut);
         }
     }
 }

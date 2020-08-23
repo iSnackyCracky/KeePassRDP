@@ -87,9 +87,9 @@ namespace KeePassRDP
                 // add the OpenRDP menu entry
                 var tsmiOpenRDP = new ToolStripMenuItem
                 {
-                    ShortcutKeys = Keys.Control | Keys.M,
+                    ShortcutKeys = KprMenu.GetShortcut(KprMenu.MenuItem.OpenRdpConnection, _config),
                     ShowShortcutKeys = true,
-                    Text = "Open RDP connection"
+                    Text = KprMenu.GetText(KprMenu.MenuItem.OpenRdpConnection)
                 };
                 tsmiOpenRDP.Click += OnOpenRDP_Click;
                 tsmi.DropDownItems.Add(tsmiOpenRDP);
@@ -97,25 +97,40 @@ namespace KeePassRDP
                 // add the OpenRDPAdmin menu entry
                 var tsmiOpenRDPAdmin = new ToolStripMenuItem
                 {
-                    ShortcutKeys = Keys.Control | Keys.Alt | Keys.M,
+                    ShortcutKeys = KprMenu.GetShortcut(KprMenu.MenuItem.OpenRdpConnectionAdmin, _config),
                     ShowShortcutKeys = true,
-                    Text = "Open RDP connection (/admin)"
+                    Text = KprMenu.GetText(KprMenu.MenuItem.OpenRdpConnectionAdmin)
                 };
                 tsmiOpenRDPAdmin.Click += OnOpenRDPAdmin_Click;
                 tsmi.DropDownItems.Add(tsmiOpenRDPAdmin);
 
                 // add the OpenRDPNoCred menu entry
-                var tsmiOpenRDPNoCred = new ToolStripMenuItem("Open RDP connection without credentials");
+                var tsmiOpenRDPNoCred = new ToolStripMenuItem
+                {
+                    ShortcutKeys = KprMenu.GetShortcut(KprMenu.MenuItem.OpenRdpConnectionNoCred, _config),
+                    ShowShortcutKeys = true,
+                    Text = KprMenu.GetText(KprMenu.MenuItem.OpenRdpConnectionNoCred)
+                };
                 tsmiOpenRDPNoCred.Click += OnOpenRDPNoCred_Click;
                 tsmi.DropDownItems.Add(tsmiOpenRDPNoCred);
 
                 // add the OpenRDPNoCredAdmin menu entry
-                var tsmiOpenRDPNoCredAdmin = new ToolStripMenuItem("Open RDP connection without credentials (/admin)");
+                var tsmiOpenRDPNoCredAdmin = new ToolStripMenuItem
+                {
+                    ShortcutKeys = KprMenu.GetShortcut(KprMenu.MenuItem.OpenRdpConnectionNoCredAdmin, _config),
+                    ShowShortcutKeys = true,
+                    Text = KprMenu.GetText(KprMenu.MenuItem.OpenRdpConnectionNoCredAdmin)
+                };
                 tsmiOpenRDPNoCredAdmin.Click += OnOpenRDPNoCredAdmin_Click;
                 tsmi.DropDownItems.Add(tsmiOpenRDPNoCredAdmin);
 
                 // add the IgnoreCredEntry menu entry
-                var tsmiIgnoreCredEntry = new ToolStripMenuItem("Ignore these credentials");
+                var tsmiIgnoreCredEntry = new ToolStripMenuItem
+                {
+                    ShortcutKeys = KprMenu.GetShortcut(KprMenu.MenuItem.IgnoreCredentials, _config),
+                    ShowShortcutKeys = true,
+                    Text = KprMenu.GetText(KprMenu.MenuItem.IgnoreCredentials)
+                };
                 tsmiIgnoreCredEntry.Click += OnIgnoreCredEntry_Click;
                 tsmi.DropDownItems.Add(tsmiIgnoreCredEntry);
 
@@ -128,7 +143,7 @@ namespace KeePassRDP
             else if (t == PluginMenuType.Main)
             {
                 // create the main menu options item
-                tsmi = new ToolStripMenuItem("KeePassRDP Options");
+                tsmi = new ToolStripMenuItem(KprMenu.GetText(KprMenu.MenuItem.Options));
                 tsmi.Click += OnKPROptions_Click;
             }
 
