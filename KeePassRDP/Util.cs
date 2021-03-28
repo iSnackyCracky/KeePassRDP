@@ -22,6 +22,7 @@ using KeePass.Util.Spr;
 using KeePassLib;
 using KeePassLib.Security;
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
@@ -30,6 +31,8 @@ namespace KeePassRDP
     public static class Util
     {
         public const string IgnoreEntryString = "rdpignore";
+        public const string KprCpIgnoreField = IgnoreEntryString;
+        public const string KprEntrySettingsField = "KeePassRDP Settings";
         public const string DefaultCredPickRegExPre = "domain|domänen|local|lokaler|windows";
         public const string DefaultCredPickRegExPost = "admin|user|administrator|benutzer|nutzer";
         public const string ToolbarConnectBtnId = "KprConnect";
@@ -58,6 +61,16 @@ namespace KeePassRDP
             return SprEngine.Compile(pe.Strings.ReadSafe(field), ctx);
         }
 
+        public static PwEntry GetResolvedReferencesEntry(PwEntry pe, PwDatabase pd)
+        {
+            var retPE = new PwEntry(false, false);
+            retPE.Strings.Set(PwDefs.UserNameField, new ProtectedString(false, Util.ResolveReferences(pe, pd, PwDefs.UserNameField)));
+            retPE.Strings.Set(PwDefs.PasswordField, new ProtectedString(true, Util.ResolveReferences(pe, pd, PwDefs.PasswordField)));
+            retPE.Strings.Set(PwDefs.UrlField, new ProtectedString(false, Util.ResolveReferences(pe, pd, PwDefs.UrlField)));
+
+            return retPE;
+        }
+
         /// <summary>
         /// Checks if a given PwEntry has the "rdpignore-flag" set
         /// </summary>
@@ -66,7 +79,7 @@ namespace KeePassRDP
         public static bool IsEntryIgnored(PwEntry pe)
         {
             // Does a CustomField "rdpignore" exist and is the value NOT set to "false"?
-            if (pe.Strings.Exists(IgnoreEntryString) && !(pe.Strings.ReadSafe(IgnoreEntryString).ToLower() == Boolean.FalseString.ToLower())) { return true; }
+            if (pe.Strings.Exists(KprCpIgnoreField) && !(pe.Strings.ReadSafe(KprCpIgnoreField).ToLower() == Boolean.FalseString.ToLower())) { return true; }
             // Does the entry title contain "[rdpignore]"?
             else if (Regex.IsMatch(pe.Strings.ReadSafe(PwDefs.TitleField), ".*\\[" + IgnoreEntryString + "\\].*", RegexOptions.IgnoreCase)) { return true; }
             else { return false; }
@@ -102,11 +115,11 @@ namespace KeePassRDP
             var pFalse = new ProtectedString(false, Boolean.FalseString.ToLower());
 
             // Does a CustomField "rdpignore" exist?
-            if (pe.Strings.Exists(IgnoreEntryString))
+            if (pe.Strings.Exists(KprCpIgnoreField))
             {
                 // Is the CustomField value set to "false"?
-                if (pe.Strings.ReadSafe(IgnoreEntryString).ToLower() == Boolean.FalseString.ToLower()) { pe.Strings.Set(IgnoreEntryString, pTrue); }
-                else { pe.Strings.Set(IgnoreEntryString, pFalse); }
+                if (pe.Strings.ReadSafe(KprCpIgnoreField).ToLower() == Boolean.FalseString.ToLower()) { pe.Strings.Set(KprCpIgnoreField, pTrue); }
+                else { pe.Strings.Set(KprCpIgnoreField, pFalse); }
             }
             // Does the entry title contain "[rdpignore]"?
             else if (Regex.IsMatch(pe.Strings.ReadSafe(PwDefs.TitleField), ".*\\[" + IgnoreEntryString + "\\].*", RegexOptions.IgnoreCase))
@@ -119,7 +132,7 @@ namespace KeePassRDP
             else
             {
                 // So set the CustomField with "true" value.
-                pe.Strings.Set(IgnoreEntryString, pTrue);
+                pe.Strings.Set(KprCpIgnoreField, pTrue);
             }
         }
 
