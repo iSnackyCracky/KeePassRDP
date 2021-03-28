@@ -24,8 +24,10 @@ using KeePass.Plugins;
 using KeePass.UI;
 using KeePassLib;
 using KeePassLib.Collections;
-using KeePassLib.Security;
+using KeePassLib.Utility;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -171,73 +173,6 @@ namespace KeePassRDP
             }
         }
 
-        private PwEntry SelectCred(PwEntry pe)
-        {
-            var retPE = new PwEntry(true, true);
-
-            // if selected entry is in a subgroup called "RDP", specified entries get collected and showed to the user for selection (see the RegEx in GetRdpAccountEntries)
-            if (Util.InRdpSubgroup(pe))
-            {
-                // rdpPG is the parent-group of the "RDP" group
-                PwGroup rdpPG = pe.ParentGroup.ParentGroup;
-
-                // create PwObjectList with all matching entries directly inside the rdpPG
-                PwObjectList<PwEntry> rdpAccountEntries = GetRdpAccountEntries(rdpPG);
-
-                // extend the rdpAccountEntries list with matching entries in 1-level-subgroups of rdpPG
-                foreach (PwGroup subPwG in rdpPG.Groups) { rdpAccountEntries.Add(GetRdpAccountEntries(subPwG)); }
-
-                // if matching entries were found...
-                if (rdpAccountEntries.UCount >= 1)
-                {
-                    // create a selection dialog with the matching entries
-                    var frmCredPick = new CredentialPickerForm(_config, m_host.Database)
-                    {
-                        rdpAccountEntries = rdpAccountEntries,
-                        connPE = pe
-                    };
-
-                    // show the dialog and get the result
-                    var res = frmCredPick.ShowDialog();
-                    if (res == System.Windows.Forms.DialogResult.OK)
-                    {
-                        // use the selected PwEntry and reset the selected value of the dialog
-                        retPE = frmCredPick.returnPE;
-                        UIUtil.DestroyForm(frmCredPick);
-                    }
-                    else
-                    {
-                        retPE = null;
-                        UIUtil.DestroyForm(frmCredPick);
-                    }
-                }
-                // if no matching entries were found...
-                else
-                {
-                    // fall back to using the currently selected entry
-                    retPE.Strings.Set(PwDefs.UserNameField, pe.Strings.GetSafe(PwDefs.UserNameField));
-                    retPE.Strings.Set(PwDefs.PasswordField, pe.Strings.GetSafe(PwDefs.PasswordField));
-                    retPE.Strings.Set(PwDefs.UrlField, pe.Strings.GetSafe(PwDefs.UrlField));
-                }
-            }
-            else
-            {
-                retPE.Strings.Set(PwDefs.UserNameField, pe.Strings.GetSafe(PwDefs.UserNameField));
-                retPE.Strings.Set(PwDefs.PasswordField, pe.Strings.GetSafe(PwDefs.PasswordField));
-                retPE.Strings.Set(PwDefs.UrlField, pe.Strings.GetSafe(PwDefs.UrlField));
-            }
-
-            if (!(retPE == null))
-            {
-                // resolve References in entry fields
-                retPE.Strings.Set(PwDefs.UserNameField, new ProtectedString(false, Util.ResolveReferences(retPE, m_host.Database, PwDefs.UserNameField)));
-                retPE.Strings.Set(PwDefs.PasswordField, new ProtectedString(true, Util.ResolveReferences(retPE, m_host.Database, PwDefs.PasswordField)));
-                retPE.Strings.Set(PwDefs.UrlField, new ProtectedString(false, Util.ResolveReferences(retPE, m_host.Database, PwDefs.UrlField)));
-            }
-
-            return retPE;
-        }
-
         private PwObjectList<PwEntry> GetRdpAccountEntries(PwGroup pwg)
         {
             // create PwObjectList and fill it with matching entries
@@ -254,13 +189,72 @@ namespace KeePassRDP
             return rdpAccountEntries;
         }
 
+        private PwEntry SelectCred(PwEntry pe)
+        {
+            PwEntry entry = null;
+
+            var entrySettingsString = pe.Strings.ReadSafe(Util.KprEntrySettingsField);
+            var entrySettings = JsonConvert.DeserializeObject<KprEntrySettings>(entrySettingsString);
+
+            var cpGroups = new PwObjectList<PwGroup>();
+            var cpGroupUUIDs = new List<byte[]>();
+
+
+            if (Util.InRdpSubgroup(pe)) { cpGroupUUIDs.Add(pe.ParentGroup.ParentGroup.Uuid.UuidBytes); }
+            if (entrySettings != null && entrySettings.CpGroupUUIDs.Count >= 1)
+            {
+                foreach (string uuidString in entrySettings.CpGroupUUIDs)
+                {
+                    byte[] uuidBytes = MemUtil.HexStringToByteArray(uuidString);
+                    if (uuidBytes != null && !cpGroupUUIDs.Contains(uuidBytes)) { cpGroupUUIDs.Add(uuidBytes); }
+                }
+            }
+
+            if (cpGroupUUIDs.Count >= 1)
+            {
+                foreach (byte[] groupUUID in cpGroupUUIDs)
+                {
+                    var group = m_host.Database.RootGroup.FindGroup(new PwUuid(groupUUID), true);
+                    if (group != null) { cpGroups.Add(group); }
+                }
+            }
+
+            if (cpGroups.UCount >= 1)
+            {
+                var rdpAccountEntries = new PwObjectList<PwEntry>();
+                foreach (PwGroup cpGroup in cpGroups)
+                {
+                    rdpAccountEntries.Add(GetRdpAccountEntries(cpGroup));
+                }
+
+                var frmCredPick = new CredentialPickerForm(_config, m_host.Database)
+                {
+                    connPE = pe,
+                    rdpAccountEntries = rdpAccountEntries
+                };
+
+                var res = frmCredPick.ShowDialog();
+                if (res == System.Windows.Forms.DialogResult.OK)
+                {
+                    entry = frmCredPick.returnPE;
+                    UIUtil.DestroyForm(frmCredPick);
+                }
+                else { UIUtil.DestroyForm(frmCredPick); }
+            }
+            else { entry = pe; }
+
+            if (entry != null) { entry = Util.GetResolvedReferencesEntry(pe, m_host.Database); }
+
+            return entry;
+        }
+
         private void ConnectRDPtoKeePassEntry(bool tmpMstscUseAdmin = false, bool tmpUseCreds = false)
         {
             if (IsValid(m_host))
             {
                 // get selected entry for connection
                 var connPwEntry = m_host.MainWindow.GetSelectedEntry(true, true);
-                string URL = Util.StripUrl(connPwEntry.Strings.ReadSafe(PwDefs.UrlField));
+                string URL = Util.StripUrl(Util.ResolveReferences(connPwEntry, m_host.Database, PwDefs.UrlField));
 
                 if (string.IsNullOrEmpty(URL))
                 {
