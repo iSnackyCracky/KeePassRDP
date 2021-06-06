@@ -134,6 +134,8 @@ namespace KeePassRDP
                 // So set the CustomField with "true" value.
                 pe.Strings.Set(KprCpIgnoreField, pTrue);
             }
+            // Touch the entry to update "last modified" for synchronization.
+            pe.Touch(true, false);
         }
 
         public static int ConvertStringToKeys(string shortcut)
