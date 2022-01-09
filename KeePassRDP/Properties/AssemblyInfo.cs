@@ -19,6 +19,6 @@ using System.Resources;
 [assembly: Guid("404935cb-8f30-4801-a3e6-6a88ad963544")]
 
 // Version informationr(
-[assembly: AssemblyVersion("1.13.0.259")]
-[assembly: AssemblyFileVersion("1.13.0.259")]
+[assembly: AssemblyVersion("1.13.0.294")]
+[assembly: AssemblyFileVersion("1.13.0.294")]
 

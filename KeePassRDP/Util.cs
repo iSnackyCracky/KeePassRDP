@@ -21,8 +21,8 @@
 using KeePass.Util.Spr;
 using KeePassLib;
 using KeePassLib.Security;
+using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
@@ -36,6 +36,11 @@ namespace KeePassRDP
         public const string DefaultCredPickRegExPre = "domain|domänen|local|lokaler|windows";
         public const string DefaultCredPickRegExPost = "admin|user|administrator|benutzer|nutzer";
         public const string ToolbarConnectBtnId = "KprConnect";
+
+        public static JsonSerializerSettings jsonSerializerSettings = new JsonSerializerSettings()
+        {
+            DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate,
+        };
 
         /// <summary>
         /// Checks if the ParentGroup of a PwEntry is named "RDP".
@@ -78,11 +83,10 @@ namespace KeePassRDP
         /// <returns></returns>
         public static bool IsEntryIgnored(PwEntry pe)
         {
+            var entrySettings = GetEntrySettings(pe);
             // Does a CustomField "rdpignore" exist and is the value NOT set to "false"?
             if (pe.Strings.Exists(KprCpIgnoreField) && !(pe.Strings.ReadSafe(KprCpIgnoreField).ToLower() == Boolean.FalseString.ToLower())) { return true; }
-            // Does the entry title contain "[rdpignore]"?
-            else if (Regex.IsMatch(pe.Strings.ReadSafe(PwDefs.TitleField), ".*\\[" + IgnoreEntryString + "\\].*", RegexOptions.IgnoreCase)) { return true; }
-            else { return false; }
+            else { return entrySettings.Ignore; }
         }
 
         /// <summary>
@@ -104,6 +108,18 @@ namespace KeePassRDP
             return text;
         }
 
+        /// <summary>
+        /// Retrieves the KprEntrySettings of a given entry.
+        /// </summary>
+        /// <param name="pe"></param>
+        /// <returns></returns>
+        public static KprEntrySettings GetEntrySettings(PwEntry pe)
+        {
+            var entrySettingsString = pe.Strings.ReadSafe(Util.KprEntrySettingsField);
+            var entrySettings = JsonConvert.DeserializeObject<KprEntrySettings>(entrySettingsString, jsonSerializerSettings);
+            if (entrySettings == null) { entrySettings = new KprEntrySettings(); }
+            return entrySettings;
+        }
 
         /// <summary>
         /// Toggles the "rdpignore-flag" of a given PwEntry
@@ -111,30 +127,27 @@ namespace KeePassRDP
         /// <param name="pe"></param>
         public static void ToggleEntryIgnored(PwEntry pe)
         {
-            var pTrue = new ProtectedString(false, Boolean.TrueString.ToLower());
-            var pFalse = new ProtectedString(false, Boolean.FalseString.ToLower());
+            var entrySettings = GetEntrySettings(pe);
 
             // Does a CustomField "rdpignore" exist?
             if (pe.Strings.Exists(KprCpIgnoreField))
             {
                 // Is the CustomField value set to "false"?
-                if (pe.Strings.ReadSafe(KprCpIgnoreField).ToLower() == Boolean.FalseString.ToLower()) { pe.Strings.Set(KprCpIgnoreField, pTrue); }
-                else { pe.Strings.Set(KprCpIgnoreField, pFalse); }
+                if (pe.Strings.ReadSafe(KprCpIgnoreField).ToLower() == Boolean.FalseString.ToLower())
+                {
+                    entrySettings.Ignore = true;
+                    pe.Strings.Remove(KprCpIgnoreField);
+                }
+                else
+                {
+                    entrySettings.Ignore = false;
+                    pe.Strings.Remove(KprCpIgnoreField);
+                }
             }
-            // Does the entry title contain "[rdpignore]"?
-            else if (Regex.IsMatch(pe.Strings.ReadSafe(PwDefs.TitleField), ".*\\[" + IgnoreEntryString + "\\].*", RegexOptions.IgnoreCase))
-            {
-                // Then remove the flag from the title.
-                string newTitle = Regex.Replace(pe.Strings.ReadSafe(PwDefs.TitleField), "\\[" + IgnoreEntryString + "\\]", "", RegexOptions.IgnoreCase);
-                pe.Strings.Set(PwDefs.TitleField, new ProtectedString(false, newTitle));
-            }
-            // Else the entry currently has no "rdpignore-flags" set
-            else
-            {
-                // So set the CustomField with "true" value.
-                pe.Strings.Set(KprCpIgnoreField, pTrue);
-            }
-            // Touch the entry to update "last modified" for synchronization.
+            // Else the entry currently has no "rdpignore-flags" set, so just toggle the entrySetting
+            else { entrySettings.Ignore = !entrySettings.Ignore; }
+
+            pe.Strings.Set(KprEntrySettingsField, entrySettings.ToProtectedJsonString());
             pe.Touch(true, false);
         }
 

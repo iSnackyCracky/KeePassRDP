@@ -23,11 +23,8 @@ using KeePass.Ecas;
 using KeePass.Plugins;
 using KeePass.UI;
 using KeePassLib;
-using KeePassLib.Collections;
-using KeePassLib.Security;
 using System;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace KeePassRDP
@@ -173,85 +170,19 @@ namespace KeePassRDP
 
         private PwEntry SelectCred(PwEntry pe)
         {
-            var retPE = new PwEntry(true, true);
+            var entrySettings = Util.GetEntrySettings(pe);
 
-            // if selected entry is in a subgroup called "RDP", specified entries get collected and showed to the user for selection (see the RegEx in GetRdpAccountEntries)
-            if (Util.InRdpSubgroup(pe))
+            PwEntry entry;
+            if ((Util.InRdpSubgroup(pe) || entrySettings.CpGroupUUIDs.Count >= 1) && entrySettings.UseCredpicker)
             {
-                // rdpPG is the parent-group of the "RDP" group
-                PwGroup rdpPG = pe.ParentGroup.ParentGroup;
-
-                // create PwObjectList with all matching entries directly inside the rdpPG
-                PwObjectList<PwEntry> rdpAccountEntries = GetRdpAccountEntries(rdpPG);
-
-                // extend the rdpAccountEntries list with matching entries in 1-level-subgroups of rdpPG
-                foreach (PwGroup subPwG in rdpPG.Groups) { rdpAccountEntries.Add(GetRdpAccountEntries(subPwG)); }
-
-                // if matching entries were found...
-                if (rdpAccountEntries.UCount >= 1)
-                {
-                    // create a selection dialog with the matching entries
-                    var frmCredPick = new CredentialPickerForm(_config, m_host.Database)
-                    {
-                        rdpAccountEntries = rdpAccountEntries,
-                        connPE = pe
-                    };
-
-                    // show the dialog and get the result
-                    var res = frmCredPick.ShowDialog();
-                    if (res == System.Windows.Forms.DialogResult.OK)
-                    {
-                        // use the selected PwEntry and reset the selected value of the dialog
-                        retPE = frmCredPick.returnPE;
-                        UIUtil.DestroyForm(frmCredPick);
-                    }
-                    else
-                    {
-                        retPE = null;
-                        UIUtil.DestroyForm(frmCredPick);
-                    }
-                }
-                // if no matching entries were found...
-                else
-                {
-                    // fall back to using the currently selected entry
-                    retPE.Strings.Set(PwDefs.UserNameField, pe.Strings.GetSafe(PwDefs.UserNameField));
-                    retPE.Strings.Set(PwDefs.PasswordField, pe.Strings.GetSafe(PwDefs.PasswordField));
-                    retPE.Strings.Set(PwDefs.UrlField, pe.Strings.GetSafe(PwDefs.UrlField));
-                }
+                var credPick = new CredentialPicker(pe, entrySettings, m_host.Database, _config);
+                entry = credPick.GetCredentialEntry();
             }
-            else
-            {
-                retPE.Strings.Set(PwDefs.UserNameField, pe.Strings.GetSafe(PwDefs.UserNameField));
-                retPE.Strings.Set(PwDefs.PasswordField, pe.Strings.GetSafe(PwDefs.PasswordField));
-                retPE.Strings.Set(PwDefs.UrlField, pe.Strings.GetSafe(PwDefs.UrlField));
-            }
+            else { entry = pe; }
 
-            if (!(retPE == null))
-            {
-                // resolve References in entry fields
-                retPE.Strings.Set(PwDefs.UserNameField, new ProtectedString(false, Util.ResolveReferences(retPE, m_host.Database, PwDefs.UserNameField)));
-                retPE.Strings.Set(PwDefs.PasswordField, new ProtectedString(true, Util.ResolveReferences(retPE, m_host.Database, PwDefs.PasswordField)));
-                retPE.Strings.Set(PwDefs.UrlField, new ProtectedString(false, Util.ResolveReferences(retPE, m_host.Database, PwDefs.UrlField)));
-            }
+            if (entry != null) { Util.GetResolvedReferencesEntry(pe, m_host.Database); }
 
-            return retPE;
-        }
-
-        private PwObjectList<PwEntry> GetRdpAccountEntries(PwGroup pwg)
-        {
-            // create PwObjectList and fill it with matching entries
-            var rdpAccountEntries = new PwObjectList<PwEntry>();
-            foreach (PwEntry pe in pwg.Entries)
-            {
-                string title = pe.Strings.ReadSafe(PwDefs.TitleField);
-                bool ignore = Util.IsEntryIgnored(pe);
-
-                string re = ".*(" + _config.CredPickerRegExPre + ").*(" + _config.CredPickerRegExPost + ").*";
-
-                if (!ignore && Regex.IsMatch(title, re, RegexOptions.IgnoreCase)) { rdpAccountEntries.Add(pe); }
-            }
-            return rdpAccountEntries;
+            return entry;
         }
 
         private void ConnectRDPtoKeePassEntry(bool tmpMstscUseAdmin = false, bool tmpUseCreds = false)
@@ -260,7 +191,7 @@ namespace KeePassRDP
             {
                 // get selected entry for connection
                 var connPwEntry = m_host.MainWindow.GetSelectedEntry(true, true);
-                string URL = Util.StripUrl(connPwEntry.Strings.ReadSafe(PwDefs.UrlField));
+                string URL = Util.StripUrl(Util.ResolveReferences(connPwEntry, m_host.Database, PwDefs.UrlField));
 
                 if (string.IsNullOrEmpty(URL))
                 {
@@ -268,16 +199,16 @@ namespace KeePassRDP
                     return;
                 }
 
-                // get credentials for connection
-                if (tmpUseCreds) { connPwEntry = SelectCred(connPwEntry); }
-                if (connPwEntry == null) { return; }
-
                 var rdpProcess = new Process();
 
                 // if selected, save credentials into the Windows Credential Manager
                 if (tmpUseCreds)
                 {
-                    // First instantiate a new KprCredential object.
+                    // get credentials for connection
+                    connPwEntry = SelectCred(connPwEntry);
+                    if (connPwEntry == null) { return; }
+
+                    // Instantiate a new KprCredential object.
                     var cred = new KprCredential(
                         connPwEntry.Strings.ReadSafe(PwDefs.UserNameField),
                         connPwEntry.Strings.ReadSafe(PwDefs.PasswordField),
@@ -286,7 +217,7 @@ namespace KeePassRDP
                         Convert.ToInt32(_config.CredVaultTtl)
                     );
 
-                    // Then give the KprCredential to the CredentialManager for managing the Windows Vault.
+                    // Give the KprCredential to the CredentialManager for managing the Windows Vault.
                     _credManager.Add(cred);
 
                     System.Threading.Thread.Sleep(300);

@@ -42,10 +42,15 @@
     <Reference Include="CredentialManagement">
       <HintPath>ext\CredentialManagement.dll</HintPath>
     </Reference>
-    <Reference Include="KeePass">
-      <HintPath>..\KeePass.exe</HintPath>
+    <Reference Include="KeePass, Version=2.44.0.19625, Culture=neutral, PublicKeyToken=fed2ed7716aecf5c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\KeePass\KeePass.exe</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>ext\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="ObjectListView, Version=2.8.0.29144, Culture=neutral, PublicKeyToken=b1c5bf581481bcd4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>ext\ObjectListView.dll</HintPath>
@@ -63,6 +68,7 @@
   <ItemGroup>
     <Compile Include="AccountEntry.cs" />
     <Compile Include="CredentialManager.cs" />
+    <Compile Include="CredentialPicker.cs" />
     <Compile Include="CredentialPickerForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -72,6 +78,7 @@
     <Compile Include="KeePassRDP.cs" />
     <Compile Include="KprConfig.cs" />
     <Compile Include="KprCredential.cs" />
+    <Compile Include="KprEntrySettings.cs" />
     <Compile Include="KprMenu.cs" />
     <Compile Include="KPROptionsForm.cs">
       <SubType>Form</SubType>
@@ -95,8 +102,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>if $(ConfigurationName) == Debug "%25ProgramFiles(x86)%25\Microsoft Visual Studio\2017\Community\Common7\IDE\TextTransform.exe" -a !!build!true "$(ProjectDir)Properties\AssemblyInfo.tt"
-if $(ConfigurationName) == DebugPLGX "%25ProgramFiles(x86)%25\Microsoft Visual Studio\2017\Community\Common7\IDE\TextTransform.exe" -a !!build!true "$(ProjectDir)Properties\AssemblyInfo.tt"</PreBuildEvent>
+    <PreBuildEvent>if $(ConfigurationName) == Debug "%25ProgramFiles%25\Microsoft Visual Studio\2022\Community\Common7\IDE\TextTransform.exe" -a !!build!true "$(ProjectDir)Properties\AssemblyInfo.tt"
+if $(ConfigurationName) == DebugPLGX "%25ProgramFiles%25\Microsoft Visual Studio\2022\Community\Common7\IDE\TextTransform.exe" -a !!build!true "$(ProjectDir)Properties\AssemblyInfo.tt"</PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PostBuildEvent>if $(ConfigurationName) == DebugPLGX goto plgx
