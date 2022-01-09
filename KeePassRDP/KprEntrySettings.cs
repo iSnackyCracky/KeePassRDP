@@ -8,25 +8,29 @@ namespace KeePassRDP
     public class KprEntrySettings
     {
         [DefaultValue(false)]
-        public bool Ignore { get; set; } = false;
+        public bool Ignore { get; set; }
         [DefaultValue(true)]
-        public bool UseCredpicker { get; set; } = true;
+        public bool UseCredpicker { get; set; }
         [DefaultValue(true)]
-        public bool CpIncludeDefaultRegex { get; set; } = true;
+        public bool CpIncludeDefaultRegex { get; set; }
         [DefaultValue(false)]
-        public bool CpRecurseGroups { get; set; } = false;
+        public bool CpRecurseGroups { get; set; }
 
-        public bool ShouldSerializeCpGroupUUIDs() => CpGroupUUIDs != null && CpGroupUUIDs.Count > 0;
+        public bool ShouldSerializeCpGroupUUIDs() { return CpGroupUUIDs != null && CpGroupUUIDs.Count > 0; }
         public List<string> CpGroupUUIDs;
-        public bool ShouldSerializeCpExcludedGroupUUIDs() => CpExcludedGroupUUIDs != null && CpExcludedGroupUUIDs.Count > 0;
+        public bool ShouldSerializeCpExcludedGroupUUIDs() { return CpExcludedGroupUUIDs != null && CpExcludedGroupUUIDs.Count > 0; }
         public List<string> CpExcludedGroupUUIDs;
-        public bool ShouldSerializeCpRegExPatterns() => CpRegExPatterns != null && CpRegExPatterns.Count > 0;
+        public bool ShouldSerializeCpRegExPatterns() { return CpRegExPatterns != null && CpRegExPatterns.Count > 0; }
         public List<string> CpRegExPatterns;
-        public bool ShouldSerializeMstscParameters() => MstscParameters != null && MstscParameters.Count > 0;
+        public bool ShouldSerializeMstscParameters() { return MstscParameters != null && MstscParameters.Count > 0; }
         public List<string> MstscParameters;
 
         public KprEntrySettings()
         {
+            Ignore = false;
+            UseCredpicker = true;
+            CpIncludeDefaultRegex = true;
+            CpRecurseGroups = false;
             CpGroupUUIDs = new List<string>();
             CpExcludedGroupUUIDs = new List<string>();
             CpRegExPatterns = new List<string>();
