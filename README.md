@@ -45,7 +45,7 @@ The customer group itself contains the account-entries in this case (they can al
 
 ![cusotmer example entries](https://isnackycracky.github.io/KeePassRDP/img/customer_entries.jpg)
 
-If we now want to connect to one of the machines in the RDP subgroup (with credential usage), just select the machine-entry, press <kbd>CTRL</kbd> + <kbd>M</kbd> and KeePassRDP shows you a dialog with viable account-entries (with titles like e.g. *domain-admin*, *local user*, ...) it always ignores entries where the title contains **[rdpignore]** or where a custom field named **rdpignore** is created with a value not equal to *false* (not case-sensitive).
+If we now want to connect to one of the machines in the RDP subgroup (with credential usage), just select the machine-entry, press <kbd>CTRL</kbd> + <kbd>M</kbd> and KeePassRDP shows you a dialog with viable account-entries (with titles like e.g. *domain-admin*, *local user*, ...) it always ignores entries where a custom field named **rdpignore** is created with a value not equal to *false* (not case-sensitive).
 This "ignore-flag" can be toggled via the KeePassRDP context menu since v1.9.0.
 
 ![credential selection dialog](https://isnackycracky.github.io/KeePassRDP/img/credential_picker.jpg)
