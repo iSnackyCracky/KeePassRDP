@@ -18,11 +18,11 @@
  *
  */
 
-using System;
-using System.Windows.Forms;
-using System.Collections.Generic;
-
 using KeePassLib;
+using KeePassLib.Collections;
+using System;
+using System.Collections.Generic;
+using System.Windows.Forms;
 
 
 namespace KeePassRDP
@@ -40,12 +40,12 @@ namespace KeePassRDP
         }
 
         // PwObjectList with all matching entries
-        public KeePassLib.Collections.PwObjectList<PwEntry> rdpAccountEntries { get; set; }
+        public PwObjectList<PwEntry> RdpAccountEntries { get; set; }
         // PwEntry that contains the URL for the connection
-        public PwEntry connPE { get; set; }
+        public PwEntry ConnPE { get; set; }
         // new PwEntry created for the connection (URL from connPE, username and password from selected rdpAccountEntry)
-        public PwEntry returnPE { get; set; }
-        
+        public PwEntry ReturnPE { get; set; }
+
         private void CredentialPickerForm_Load(object sender, EventArgs e)
         {
             // set window size
@@ -53,28 +53,29 @@ namespace KeePassRDP
             Height = Convert.ToInt32(_config.CredPickerHeight);
             CenterToParent();
 
-            loadListEntries();
+            LoadListEntries();
             olvEntries.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
         }
 
-        private void loadListEntries()
+        private void LoadListEntries()
         {
             // create new list with AccountEntry-objects to show them in ObjectListView-element
             List<AccountEntry> listAccounts = new List<AccountEntry>();
 
-            foreach (PwEntry account in rdpAccountEntries)
+            foreach (PwEntry account in RdpAccountEntries)
             {
                 // get title, username, notes and a UUID-hash from the Account...
                 int uidhash = account.Uuid.GetHashCode();
 
                 string path, title, username, notes;
                 path = account.ParentGroup.GetFullPath("\\", false);
-                if(_config.KeePassShowResolvedReferences)
+                if (_config.KeePassShowResolvedReferences)
                 {
                     title = Util.ResolveReferences(account, _db, PwDefs.TitleField);
                     username = Util.ResolveReferences(account, _db, PwDefs.UserNameField);
                     notes = Util.ResolveReferences(account, _db, PwDefs.NotesField);
-                } else
+                }
+                else
                 {
                     title = account.Strings.ReadSafe(PwDefs.TitleField);
                     username = account.Strings.ReadSafe(PwDefs.UserNameField);
@@ -91,25 +92,25 @@ namespace KeePassRDP
             olvEntries.Items[0].Selected = true;
         }
 
-        private void cmdCancel_Click(object sender, EventArgs e)
+        private void CmdCancel_Click(object sender, EventArgs e)
         {
             Close();
         }
 
-        private void cmdOk_Click(object sender, EventArgs e)
+        private void CmdOk_Click(object sender, EventArgs e)
         {
             // set returnPE to the selected account
-            confirmDialog(); 
+            ConfirmDialog();
 
             // Form schließen
             Close();
         }
 
         // when double-clicking an entry in the ObjectListView
-        private void olvEntries_ItemActivate(object sender, EventArgs e)
+        private void OlvEntries_ItemActivate(object sender, EventArgs e)
         {
             // set returnPE to the selected account
-            confirmDialog();
+            ConfirmDialog();
 
             // return dialog result OK
             DialogResult = DialogResult.OK;
@@ -117,7 +118,7 @@ namespace KeePassRDP
             Close();
         }
 
-        private void confirmDialog()
+        private void ConfirmDialog()
         {
             // save window Size
             if (_config.CredPickerRememberSize)
@@ -128,24 +129,14 @@ namespace KeePassRDP
 
             try
             {
-                // create returnPwEntry
-                returnPE = new PwEntry(true, true);
-
-                // set the URL value
-                returnPE.Strings.Set(PwDefs.UrlField, connPE.Strings.GetSafe(PwDefs.UrlField));
-
-                // set username and password
-                foreach (PwEntry account in rdpAccountEntries)
+                foreach (PwEntry account in RdpAccountEntries)
                 {
                     // get UUID-Hash and use entry if it matches the selected custom entry
                     int uidhash = account.Uuid.GetHashCode();
-                    if (uidhash == ((AccountEntry)olvEntries.SelectedObject).UidHash)
-                    {
-                        returnPE.Strings.Set(PwDefs.UserNameField, account.Strings.GetSafe(PwDefs.UserNameField));
-                        returnPE.Strings.Set(PwDefs.PasswordField, account.Strings.GetSafe(PwDefs.PasswordField));
-                    }
+                    if (uidhash == ((AccountEntry)olvEntries.SelectedObject).UidHash) { ReturnPE = account; }
                 }
-            } catch
+            }
+            catch
             {
                 MessageBox.Show("You have to select an account first", "KeePassRDP");
                 return;

@@ -23,13 +23,8 @@ using KeePass.Ecas;
 using KeePass.Plugins;
 using KeePass.UI;
 using KeePassLib;
-using KeePassLib.Collections;
-using KeePassLib.Utility;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace KeePassRDP
@@ -173,77 +168,19 @@ namespace KeePassRDP
             }
         }
 
-        private PwObjectList<PwEntry> GetRdpAccountEntries(PwGroup pwg)
-        {
-            // create PwObjectList and fill it with matching entries
-            var rdpAccountEntries = new PwObjectList<PwEntry>();
-            foreach (PwEntry pe in pwg.Entries)
-            {
-                string title = pe.Strings.ReadSafe(PwDefs.TitleField);
-                bool ignore = Util.IsEntryIgnored(pe);
-
-                string re = ".*(" + _config.CredPickerRegExPre + ").*(" + _config.CredPickerRegExPost + ").*";
-
-                if (!ignore && Regex.IsMatch(title, re, RegexOptions.IgnoreCase)) { rdpAccountEntries.Add(pe); }
-            }
-            return rdpAccountEntries;
-        }
-
         private PwEntry SelectCred(PwEntry pe)
         {
-            PwEntry entry = null;
+            var entrySettings = Util.GetEntrySettings(pe);
 
-            var entrySettingsString = pe.Strings.ReadSafe(Util.KprEntrySettingsField);
-            var entrySettings = JsonConvert.DeserializeObject<KprEntrySettings>(entrySettingsString);
-
-            var cpGroups = new PwObjectList<PwGroup>();
-            var cpGroupUUIDs = new List<byte[]>();
-
-
-            if (Util.InRdpSubgroup(pe)) { cpGroupUUIDs.Add(pe.ParentGroup.ParentGroup.Uuid.UuidBytes); }
-            if (entrySettings != null && entrySettings.CpGroupUUIDs.Count >= 1)
+            PwEntry entry;
+            if ((Util.InRdpSubgroup(pe) || entrySettings.CpGroupUUIDs.Count >= 1) && entrySettings.UseCredpicker)
             {
-                foreach (string uuidString in entrySettings.CpGroupUUIDs)
-                {
-                    byte[] uuidBytes = MemUtil.HexStringToByteArray(uuidString);
-                    if (uuidBytes != null && !cpGroupUUIDs.Contains(uuidBytes)) { cpGroupUUIDs.Add(uuidBytes); }
-                }
-            }
-
-            if (cpGroupUUIDs.Count >= 1)
-            {
-                foreach (byte[] groupUUID in cpGroupUUIDs)
-                {
-                    var group = m_host.Database.RootGroup.FindGroup(new PwUuid(groupUUID), true);
-                    if (group != null) { cpGroups.Add(group); }
-                }
-            }
-
-            if (cpGroups.UCount >= 1)
-            {
-                var rdpAccountEntries = new PwObjectList<PwEntry>();
-                foreach (PwGroup cpGroup in cpGroups)
-                {
-                    rdpAccountEntries.Add(GetRdpAccountEntries(cpGroup));
-                }
-
-                var frmCredPick = new CredentialPickerForm(_config, m_host.Database)
-                {
-                    connPE = pe,
-                    rdpAccountEntries = rdpAccountEntries
-                };
-
-                var res = frmCredPick.ShowDialog();
-                if (res == System.Windows.Forms.DialogResult.OK)
-                {
-                    entry = frmCredPick.returnPE;
-                    UIUtil.DestroyForm(frmCredPick);
-                }
-                else { UIUtil.DestroyForm(frmCredPick); }
+                var credPick = new CredentialPicker(pe, entrySettings, m_host.Database, _config);
+                entry = credPick.GetCredentialEntry();
             }
             else { entry = pe; }
 
-            if (entry != null) { entry = Util.GetResolvedReferencesEntry(pe, m_host.Database); }
+            if (entry != null) { Util.GetResolvedReferencesEntry(pe, m_host.Database); }
 
             return entry;
         }
@@ -262,16 +199,16 @@ namespace KeePassRDP
                     return;
                 }
 
-                // get credentials for connection
-                if (tmpUseCreds) { connPwEntry = SelectCred(connPwEntry); }
-                if (connPwEntry == null) { return; }
-
                 var rdpProcess = new Process();
 
                 // if selected, save credentials into the Windows Credential Manager
                 if (tmpUseCreds)
                 {
-                    // First instantiate a new KprCredential object.
+                    // get credentials for connection
+                    connPwEntry = SelectCred(connPwEntry);
+                    if (connPwEntry == null) { return; }
+
+                    // Instantiate a new KprCredential object.
                     var cred = new KprCredential(
                         connPwEntry.Strings.ReadSafe(PwDefs.UserNameField),
                         connPwEntry.Strings.ReadSafe(PwDefs.PasswordField),
@@ -280,7 +217,7 @@ namespace KeePassRDP
                         Convert.ToInt32(_config.CredVaultTtl)
                     );
 
-                    // Then give the KprCredential to the CredentialManager for managing the Windows Vault.
+                    // Give the KprCredential to the CredentialManager for managing the Windows Vault.
                     _credManager.Add(cred);
 
                     System.Threading.Thread.Sleep(300);

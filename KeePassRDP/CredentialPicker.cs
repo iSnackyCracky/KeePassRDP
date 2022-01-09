@@ -21,7 +21,7 @@
 using KeePass.UI;
 using KeePassLib;
 using KeePassLib.Collections;
-using KeePassLib.Security;
+using KeePassLib.Utility;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
@@ -29,114 +29,109 @@ namespace KeePassRDP
 {
     internal class CredentialPicker
     {
-        public PwObjectList<PwGroup> CredentialRoots { get; set; }
-        public bool RecurseGroups { get; set; }
-        public List<string> RegexPatterns { get; set; }
-        public PwObjectList<PwGroup> ExcludedGroups { get; set; }
+        private readonly PwEntry _pe;
+        private readonly KprEntrySettings _peSettings;
+        private readonly PwDatabase _database;
+        private readonly KprConfig _config;
+        private List<PwUuid> _GroupUUIDs;
+        private List<PwUuid> _ExcludedGroupUUIDs;
 
-        public CredentialPicker(PwObjectList<PwGroup> CredentialRoots, List<string> RegexPatterns, bool RecurseGroups = true)
+        public CredentialPicker(PwEntry pe, KprEntrySettings peSettings, PwDatabase database, KprConfig config)
         {
-            this.CredentialRoots = CredentialRoots;
-            this.RegexPatterns = RegexPatterns;
-            this.RecurseGroups = RecurseGroups;
-            this.ExcludedGroups = new PwObjectList<PwGroup>();
-        }
-        public CredentialPicker(PwObjectList<PwGroup> CredentialRoots, List<string> RegexPatterns, PwObjectList<PwGroup> ExcludedGroups, bool RecurseGroups = true)
-        {
-            this.CredentialRoots = CredentialRoots;
-            this.RegexPatterns = RegexPatterns;
-            this.RecurseGroups = RecurseGroups;
-            this.ExcludedGroups = ExcludedGroups;
+            _pe = pe;
+            _peSettings = peSettings;
+            _database = database;
+            _config = config;
         }
 
         public PwEntry GetCredentialEntry()
         {
             PwEntry pe = null;
 
+            // build a list of excluded group UUIDs
+            _ExcludedGroupUUIDs = new List<PwUuid>();
+            foreach (string uuidString in _peSettings.CpExcludedGroupUUIDs)
+            {
+                byte[] uuidBytes = MemUtil.HexStringToByteArray(uuidString);
+                if (uuidBytes != null) { _ExcludedGroupUUIDs.Add(new PwUuid(uuidBytes)); }
+            }
+
+            // build a list of included group UUIDs (do not add if it's excluded)
+            _GroupUUIDs = new List<PwUuid>();
+            foreach (string uuidString in _peSettings.CpGroupUUIDs)
+            {
+                byte[] uuidBytes = MemUtil.HexStringToByteArray(uuidString);
+                if (uuidBytes != null) { AddUuidToList(new PwUuid(uuidBytes)); }
+            }
+
+            // include rdp parent group if given and not excluded
+            if (Util.InRdpSubgroup(_pe)) { AddUuidToList(_pe.ParentGroup.ParentGroup.Uuid); }
+
+            if (_GroupUUIDs.Count >= 1)
+            {
+                var accountEntries = new PwObjectList<PwEntry>();
+                foreach (PwUuid uuid in _GroupUUIDs)
+                {
+                    var group = _database.RootGroup.FindGroup(uuid, true);
+                    accountEntries.Add(GetRdpAccountEntries(group));
+                }
+
+                if (accountEntries.UCount >= 1)
+                {
+                    // create a selection dialog with the matching entries
+                    var frmCredPick = new CredentialPickerForm(_config, _database)
+                    {
+                        RdpAccountEntries = accountEntries,
+                        ConnPE = pe
+                    };
+
+                    // show the dialog and get the result
+                    var res = frmCredPick.ShowDialog();
+                    if (res == System.Windows.Forms.DialogResult.OK)
+                    {
+                        // use the selected PwEntry and reset the selected value of the dialog
+                        pe = frmCredPick.ReturnPE;
+                        UIUtil.DestroyForm(frmCredPick);
+                    }
+                    else { UIUtil.DestroyForm(frmCredPick); }
+
+                }
+                else { pe = _pe; }
+
+            }
+
             return pe;
         }
 
-        //private PwEntry SelectCred(PwEntry pe)
-        //{
-        //    var retPE = new PwEntry(true, true);
+        private void AddUuidToList(PwUuid uuid)
+        {
+            if (_ExcludedGroupUUIDs.Contains(uuid)) { return; }
+            if (_GroupUUIDs.Contains(uuid)) { return; }
 
-        //    // if selected entry is in a subgroup called "RDP", specified entries get collected and showed to the user for selection (see the RegEx in GetRdpAccountEntries)
-        //    if (Util.InRdpSubgroup(pe))
-        //    {
-        //        // rdpPG is the parent-group of the "RDP" group
-        //        PwGroup rdpPG = pe.ParentGroup.ParentGroup;
+            _GroupUUIDs.Add(uuid);
+        }
 
-        //        // create PwObjectList with all matching entries directly inside the rdpPG
-        //        PwObjectList<PwEntry> rdpAccountEntries = GetRdpAccountEntries(rdpPG);
+        private PwObjectList<PwEntry> GetRdpAccountEntries(PwGroup pwg)
+        {
+            // create PwObjectList and fill it with matching entries
+            var rdpAccountEntries = new PwObjectList<PwEntry>();
+            foreach (PwEntry pe in pwg.Entries)
+            {
+                string title = pe.Strings.ReadSafe(PwDefs.TitleField);
+                bool ignore = Util.IsEntryIgnored(pe);
 
-        //        // extend the rdpAccountEntries list with matching entries in 1-level-subgroups of rdpPG
-        //        foreach (PwGroup subPwG in rdpPG.Groups) { rdpAccountEntries.Add(GetRdpAccountEntries(subPwG)); }
+                string re = string.Empty;
+                if (_peSettings.CpIncludeDefaultRegex) { re = ".*(" + _config.CredPickerRegExPre + ").*(" + _config.CredPickerRegExPost + ").*"; }
 
-        //        // if matching entries were found...
-        //        if (rdpAccountEntries.UCount >= 1)
-        //        {
-        //            // create a selection dialog with the matching entries
-        //            var frmCredPick = new CredentialPickerForm(_config, m_host.Database)
-        //            {
-        //                rdpAccountEntries = rdpAccountEntries,
-        //                connPE = pe
-        //            };
+                foreach (string regex in _peSettings.CpRegExPatterns)
+                {
+                    re += string.IsNullOrEmpty(re) ? string.Empty : "|";
+                    re += regex;
+                }
 
-        //            // show the dialog and get the result
-        //            var res = frmCredPick.ShowDialog();
-        //            if (res == System.Windows.Forms.DialogResult.OK)
-        //            {
-        //                // use the selected PwEntry and reset the selected value of the dialog
-        //                retPE = frmCredPick.returnPE;
-        //                UIUtil.DestroyForm(frmCredPick);
-        //            }
-        //            else
-        //            {
-        //                retPE = null;
-        //                UIUtil.DestroyForm(frmCredPick);
-        //            }
-        //        }
-        //        // if no matching entries were found...
-        //        else
-        //        {
-        //            // fall back to using the currently selected entry
-        //            retPE.Strings.Set(PwDefs.UserNameField, pe.Strings.GetSafe(PwDefs.UserNameField));
-        //            retPE.Strings.Set(PwDefs.PasswordField, pe.Strings.GetSafe(PwDefs.PasswordField));
-        //            retPE.Strings.Set(PwDefs.UrlField, pe.Strings.GetSafe(PwDefs.UrlField));
-        //        }
-        //    }
-        //    else
-        //    {
-        //        retPE.Strings.Set(PwDefs.UserNameField, pe.Strings.GetSafe(PwDefs.UserNameField));
-        //        retPE.Strings.Set(PwDefs.PasswordField, pe.Strings.GetSafe(PwDefs.PasswordField));
-        //        retPE.Strings.Set(PwDefs.UrlField, pe.Strings.GetSafe(PwDefs.UrlField));
-        //    }
-
-        //    if (!(retPE == null))
-        //    {
-        //        // resolve References in entry fields
-        //        retPE.Strings.Set(PwDefs.UserNameField, new ProtectedString(false, Util.ResolveReferences(retPE, m_host.Database, PwDefs.UserNameField)));
-        //        retPE.Strings.Set(PwDefs.PasswordField, new ProtectedString(true, Util.ResolveReferences(retPE, m_host.Database, PwDefs.PasswordField)));
-        //        retPE.Strings.Set(PwDefs.UrlField, new ProtectedString(false, Util.ResolveReferences(retPE, m_host.Database, PwDefs.UrlField)));
-        //    }
-
-        //    return retPE;
-        //}
-
-        //private PwObjectList<PwEntry> GetRdpAccountEntries(PwGroup pwg)
-        //{
-        //    // create PwObjectList and fill it with matching entries
-        //    var rdpAccountEntries = new PwObjectList<PwEntry>();
-        //    foreach (PwEntry pe in pwg.Entries)
-        //    {
-        //        string title = pe.Strings.ReadSafe(PwDefs.TitleField);
-        //        bool ignore = Util.IsEntryIgnored(pe);
-
-        //        string re = ".*(" + _config.CredPickerRegExPre + ").*(" + _config.CredPickerRegExPost + ").*";
-
-        //        if (!ignore && Regex.IsMatch(title, re, RegexOptions.IgnoreCase)) { rdpAccountEntries.Add(pe); }
-        //    }
-        //    return rdpAccountEntries;
-        //}
+                if (!ignore && Regex.IsMatch(title, re, RegexOptions.IgnoreCase)) { rdpAccountEntries.Add(pe); }
+            }
+            return rdpAccountEntries;
+        }
     }
 }

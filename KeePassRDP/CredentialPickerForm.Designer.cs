@@ -68,7 +68,7 @@
             this.olvEntries.TabIndex = 0;
             this.olvEntries.UseCompatibleStateImageBehavior = false;
             this.olvEntries.View = System.Windows.Forms.View.Details;
-            this.olvEntries.ItemActivate += new System.EventHandler(this.olvEntries_ItemActivate);
+            this.olvEntries.ItemActivate += new System.EventHandler(this.OlvEntries_ItemActivate);
             // 
             // olvColUsername
             // 
@@ -119,7 +119,7 @@
             this.cmdOk.TabIndex = 1;
             this.cmdOk.Text = "&Ok";
             this.cmdOk.UseVisualStyleBackColor = true;
-            this.cmdOk.Click += new System.EventHandler(this.cmdOk_Click);
+            this.cmdOk.Click += new System.EventHandler(this.CmdOk_Click);
             // 
             // cmdCancel
             // 
@@ -132,7 +132,7 @@
             this.cmdCancel.TabIndex = 2;
             this.cmdCancel.Text = "&Cancel";
             this.cmdCancel.UseVisualStyleBackColor = true;
-            this.cmdCancel.Click += new System.EventHandler(this.cmdCancel_Click);
+            this.cmdCancel.Click += new System.EventHandler(this.CmdCancel_Click);
             // 
             // CredentialPickerForm
             // 
