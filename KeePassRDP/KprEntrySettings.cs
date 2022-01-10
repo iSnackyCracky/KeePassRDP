@@ -13,7 +13,7 @@ namespace KeePassRDP
         public bool UseCredpicker { get; set; }
         [DefaultValue(true)]
         public bool CpIncludeDefaultRegex { get; set; }
-        [DefaultValue(false)]
+        [DefaultValue(true)]
         public bool CpRecurseGroups { get; set; }
 
         public bool ShouldSerializeCpGroupUUIDs() { return CpGroupUUIDs != null && CpGroupUUIDs.Count > 0; }
@@ -30,7 +30,7 @@ namespace KeePassRDP
             Ignore = false;
             UseCredpicker = true;
             CpIncludeDefaultRegex = true;
-            CpRecurseGroups = false;
+            CpRecurseGroups = true;
             CpGroupUUIDs = new List<string>();
             CpExcludedGroupUUIDs = new List<string>();
             CpRegExPatterns = new List<string>();

@@ -61,11 +61,23 @@ namespace KeePassRDP
             foreach (string uuidString in _peSettings.CpGroupUUIDs)
             {
                 byte[] uuidBytes = MemUtil.HexStringToByteArray(uuidString);
-                if (uuidBytes != null) { AddUuidToList(new PwUuid(uuidBytes)); }
+                if (uuidBytes != null) { AddUuidToList(new PwUuid(uuidBytes), ref _GroupUUIDs); }
             }
+            // TODO: recursiveness!
 
             // include rdp parent group if given and not excluded
-            if (Util.InRdpSubgroup(_pe)) { AddUuidToList(_pe.ParentGroup.ParentGroup.Uuid); }
+            if (Util.InRdpSubgroup(_pe)) { AddUuidToList(_pe.ParentGroup.ParentGroup.Uuid, ref _GroupUUIDs); }
+
+            if (_peSettings.CpRecurseGroups && _GroupUUIDs.Count >= 1)
+            {
+                var recurseGroupUUIDs = new List<PwUuid>();
+                foreach (PwUuid uuid in _GroupUUIDs)
+                {
+                    var childs = _database.RootGroup.FindGroup(uuid, true).GetGroups(true);
+                    foreach (PwGroup child in childs) { AddUuidToList(child.Uuid, ref recurseGroupUUIDs); }
+                }
+                _GroupUUIDs = recurseGroupUUIDs;
+            }
 
             if (_GroupUUIDs.Count >= 1)
             {
@@ -103,31 +115,32 @@ namespace KeePassRDP
             return pe;
         }
 
-        private void AddUuidToList(PwUuid uuid)
+        private void AddUuidToList(PwUuid uuid, ref List<PwUuid> list)
         {
             if (_ExcludedGroupUUIDs.Contains(uuid)) { return; }
-            if (_GroupUUIDs.Contains(uuid)) { return; }
+            if (list.Contains(uuid)) { return; }
 
-            _GroupUUIDs.Add(uuid);
+            list.Add(uuid);
         }
 
         private PwObjectList<PwEntry> GetRdpAccountEntries(PwGroup pwg)
         {
             // create PwObjectList and fill it with matching entries
             var rdpAccountEntries = new PwObjectList<PwEntry>();
+
+            string re = string.Empty;
+            if (_peSettings.CpIncludeDefaultRegex) { re = ".*(" + _config.CredPickerRegExPre + ").*(" + _config.CredPickerRegExPost + ").*"; }
+
+            foreach (string regex in _peSettings.CpRegExPatterns)
+            {
+                re += string.IsNullOrEmpty(re) ? string.Empty : "|";
+                re += regex;
+            }
+
             foreach (PwEntry pe in pwg.Entries)
             {
                 string title = pe.Strings.ReadSafe(PwDefs.TitleField);
                 bool ignore = Util.IsEntryIgnored(pe);
-
-                string re = string.Empty;
-                if (_peSettings.CpIncludeDefaultRegex) { re = ".*(" + _config.CredPickerRegExPre + ").*(" + _config.CredPickerRegExPost + ").*"; }
-
-                foreach (string regex in _peSettings.CpRegExPatterns)
-                {
-                    re += string.IsNullOrEmpty(re) ? string.Empty : "|";
-                    re += regex;
-                }
 
                 if (!ignore && Regex.IsMatch(title, re, RegexOptions.IgnoreCase)) { rdpAccountEntries.Add(pe); }
             }
