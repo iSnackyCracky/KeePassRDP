@@ -63,7 +63,6 @@ namespace KeePassRDP
                 byte[] uuidBytes = MemUtil.HexStringToByteArray(uuidString);
                 if (uuidBytes != null) { AddUuidToList(new PwUuid(uuidBytes), ref _GroupUUIDs); }
             }
-            // TODO: recursiveness!
 
             // include rdp parent group if given and not excluded
             if (Util.InRdpSubgroup(_pe)) { AddUuidToList(_pe.ParentGroup.ParentGroup.Uuid, ref _GroupUUIDs); }
@@ -76,7 +75,7 @@ namespace KeePassRDP
                     var childs = _database.RootGroup.FindGroup(uuid, true).GetGroups(true);
                     foreach (PwGroup child in childs) { AddUuidToList(child.Uuid, ref recurseGroupUUIDs); }
                 }
-                _GroupUUIDs = recurseGroupUUIDs;
+                _GroupUUIDs.AddRange(recurseGroupUUIDs);
             }
 
             if (_GroupUUIDs.Count >= 1)
