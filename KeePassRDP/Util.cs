@@ -154,7 +154,13 @@ namespace KeePassRDP
         public static int ConvertStringToKeys(string shortcut)
         {
             var conv = new KeysConverter();
-            return (int)conv.ConvertFromInvariantString(shortcut);
+            return (int)conv.ConvertFromString(shortcut);
+        }
+
+        public static string ConvertKeysToString(int shortcut)
+        {
+            var conv = new KeysConverter();
+            return conv.ConvertToString((Keys)shortcut);
         }
     }
 }

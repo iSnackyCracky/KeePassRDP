@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018-2020 iSnackyCracky
+ *  Copyright (C) 2018-2022 iSnackyCracky
  *
  *  This file is part of KeePassRDP.
  *
@@ -27,9 +27,6 @@ namespace KeePassRDP
     public partial class KPROptionsForm : Form
     {
         private readonly KprConfig _config;
-        private static int _AltValue = (int)Keys.Alt;
-        private static int _CtrlValue = (int)Keys.Control;
-        private static int _ShiftValue = (int)Keys.Shift;
 
         public KPROptionsForm(KprConfig config)
         {
@@ -74,28 +71,16 @@ namespace KeePassRDP
 
 
             var openRdpShortcut = Convert.ToInt32(_config.ShortcutOpenRdpConnection);
-            if (openRdpShortcut - _AltValue > 0) { openRdpShortcut -= _AltValue; chkOpenRdpAlt.Checked = true; }
-            if (openRdpShortcut - _CtrlValue > 0) { openRdpShortcut -= _CtrlValue; chkOpenRdpCtrl.Checked = true; }
-            if (openRdpShortcut - _ShiftValue > 0) { openRdpShortcut -= _ShiftValue; chkOpenRdpShift.Checked = true; }
-            txtOpenRdpKey.Text = ((Keys)openRdpShortcut).ToString();
-            
+            txtOpenRdpKey.Text = Util.ConvertKeysToString(openRdpShortcut);
+
             var openRdpAdminShortcut = Convert.ToInt32(_config.ShortcutOpenRdpConnectionAdmin);
-            if (openRdpAdminShortcut - _AltValue > 0) { openRdpAdminShortcut -= _AltValue; chkOpenRdpAdminAlt.Checked = true; }
-            if (openRdpAdminShortcut - _CtrlValue > 0) { openRdpAdminShortcut -= _CtrlValue; chkOpenRdpAdminCtrl.Checked = true; }
-            if (openRdpAdminShortcut - _ShiftValue > 0) { openRdpAdminShortcut -= _ShiftValue; chkOpenRdpAdminShift.Checked = true; }
-            txtOpenRdpAdminKey.Text = ((Keys)openRdpAdminShortcut).ToString();
+            txtOpenRdpAdminKey.Text = Util.ConvertKeysToString(openRdpAdminShortcut);
 
             var openRdpNoCredShortcut = Convert.ToInt32(_config.ShortcutOpenRdpConnectionNoCred);
-            if (openRdpNoCredShortcut - _AltValue > 0) { openRdpNoCredShortcut -= _AltValue; chkOpenRdpNoCredAlt.Checked = true; }
-            if (openRdpNoCredShortcut - _CtrlValue > 0) { openRdpNoCredShortcut -= _CtrlValue; chkOpenRdpNoCredCtrl.Checked = true; }
-            if (openRdpNoCredShortcut - _ShiftValue > 0) { openRdpNoCredShortcut -= _ShiftValue; chkOpenRdpNoCredShift.Checked = true; }
-            txtOpenRdpNoCredKey.Text = ((Keys)openRdpNoCredShortcut).ToString();
+            txtOpenRdpNoCredKey.Text = Util.ConvertKeysToString(openRdpNoCredShortcut);
 
             var openRdpNoCredAdminShortcut = Convert.ToInt32(_config.ShortcutOpenRdpConnectionNoCredAdmin);
-            if (openRdpNoCredAdminShortcut - _AltValue > 0) { openRdpNoCredAdminShortcut -= _AltValue; chkOpenRdpNoCredAdminAlt.Checked = true; }
-            if (openRdpNoCredAdminShortcut - _CtrlValue > 0) { openRdpNoCredAdminShortcut -= _CtrlValue; chkOpenRdpNoCredAdminCtrl.Checked = true; }
-            if (openRdpNoCredAdminShortcut - _ShiftValue > 0) { openRdpNoCredAdminShortcut -= _ShiftValue; chkOpenRdpNoCredAdminShift.Checked = true; }
-            txtOpenRdpNoCredAdminKey.Text = ((Keys)openRdpNoCredAdminShortcut).ToString();
+            txtOpenRdpNoCredAdminKey.Text = Util.ConvertKeysToString(openRdpNoCredAdminShortcut);
 
 
 
@@ -162,27 +147,15 @@ namespace KeePassRDP
             _config.CredPickerRegExPost = string.Join("|", regExPost);
 
             var openRdpShortcut = Util.ConvertStringToKeys(txtOpenRdpKey.Text);
-            if (chkOpenRdpAlt.Checked) { openRdpShortcut += _AltValue; }
-            if (chkOpenRdpCtrl.Checked) { openRdpShortcut += _CtrlValue; }
-            if (chkOpenRdpShift.Checked) { openRdpShortcut += _ShiftValue; }
             _config.ShortcutOpenRdpConnection = Convert.ToUInt64(openRdpShortcut);
 
             var openRdpAdminShortcut = Util.ConvertStringToKeys(txtOpenRdpAdminKey.Text);
-            if (chkOpenRdpAdminAlt.Checked) { openRdpAdminShortcut += _AltValue; }
-            if (chkOpenRdpAdminCtrl.Checked) { openRdpAdminShortcut += _CtrlValue; }
-            if (chkOpenRdpAdminShift.Checked) { openRdpAdminShortcut += _ShiftValue; }
             _config.ShortcutOpenRdpConnectionAdmin = Convert.ToUInt64(openRdpAdminShortcut);
 
             var openRdpNoCredShortcut = Util.ConvertStringToKeys(txtOpenRdpNoCredKey.Text);
-            if (chkOpenRdpNoCredAlt.Checked) { openRdpNoCredShortcut += _AltValue; }
-            if (chkOpenRdpNoCredCtrl.Checked) { openRdpNoCredShortcut += _CtrlValue; }
-            if (chkOpenRdpNoCredShift.Checked) { openRdpNoCredShortcut += _ShiftValue; }
             _config.ShortcutOpenRdpConnectionNoCred = Convert.ToUInt64(openRdpNoCredShortcut);
 
             var openRdpNoCredAdminShortcut = Util.ConvertStringToKeys(txtOpenRdpNoCredAdminKey.Text);
-            if (chkOpenRdpNoCredAdminAlt.Checked) { openRdpNoCredAdminShortcut += _AltValue; }
-            if (chkOpenRdpNoCredAdminCtrl.Checked) { openRdpNoCredAdminShortcut += _CtrlValue; }
-            if (chkOpenRdpNoCredAdminShift.Checked) { openRdpNoCredAdminShortcut += _ShiftValue; }
             _config.ShortcutOpenRdpConnectionNoCredAdmin = Convert.ToUInt64(openRdpNoCredAdminShortcut);
         }
 
@@ -214,5 +187,31 @@ namespace KeePassRDP
             lstRegExPost.Items.AddRange(Util.DefaultCredPickRegExPost.Split('|'));
         }
 
+        private void txtKeys_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
+            {
+                txtOpenRdpKey.Text = "";
+                return;
+            }
+            if (e.KeyCode == Keys.ControlKey ||
+                e.KeyCode == Keys.ShiftKey ||
+                e.KeyCode == Keys.Alt ||
+                e.KeyCode == Keys.Menu ||
+                e.KeyCode == Keys.LWin ||
+                e.KeyCode == Keys.RWin)
+            {
+                return;
+            }
+            var key = e.KeyCode;
+            if ((ModifierKeys & Keys.Control) == Keys.Control) { key = key ^ Keys.Control; }
+            if ((ModifierKeys & Keys.Shift) == Keys.Shift) { key = key ^ Keys.Shift; }
+            if ((ModifierKeys & Keys.Alt) == Keys.Alt) { key = key ^ Keys.Alt; }
+            var textbox = sender as TextBox;
+            var keyConv = new KeysConverter();
+            textbox.Text = keyConv.ConvertToInvariantString(key);
+        }
+
+        private void txtKeys_KeyPress(object sender, KeyPressEventArgs e) { e.Handled = true; }
     }
 }

@@ -57,29 +57,13 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.lblOpenRdpNoCredAdminShortcut = new System.Windows.Forms.Label();
-            this.chkOpenRdpNoCredAdminCtrl = new System.Windows.Forms.CheckBox();
-            this.chkOpenRdpNoCredAdminAlt = new System.Windows.Forms.CheckBox();
-            this.chkOpenRdpNoCredAdminShift = new System.Windows.Forms.CheckBox();
             this.txtOpenRdpNoCredAdminKey = new System.Windows.Forms.TextBox();
             this.txtOpenRdpNoCredKey = new System.Windows.Forms.TextBox();
             this.txtOpenRdpAdminKey = new System.Windows.Forms.TextBox();
-            this.txtOpenRdpKey = new System.Windows.Forms.TextBox();
-            this.chkOpenRdpNoCredShift = new System.Windows.Forms.CheckBox();
-            this.chkOpenRdpNoCredAlt = new System.Windows.Forms.CheckBox();
-            this.chkOpenRdpNoCredCtrl = new System.Windows.Forms.CheckBox();
             this.lblOpenRdpNoCredShortcut = new System.Windows.Forms.Label();
             this.lblOpenRdpAdminShortcut = new System.Windows.Forms.Label();
-            this.chkOpenRdpAdminCtrl = new System.Windows.Forms.CheckBox();
-            this.chkOpenRdpAdminAlt = new System.Windows.Forms.CheckBox();
-            this.chkOpenRdpAdminShift = new System.Windows.Forms.CheckBox();
-            this.chkOpenRdpCtrl = new System.Windows.Forms.CheckBox();
-            this.chkOpenRdpAlt = new System.Windows.Forms.CheckBox();
-            this.chkOpenRdpShift = new System.Windows.Forms.CheckBox();
             this.lblOpenRdpShortcut = new System.Windows.Forms.Label();
-            this.label9 = new System.Windows.Forms.Label();
-            this.label10 = new System.Windows.Forms.Label();
-            this.label11 = new System.Windows.Forms.Label();
-            this.label12 = new System.Windows.Forms.Label();
+            this.txtOpenRdpKey = new System.Windows.Forms.TextBox();
             this.grpCredentialOptions = new System.Windows.Forms.GroupBox();
             this.tabCredPicker = new System.Windows.Forms.TabPage();
             this.cmdRegExPostReset = new System.Windows.Forms.Button();
@@ -382,41 +366,21 @@
             // 
             // tableLayoutPanel1
             // 
-            this.tableLayoutPanel1.ColumnCount = 5;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 62.42171F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 12.5261F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 12.5261F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 12.5261F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel1.Controls.Add(this.lblOpenRdpNoCredAdminShortcut, 0, 4);
-            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpNoCredAdminCtrl, 1, 4);
-            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpNoCredAdminAlt, 2, 4);
-            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpNoCredAdminShift, 3, 4);
-            this.tableLayoutPanel1.Controls.Add(this.txtOpenRdpNoCredAdminKey, 4, 4);
-            this.tableLayoutPanel1.Controls.Add(this.txtOpenRdpNoCredKey, 4, 3);
-            this.tableLayoutPanel1.Controls.Add(this.txtOpenRdpAdminKey, 4, 2);
-            this.tableLayoutPanel1.Controls.Add(this.txtOpenRdpKey, 4, 1);
-            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpNoCredShift, 3, 3);
-            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpNoCredAlt, 2, 3);
-            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpNoCredCtrl, 1, 3);
-            this.tableLayoutPanel1.Controls.Add(this.lblOpenRdpNoCredShortcut, 0, 3);
-            this.tableLayoutPanel1.Controls.Add(this.lblOpenRdpAdminShortcut, 0, 2);
-            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpAdminCtrl, 1, 2);
-            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpAdminAlt, 2, 2);
-            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpAdminShift, 3, 2);
-            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpCtrl, 1, 1);
-            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpAlt, 2, 1);
-            this.tableLayoutPanel1.Controls.Add(this.chkOpenRdpShift, 3, 1);
-            this.tableLayoutPanel1.Controls.Add(this.lblOpenRdpShortcut, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.label9, 1, 0);
-            this.tableLayoutPanel1.Controls.Add(this.label10, 2, 0);
-            this.tableLayoutPanel1.Controls.Add(this.label11, 3, 0);
-            this.tableLayoutPanel1.Controls.Add(this.label12, 4, 0);
+            this.tableLayoutPanel1.ColumnCount = 2;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.Controls.Add(this.lblOpenRdpNoCredAdminShortcut, 0, 3);
+            this.tableLayoutPanel1.Controls.Add(this.txtOpenRdpNoCredAdminKey, 1, 3);
+            this.tableLayoutPanel1.Controls.Add(this.txtOpenRdpNoCredKey, 1, 2);
+            this.tableLayoutPanel1.Controls.Add(this.txtOpenRdpAdminKey, 1, 1);
+            this.tableLayoutPanel1.Controls.Add(this.lblOpenRdpNoCredShortcut, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.lblOpenRdpAdminShortcut, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.lblOpenRdpShortcut, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.txtOpenRdpKey, 1, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(3, 22);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 5;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel1.RowCount = 4;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
@@ -428,109 +392,47 @@
             // 
             this.lblOpenRdpNoCredAdminShortcut.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lblOpenRdpNoCredAdminShortcut.AutoSize = true;
-            this.lblOpenRdpNoCredAdminShortcut.Location = new System.Drawing.Point(3, 162);
+            this.lblOpenRdpNoCredAdminShortcut.Location = new System.Drawing.Point(3, 160);
             this.lblOpenRdpNoCredAdminShortcut.Name = "lblOpenRdpNoCredAdminShortcut";
             this.lblOpenRdpNoCredAdminShortcut.Size = new System.Drawing.Size(230, 40);
             this.lblOpenRdpNoCredAdminShortcut.TabIndex = 19;
             this.lblOpenRdpNoCredAdminShortcut.Text = "Open RDP Connection without Credentials (/admin)";
             // 
-            // chkOpenRdpNoCredAdminCtrl
-            // 
-            this.chkOpenRdpNoCredAdminCtrl.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.chkOpenRdpNoCredAdminCtrl.AutoSize = true;
-            this.chkOpenRdpNoCredAdminCtrl.Location = new System.Drawing.Point(263, 172);
-            this.chkOpenRdpNoCredAdminCtrl.Name = "chkOpenRdpNoCredAdminCtrl";
-            this.chkOpenRdpNoCredAdminCtrl.Size = new System.Drawing.Size(22, 21);
-            this.chkOpenRdpNoCredAdminCtrl.TabIndex = 20;
-            this.chkOpenRdpNoCredAdminCtrl.UseVisualStyleBackColor = true;
-            // 
-            // chkOpenRdpNoCredAdminAlt
-            // 
-            this.chkOpenRdpNoCredAdminAlt.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.chkOpenRdpNoCredAdminAlt.AutoSize = true;
-            this.chkOpenRdpNoCredAdminAlt.Location = new System.Drawing.Point(313, 172);
-            this.chkOpenRdpNoCredAdminAlt.Name = "chkOpenRdpNoCredAdminAlt";
-            this.chkOpenRdpNoCredAdminAlt.Size = new System.Drawing.Size(22, 21);
-            this.chkOpenRdpNoCredAdminAlt.TabIndex = 21;
-            this.chkOpenRdpNoCredAdminAlt.UseVisualStyleBackColor = true;
-            // 
-            // chkOpenRdpNoCredAdminShift
-            // 
-            this.chkOpenRdpNoCredAdminShift.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.chkOpenRdpNoCredAdminShift.AutoSize = true;
-            this.chkOpenRdpNoCredAdminShift.Location = new System.Drawing.Point(363, 172);
-            this.chkOpenRdpNoCredAdminShift.Name = "chkOpenRdpNoCredAdminShift";
-            this.chkOpenRdpNoCredAdminShift.Size = new System.Drawing.Size(22, 21);
-            this.chkOpenRdpNoCredAdminShift.TabIndex = 22;
-            this.chkOpenRdpNoCredAdminShift.UseVisualStyleBackColor = true;
-            // 
             // txtOpenRdpNoCredAdminKey
             // 
-            this.txtOpenRdpNoCredAdminKey.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.txtOpenRdpNoCredAdminKey.Location = new System.Drawing.Point(402, 169);
+            this.txtOpenRdpNoCredAdminKey.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtOpenRdpNoCredAdminKey.Location = new System.Drawing.Point(256, 167);
             this.txtOpenRdpNoCredAdminKey.Name = "txtOpenRdpNoCredAdminKey";
-            this.txtOpenRdpNoCredAdminKey.Size = new System.Drawing.Size(100, 26);
+            this.txtOpenRdpNoCredAdminKey.Size = new System.Drawing.Size(247, 26);
             this.txtOpenRdpNoCredAdminKey.TabIndex = 23;
+            this.txtOpenRdpNoCredAdminKey.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtKeys_KeyPress);
+            this.txtOpenRdpNoCredAdminKey.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.txtKeys_PreviewKeyDown);
             // 
             // txtOpenRdpNoCredKey
             // 
-            this.txtOpenRdpNoCredKey.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.txtOpenRdpNoCredKey.Location = new System.Drawing.Point(402, 122);
+            this.txtOpenRdpNoCredKey.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtOpenRdpNoCredKey.Location = new System.Drawing.Point(256, 114);
             this.txtOpenRdpNoCredKey.Name = "txtOpenRdpNoCredKey";
-            this.txtOpenRdpNoCredKey.Size = new System.Drawing.Size(100, 26);
+            this.txtOpenRdpNoCredKey.Size = new System.Drawing.Size(247, 26);
             this.txtOpenRdpNoCredKey.TabIndex = 18;
+            this.txtOpenRdpNoCredKey.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtKeys_KeyPress);
+            this.txtOpenRdpNoCredKey.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.txtKeys_PreviewKeyDown);
             // 
             // txtOpenRdpAdminKey
             // 
-            this.txtOpenRdpAdminKey.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.txtOpenRdpAdminKey.Location = new System.Drawing.Point(402, 76);
+            this.txtOpenRdpAdminKey.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtOpenRdpAdminKey.Location = new System.Drawing.Point(256, 63);
             this.txtOpenRdpAdminKey.Name = "txtOpenRdpAdminKey";
-            this.txtOpenRdpAdminKey.Size = new System.Drawing.Size(100, 26);
+            this.txtOpenRdpAdminKey.Size = new System.Drawing.Size(247, 26);
             this.txtOpenRdpAdminKey.TabIndex = 13;
-            // 
-            // txtOpenRdpKey
-            // 
-            this.txtOpenRdpKey.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.txtOpenRdpKey.Location = new System.Drawing.Point(402, 30);
-            this.txtOpenRdpKey.Name = "txtOpenRdpKey";
-            this.txtOpenRdpKey.Size = new System.Drawing.Size(100, 26);
-            this.txtOpenRdpKey.TabIndex = 8;
-            // 
-            // chkOpenRdpNoCredShift
-            // 
-            this.chkOpenRdpNoCredShift.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.chkOpenRdpNoCredShift.AutoSize = true;
-            this.chkOpenRdpNoCredShift.Location = new System.Drawing.Point(363, 124);
-            this.chkOpenRdpNoCredShift.Name = "chkOpenRdpNoCredShift";
-            this.chkOpenRdpNoCredShift.Size = new System.Drawing.Size(22, 21);
-            this.chkOpenRdpNoCredShift.TabIndex = 17;
-            this.chkOpenRdpNoCredShift.UseVisualStyleBackColor = true;
-            // 
-            // chkOpenRdpNoCredAlt
-            // 
-            this.chkOpenRdpNoCredAlt.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.chkOpenRdpNoCredAlt.AutoSize = true;
-            this.chkOpenRdpNoCredAlt.Location = new System.Drawing.Point(313, 124);
-            this.chkOpenRdpNoCredAlt.Name = "chkOpenRdpNoCredAlt";
-            this.chkOpenRdpNoCredAlt.Size = new System.Drawing.Size(22, 21);
-            this.chkOpenRdpNoCredAlt.TabIndex = 16;
-            this.chkOpenRdpNoCredAlt.UseVisualStyleBackColor = true;
-            // 
-            // chkOpenRdpNoCredCtrl
-            // 
-            this.chkOpenRdpNoCredCtrl.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.chkOpenRdpNoCredCtrl.AutoSize = true;
-            this.chkOpenRdpNoCredCtrl.Location = new System.Drawing.Point(263, 124);
-            this.chkOpenRdpNoCredCtrl.Name = "chkOpenRdpNoCredCtrl";
-            this.chkOpenRdpNoCredCtrl.Size = new System.Drawing.Size(22, 21);
-            this.chkOpenRdpNoCredCtrl.TabIndex = 15;
-            this.chkOpenRdpNoCredCtrl.UseVisualStyleBackColor = true;
+            this.txtOpenRdpAdminKey.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtKeys_KeyPress);
+            this.txtOpenRdpAdminKey.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.txtKeys_PreviewKeyDown);
             // 
             // lblOpenRdpNoCredShortcut
             // 
             this.lblOpenRdpNoCredShortcut.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lblOpenRdpNoCredShortcut.AutoSize = true;
-            this.lblOpenRdpNoCredShortcut.Location = new System.Drawing.Point(3, 115);
+            this.lblOpenRdpNoCredShortcut.Location = new System.Drawing.Point(3, 107);
             this.lblOpenRdpNoCredShortcut.Name = "lblOpenRdpNoCredShortcut";
             this.lblOpenRdpNoCredShortcut.Size = new System.Drawing.Size(230, 40);
             this.lblOpenRdpNoCredShortcut.TabIndex = 14;
@@ -540,121 +442,31 @@
             // 
             this.lblOpenRdpAdminShortcut.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lblOpenRdpAdminShortcut.AutoSize = true;
-            this.lblOpenRdpAdminShortcut.Location = new System.Drawing.Point(3, 79);
+            this.lblOpenRdpAdminShortcut.Location = new System.Drawing.Point(3, 66);
             this.lblOpenRdpAdminShortcut.Name = "lblOpenRdpAdminShortcut";
             this.lblOpenRdpAdminShortcut.Size = new System.Drawing.Size(232, 20);
             this.lblOpenRdpAdminShortcut.TabIndex = 9;
             this.lblOpenRdpAdminShortcut.Text = "Open RDP Connection (/admin)";
             // 
-            // chkOpenRdpAdminCtrl
-            // 
-            this.chkOpenRdpAdminCtrl.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.chkOpenRdpAdminCtrl.AutoSize = true;
-            this.chkOpenRdpAdminCtrl.Location = new System.Drawing.Point(263, 78);
-            this.chkOpenRdpAdminCtrl.Name = "chkOpenRdpAdminCtrl";
-            this.chkOpenRdpAdminCtrl.Size = new System.Drawing.Size(22, 21);
-            this.chkOpenRdpAdminCtrl.TabIndex = 10;
-            this.chkOpenRdpAdminCtrl.UseVisualStyleBackColor = true;
-            // 
-            // chkOpenRdpAdminAlt
-            // 
-            this.chkOpenRdpAdminAlt.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.chkOpenRdpAdminAlt.AutoSize = true;
-            this.chkOpenRdpAdminAlt.Location = new System.Drawing.Point(313, 78);
-            this.chkOpenRdpAdminAlt.Name = "chkOpenRdpAdminAlt";
-            this.chkOpenRdpAdminAlt.Size = new System.Drawing.Size(22, 21);
-            this.chkOpenRdpAdminAlt.TabIndex = 11;
-            this.chkOpenRdpAdminAlt.UseVisualStyleBackColor = true;
-            // 
-            // chkOpenRdpAdminShift
-            // 
-            this.chkOpenRdpAdminShift.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.chkOpenRdpAdminShift.AutoSize = true;
-            this.chkOpenRdpAdminShift.Location = new System.Drawing.Point(363, 78);
-            this.chkOpenRdpAdminShift.Name = "chkOpenRdpAdminShift";
-            this.chkOpenRdpAdminShift.Size = new System.Drawing.Size(22, 21);
-            this.chkOpenRdpAdminShift.TabIndex = 12;
-            this.chkOpenRdpAdminShift.UseVisualStyleBackColor = true;
-            // 
-            // chkOpenRdpCtrl
-            // 
-            this.chkOpenRdpCtrl.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.chkOpenRdpCtrl.AutoSize = true;
-            this.chkOpenRdpCtrl.Location = new System.Drawing.Point(263, 32);
-            this.chkOpenRdpCtrl.Name = "chkOpenRdpCtrl";
-            this.chkOpenRdpCtrl.Size = new System.Drawing.Size(22, 21);
-            this.chkOpenRdpCtrl.TabIndex = 5;
-            this.chkOpenRdpCtrl.UseVisualStyleBackColor = true;
-            // 
-            // chkOpenRdpAlt
-            // 
-            this.chkOpenRdpAlt.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.chkOpenRdpAlt.AutoSize = true;
-            this.chkOpenRdpAlt.Location = new System.Drawing.Point(313, 32);
-            this.chkOpenRdpAlt.Name = "chkOpenRdpAlt";
-            this.chkOpenRdpAlt.Size = new System.Drawing.Size(22, 21);
-            this.chkOpenRdpAlt.TabIndex = 6;
-            this.chkOpenRdpAlt.UseVisualStyleBackColor = true;
-            // 
-            // chkOpenRdpShift
-            // 
-            this.chkOpenRdpShift.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.chkOpenRdpShift.AutoSize = true;
-            this.chkOpenRdpShift.Location = new System.Drawing.Point(363, 32);
-            this.chkOpenRdpShift.Name = "chkOpenRdpShift";
-            this.chkOpenRdpShift.Size = new System.Drawing.Size(22, 21);
-            this.chkOpenRdpShift.TabIndex = 7;
-            this.chkOpenRdpShift.UseVisualStyleBackColor = true;
-            // 
             // lblOpenRdpShortcut
             // 
             this.lblOpenRdpShortcut.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lblOpenRdpShortcut.AutoSize = true;
-            this.lblOpenRdpShortcut.Location = new System.Drawing.Point(3, 33);
+            this.lblOpenRdpShortcut.Location = new System.Drawing.Point(3, 15);
             this.lblOpenRdpShortcut.Name = "lblOpenRdpShortcut";
             this.lblOpenRdpShortcut.Size = new System.Drawing.Size(171, 20);
             this.lblOpenRdpShortcut.TabIndex = 4;
             this.lblOpenRdpShortcut.Text = "Open RDP Connection";
             // 
-            // label9
+            // txtOpenRdpKey
             // 
-            this.label9.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(257, 0);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(33, 20);
-            this.label9.TabIndex = 0;
-            this.label9.Text = "Ctrl";
-            // 
-            // label10
-            // 
-            this.label10.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(310, 0);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(28, 20);
-            this.label10.TabIndex = 1;
-            this.label10.Text = "Alt";
-            // 
-            // label11
-            // 
-            this.label11.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(353, 0);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(42, 20);
-            this.label11.TabIndex = 2;
-            this.label11.Text = "Shift";
-            // 
-            // label12
-            // 
-            this.label12.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(402, 0);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(35, 20);
-            this.label12.TabIndex = 3;
-            this.label12.Text = "Key";
+            this.txtOpenRdpKey.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtOpenRdpKey.Location = new System.Drawing.Point(256, 12);
+            this.txtOpenRdpKey.Name = "txtOpenRdpKey";
+            this.txtOpenRdpKey.Size = new System.Drawing.Size(247, 26);
+            this.txtOpenRdpKey.TabIndex = 8;
+            this.txtOpenRdpKey.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtKeys_KeyPress);
+            this.txtOpenRdpKey.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.txtKeys_PreviewKeyDown);
             // 
             // grpCredentialOptions
             // 
@@ -928,31 +740,15 @@
         private System.Windows.Forms.Button cmdRegExPostReset;
         private System.Windows.Forms.Button cmdRegExPreReset;
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Label lblOpenRdpNoCredAdminShortcut;
-        private System.Windows.Forms.CheckBox chkOpenRdpNoCredAdminCtrl;
-        private System.Windows.Forms.CheckBox chkOpenRdpNoCredAdminAlt;
-        private System.Windows.Forms.CheckBox chkOpenRdpNoCredAdminShift;
         private System.Windows.Forms.TextBox txtOpenRdpNoCredAdminKey;
         private System.Windows.Forms.TextBox txtOpenRdpNoCredKey;
         private System.Windows.Forms.TextBox txtOpenRdpAdminKey;
         private System.Windows.Forms.TextBox txtOpenRdpKey;
-        private System.Windows.Forms.CheckBox chkOpenRdpNoCredShift;
-        private System.Windows.Forms.CheckBox chkOpenRdpNoCredAlt;
-        private System.Windows.Forms.CheckBox chkOpenRdpNoCredCtrl;
         private System.Windows.Forms.Label lblOpenRdpNoCredShortcut;
         private System.Windows.Forms.Label lblOpenRdpAdminShortcut;
-        private System.Windows.Forms.CheckBox chkOpenRdpAdminCtrl;
-        private System.Windows.Forms.CheckBox chkOpenRdpAdminAlt;
-        private System.Windows.Forms.CheckBox chkOpenRdpAdminShift;
-        private System.Windows.Forms.CheckBox chkOpenRdpCtrl;
-        private System.Windows.Forms.CheckBox chkOpenRdpAlt;
-        private System.Windows.Forms.CheckBox chkOpenRdpShift;
         private System.Windows.Forms.Label lblOpenRdpShortcut;
-        private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.Label label10;
-        private System.Windows.Forms.Label label11;
-        private System.Windows.Forms.Label label12;
         private System.Windows.Forms.GroupBox grpCredentialOptions;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
     }
 }
