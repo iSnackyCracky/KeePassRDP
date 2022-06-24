@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018-2020 iSnackyCracky
+ *  Copyright (C) 2018-2022 iSnackyCracky
  *
  *  This file is part of KeePassRDP.
  *
@@ -180,7 +180,7 @@ namespace KeePassRDP
             }
             else { entry = pe; }
 
-            if (entry != null) { Util.GetResolvedReferencesEntry(pe, m_host.Database); }
+            if (entry != null) { entry = Util.GetResolvedReferencesEntry(entry, m_host.Database); }
 
             return entry;
         }
