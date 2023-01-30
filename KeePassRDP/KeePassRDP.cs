@@ -170,6 +170,11 @@ namespace KeePassRDP
 
         private PwEntry SelectCred(PwEntry pe)
         {
+            if (!string.IsNullOrWhiteSpace(pe.Strings.ReadSafe(PwDefs.UserNameField)) && !string.IsNullOrWhiteSpace(pe.Strings.ReadSafe(PwDefs.PasswordField)))
+            {
+                return pe;
+            }
+
             var entrySettings = Util.GetEntrySettings(pe);
 
             PwEntry entry;
