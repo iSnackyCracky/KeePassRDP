@@ -56,7 +56,7 @@ namespace KeePassRDP
             LoadListEntries();
             olvEntries.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
             Text = "KeePassRDP Credential picker";
-            if (ConnPE != null) { Text += " - " + ConnPE?.Strings.ReadSafe(PwDefs.TitleField); }
+            if (ConnPE != null) { Text += " - " + ConnPE.Strings.ReadSafe(PwDefs.TitleField); }
         }
 
         private void LoadListEntries()
