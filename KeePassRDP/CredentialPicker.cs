@@ -88,6 +88,17 @@ namespace KeePassRDP
                     accountEntries.Add(GetRdpAccountEntries(group));
                 }
 
+                // if the selected entry username match a user name in accountEntries list ...
+                string connEntryUserName = _pe.Strings.ReadSafe(PwDefs.UserNameField);
+                foreach (PwEntry entry in accountEntries)
+                {
+                    if (entry.Strings.ReadSafe(PwDefs.UserNameField) == connEntryUserName)
+                    {
+                        // ... Use the found PwEntry
+                        return entry;
+                    }
+                }
+
                 if (accountEntries.UCount >= 1)
                 {
                     // create a selection dialog with the matching entries
