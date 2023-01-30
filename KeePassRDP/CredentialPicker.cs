@@ -24,6 +24,7 @@ using KeePassLib.Collections;
 using KeePassLib.Utility;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 
 namespace KeePassRDP
 {
@@ -93,7 +94,7 @@ namespace KeePassRDP
                     var frmCredPick = new CredentialPickerForm(_config, _database)
                     {
                         RdpAccountEntries = accountEntries,
-                        ConnPE = pe
+                        ConnPE = _pe
                     };
 
                     // show the dialog and get the result

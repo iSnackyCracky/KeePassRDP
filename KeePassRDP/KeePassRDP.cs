@@ -189,51 +189,58 @@ namespace KeePassRDP
         {
             if (IsValid(m_host))
             {
-                // get selected entry for connection
-                var connPwEntry = m_host.MainWindow.GetSelectedEntry(true, true);
-                string URL = Util.StripUrl(Util.ResolveReferences(connPwEntry, m_host.Database, PwDefs.UrlField));
+                // get selected entries for connection
+                var connPwEntries = m_host.MainWindow.GetSelectedEntries();
 
-                if (string.IsNullOrEmpty(URL))
+                foreach (var entry in connPwEntries)
                 {
-                    MessageBox.Show("The selected entry has no URL/Target to connect to.", "KeePassRDP");
-                    return;
+                    string URL = Util.StripUrl(Util.ResolveReferences(entry, m_host.Database, PwDefs.UrlField));
+
+                    if (string.IsNullOrEmpty(URL))
+                    {
+                        string title = _config.KeePassShowResolvedReferences ?
+                            Util.ResolveReferences(entry, m_host.Database, PwDefs.TitleField) :
+                            entry.Strings.ReadSafe(PwDefs.TitleField);
+                        MessageBox.Show(string.Format("The entry \"{0}\" has no URL/Target to connect to.", title), "KeePassRDP");
+                        continue;
+                    }
+
+                    var rdpProcess = new Process();
+
+                    // if selected, save credentials into the Windows Credential Manager
+                    if (tmpUseCreds)
+                    {
+                        // get credentials for connection
+                        var connPwEntry = SelectCred(entry);
+                        if (connPwEntry == null) { return; }
+
+                        // Instantiate a new KprCredential object.
+                        var cred = new KprCredential(
+                            connPwEntry.Strings.ReadSafe(PwDefs.UserNameField),
+                            connPwEntry.Strings.ReadSafe(PwDefs.PasswordField),
+                            _config.CredVaultUseWindows ? "TERMSRV/" + Util.StripUrl(URL, true) : Util.StripUrl(URL, true),
+                            _config.CredVaultUseWindows ? CredentialType.DomainPassword : CredentialType.Generic,
+                            Convert.ToInt32(_config.CredVaultTtl)
+                        );
+
+                        // Give the KprCredential to the CredentialManager for managing the Windows Vault.
+                        _credManager.Add(cred);
+
+                        System.Threading.Thread.Sleep(300);
+                    }
+
+                    // start RDP / mstsc.exe
+                    rdpProcess.StartInfo.FileName = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\mstsc.exe");
+                    rdpProcess.StartInfo.Arguments = "/v:" + URL;
+                    if (tmpMstscUseAdmin || _config.MstscUseAdmin) { rdpProcess.StartInfo.Arguments += " /admin"; }
+                    if (_config.MstscUseFullscreen) { rdpProcess.StartInfo.Arguments += " /f"; }
+                    if (_config.MstscUseSpan) { rdpProcess.StartInfo.Arguments += " /span"; }
+                    if (_config.MstscUseMultimon) { rdpProcess.StartInfo.Arguments += " /multimon"; }
+                    if (_config.MstscWidth > 0) { rdpProcess.StartInfo.Arguments += " /w:" + _config.MstscWidth; }
+                    if (_config.MstscHeight > 0) { rdpProcess.StartInfo.Arguments += " /h:" + _config.MstscHeight; }
+                    rdpProcess.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
+                    rdpProcess.Start();
                 }
-
-                var rdpProcess = new Process();
-
-                // if selected, save credentials into the Windows Credential Manager
-                if (tmpUseCreds)
-                {
-                    // get credentials for connection
-                    connPwEntry = SelectCred(connPwEntry);
-                    if (connPwEntry == null) { return; }
-
-                    // Instantiate a new KprCredential object.
-                    var cred = new KprCredential(
-                        connPwEntry.Strings.ReadSafe(PwDefs.UserNameField),
-                        connPwEntry.Strings.ReadSafe(PwDefs.PasswordField),
-                        _config.CredVaultUseWindows ? "TERMSRV/" + Util.StripUrl(URL, true) : Util.StripUrl(URL, true),
-                        _config.CredVaultUseWindows ? CredentialType.DomainPassword : CredentialType.Generic,
-                        Convert.ToInt32(_config.CredVaultTtl)
-                    );
-
-                    // Give the KprCredential to the CredentialManager for managing the Windows Vault.
-                    _credManager.Add(cred);
-
-                    System.Threading.Thread.Sleep(300);
-                }
-
-                // start RDP / mstsc.exe
-                rdpProcess.StartInfo.FileName = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\System32\mstsc.exe");
-                rdpProcess.StartInfo.Arguments = "/v:" + URL;
-                if (tmpMstscUseAdmin || _config.MstscUseAdmin) { rdpProcess.StartInfo.Arguments += " /admin"; }
-                if (_config.MstscUseFullscreen) { rdpProcess.StartInfo.Arguments += " /f"; }
-                if (_config.MstscUseSpan) { rdpProcess.StartInfo.Arguments += " /span"; }
-                if (_config.MstscUseMultimon) { rdpProcess.StartInfo.Arguments += " /multimon"; }
-                if (_config.MstscWidth > 0) { rdpProcess.StartInfo.Arguments += " /w:" + _config.MstscWidth; }
-                if (_config.MstscHeight > 0) { rdpProcess.StartInfo.Arguments += " /h:" + _config.MstscHeight; }
-                rdpProcess.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
-                rdpProcess.Start();
             }
         }
 

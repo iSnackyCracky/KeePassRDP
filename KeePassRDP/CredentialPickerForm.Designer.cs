@@ -54,19 +54,22 @@
             this.olvColPath,
             this.olvColTitle,
             this.olvColNotes});
+            this.olvEntries.Font = new System.Drawing.Font("Arial", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(177)));
             this.olvEntries.FullRowSelect = true;
             this.olvEntries.GridLines = true;
             this.olvEntries.HideSelection = false;
-            this.olvEntries.Location = new System.Drawing.Point(18, 18);
-            this.olvEntries.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.olvEntries.HighlightBackgroundColor = System.Drawing.Color.FromArgb(204,232,255);
+            this.olvEntries.HighlightForegroundColor = System.Drawing.SystemColors.WindowText;
+            this.olvEntries.Location = new System.Drawing.Point(12, 12);
             this.olvEntries.MultiSelect = false;
             this.olvEntries.Name = "olvEntries";
             this.olvEntries.SelectAllOnControlA = false;
             this.olvEntries.ShowGroups = false;
-            this.olvEntries.Size = new System.Drawing.Size(877, 327);
+            this.olvEntries.Size = new System.Drawing.Size(586, 214);
             this.olvEntries.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.olvEntries.TabIndex = 0;
             this.olvEntries.UseCompatibleStateImageBehavior = false;
+            this.olvEntries.UseCustomSelectionColors = true;
             this.olvEntries.View = System.Windows.Forms.View.Details;
             this.olvEntries.ItemActivate += new System.EventHandler(this.OlvEntries_ItemActivate);
             // 
@@ -75,6 +78,7 @@
             this.olvColUsername.AspectName = "Username";
             this.olvColUsername.DisplayIndex = 2;
             this.olvColUsername.IsEditable = false;
+            this.olvColUsername.MinimumWidth = 150;
             this.olvColUsername.Text = "User Name";
             this.olvColUsername.Width = 200;
             // 
@@ -82,6 +86,7 @@
             // 
             this.olvColPath.AspectName = "Path";
             this.olvColPath.DisplayIndex = 0;
+            this.olvColPath.MinimumWidth = 80;
             this.olvColPath.Text = "Path";
             this.olvColPath.Width = 150;
             // 
@@ -90,6 +95,7 @@
             this.olvColTitle.AspectName = "Title";
             this.olvColTitle.DisplayIndex = 1;
             this.olvColTitle.IsEditable = false;
+            this.olvColTitle.MinimumWidth = 90;
             this.olvColTitle.Text = "Title";
             this.olvColTitle.Width = 90;
             // 
@@ -98,6 +104,7 @@
             this.olvColNotes.AspectName = "Notes";
             this.olvColNotes.FillsFreeSpace = true;
             this.olvColNotes.IsEditable = false;
+            this.olvColNotes.MinimumWidth = 60;
             this.olvColNotes.Text = "Notes";
             // 
             // olvColUidHash
@@ -112,10 +119,9 @@
             // 
             this.cmdOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cmdOk.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.cmdOk.Location = new System.Drawing.Point(663, 357);
-            this.cmdOk.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cmdOk.Location = new System.Drawing.Point(442, 232);
             this.cmdOk.Name = "cmdOk";
-            this.cmdOk.Size = new System.Drawing.Size(112, 35);
+            this.cmdOk.Size = new System.Drawing.Size(75, 23);
             this.cmdOk.TabIndex = 1;
             this.cmdOk.Text = "&Ok";
             this.cmdOk.UseVisualStyleBackColor = true;
@@ -125,10 +131,9 @@
             // 
             this.cmdCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cmdCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cmdCancel.Location = new System.Drawing.Point(784, 357);
-            this.cmdCancel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.cmdCancel.Location = new System.Drawing.Point(523, 232);
             this.cmdCancel.Name = "cmdCancel";
-            this.cmdCancel.Size = new System.Drawing.Size(112, 35);
+            this.cmdCancel.Size = new System.Drawing.Size(75, 23);
             this.cmdCancel.TabIndex = 2;
             this.cmdCancel.Text = "&Cancel";
             this.cmdCancel.UseVisualStyleBackColor = true;
@@ -137,15 +142,15 @@
             // CredentialPickerForm
             // 
             this.AcceptButton = this.cmdOk;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cmdCancel;
-            this.ClientSize = new System.Drawing.Size(915, 411);
+            this.ClientSize = new System.Drawing.Size(610, 267);
             this.Controls.Add(this.cmdCancel);
             this.Controls.Add(this.cmdOk);
             this.Controls.Add(this.olvEntries);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.SizableToolWindow;
-            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.MinimumSize = new System.Drawing.Size(450, 300);
             this.Name = "CredentialPickerForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "KeePassRDP Credential picker";
