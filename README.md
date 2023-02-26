@@ -1,65 +1,134 @@
-[<img alt="latest release" src="https://img.shields.io/github/v/release/iSnackyCracky/KeePassRDP?style=flat-square">](https://github.com/iSnackyCracky/KeePassRDP/releases/latest) <img alt="downloads (all releases)" src="https://img.shields.io/github/downloads/iSnackyCracky/KeePassRDP/total?style=flat-square"> [<img alt="GitHub" src="https://img.shields.io/github/license/iSnackyCracky/KeePassRDP?style=flat-square">](https://github.com/iSnackyCracky/KeePassRDP/blob/master/COPYING)
+[latest]: releases/latest/download/KeePassRDP_v2.0.zip
 
 # KeePassRDP
+[![Latest version](https://img.shields.io/github/v/release/iSnackyCracky/KeePassRDP?style=flat-square)](releases/latest)
+[![Download KeePassRDP](https://img.shields.io/badge/download-KeePassRDP.zip-blue?style=flat-square&color=yellow)][latest]
+![Total downloads](https://img.shields.io/github/downloads/iSnackyCracky/KeePassRDP/total?style=flat-square)
+[![License](https://img.shields.io/github/license/iSnackyCracky/KeePassRDP?style=flat-square)](COPYING)
+![GitHub top language](https://img.shields.io/github/languages/top/iSnackyCracky/KeePassRDP?style=flat-square&color=blueviolet)
+
 ## Overview
-KeePassRDP is a plugin for KeePass 2.x which adds multiple options to connect via RDP to the URL of an entry.
+KeePassRDP is a plugin for KeePass 2.x which adds various options to connect to the URL of an entry via RDP.
 
 ## Installation
-1. Download the zip file from the newest [release](https://github.com/iSnackyCracky/KeePassRDP/releases)
-2. Unzip and copy the KeePassRDP.plgx file to your KeePass plugins folder.
+1. Download the .zip file for the latest <sub>[![Latest version](https://img.shields.io/github/v/release/iSnackyCracky/KeePassRDP?style=flat-square)][latest]</sub>.
+2. Unzip and copy the KeePassRDP.plgx file to your KeePass plugins folder *`(e.g. C:\Program Files\KeePass Password Safe 2\Plugins)`*.
+3. Start KeePass and enjoy using KeePassRDP.
 
 ## Usage
-To connect via RDP to a machine, select the entry containing the IP-address or hostname, right-click and select *KeePassRDP* \> *Open RDP connection* (or just press <kbd>CTRL</kbd> + <kbd>M</kbd>).
+To connect to target computers via RDP select one or more entries containing the IP-address(es) or hostname(s), right-click and select `KeePassRDP > Open RDP connection` (or simply press <kbd>CTRL</kbd> + <kbd>M</kbd>).
 
-To use the other connection options, just select the corresponding entries in the context-menu.
+>![Context menu](doc/context_menu.jpg)
+
+To use one of the other connection options select the corresponding item from the context menu, or press the configurable keyboard shortcut.
 
 ## Features
 - Connect to host via RDP
 - Connect to host via RDP admin session (`mstsc.exe /admin` parameter)
-- Customize `mstsc.exe` parameters (`/f`, `/span`, `/multimon`, `/w`, `/h`)
-- Gather and show possible Windows or domain credentials when the connection entry is inside a group called "RDP" (see below for details)
+- Support for `mstsc.exe` parameters (`/f`, `/span`, `/multimon`, `/w`, `/h`, `/public`, `/restrictedAdmin`, `/remoteGuard`)
+- Select from matching (Windows or domain) credentials when the target entry is inside a configurable trigger group ([see below](#trigger-group--folder))
+- Automatic adding and removing of credentials to and from the Windows credential manager ([how it works](#how-it-works))
+- Configurable [keyboard shortcuts](#keyboard-shortcuts)
+- Configurable [context menu](#context-menu--toolbar-items)
+- Configurable [toolbar items](#context-menu--toolbar-items)
+- Configurable [credential lifetime](#credential-lifetime)
+- Customizable [credential picker](#credential-picker)
+- Customizable [per entry settings](#individual-entry-settings)
+- Support for DPI-scaling
+- Made with :heart: and :pizza:
 
+## Languages
+<sub>![](https://img.shields.io/badge/en-blue?style=flat-square)</sub> English
+| <sub>![](https://img.shields.io/badge/de-blue?style=flat-square)</sub> German
 
-### RDP subgroup / folder
-This is how I use the extension on a daily basis (I work for an MSP where we store credentials for customer domains or machines inside KeePass):
+<br>
 
-Our KeePass Database is structured like this:
+### Trigger group / folder
+This is how we use the extension on a daily basis (I work for an MSP where we use KeePass to securely store credentials for accessing customer domains and computers):
 
-![DB structure image](https://isnackycracky.github.io/KeePassRDP/img/db_structure.jpg)
+Our KeePass database is structured like that:
+
+>![DB structure](doc/db_structure.jpg)
 
 Where each group contains entries specific to that customer.
 
-If there ist just a single jumphost or something like that, we just create an entry like this directly inside the customer group:
+If there is only a single jumphost or something similiar, we usually place an entry like the following directly in the customer group:
 
-![jumphost example image](https://isnackycracky.github.io/KeePassRDP/img/jumphost_entry.jpg)
+>![Jumphost example](doc/jumphost_entry.jpg)
 
-But if a customer has many hosts and multiple accounts to access them, we create a subgroup called **RDP** (this has to be uppercase and directly inside the customer group to work) inside a customer group:
+When a customer has many hosts and/or requires multiple accounts, we create a subgroup called **RDP** inside the customer group:
 
-![rdp subgroup example image](https://isnackycracky.github.io/KeePassRDP/img/rdp_subgroup.jpg)
+>![RDP subgroup example](doc/rdp_subgroup.jpg)
 
-Which may contain entries like this:
+>><small>The name of the trigger group can be configured from within the KeePassRDP options form *(since v2.0)*.</small>
 
-![RDP subgroup example entries](https://isnackycracky.github.io/KeePassRDP/img/rdp_subgroup_entries.jpg)
+It may contain entries like this:
 
-The customer group itself contains the account-entries in this case (they can also be in different subgroups one level below the customer group):
+>![RDP subgroup example entries](doc/rdp_subgroup_entries.jpg)
 
-![cusotmer example entries](https://isnackycracky.github.io/KeePassRDP/img/customer_entries.jpg)
+Credentials are taken from the customer group in that case (by default they can also be in different subgroups within the customer group):
 
-If we now want to connect to one of the machines in the RDP subgroup (with credential usage), just select the machine-entry, press <kbd>CTRL</kbd> + <kbd>M</kbd> and KeePassRDP shows you a dialog with viable account-entries (with titles like e.g. *domain-admin*, *local user*, ...) it always ignores entries where a custom field named **rdpignore** is created with a value not equal to *false* (not case-sensitive).
-This "ignore-flag" can be toggled via the KeePassRDP context menu since v1.9.0.
+>![Customer example entries](doc/customer_entries.jpg)
 
-![credential selection dialog](https://isnackycracky.github.io/KeePassRDP/img/credential_picker.jpg)
+>><small>Ignoring entries can be toggled via the KeePassRDP context menu *(since v1.9.0)* or from the toolbar *(since v2.0)*.</small>
 
-Now just select the entry you want and click ok (or press <kbd>Enter</kbd>).
+To connect to one of the targets in the **RDP** group (using credentials), just select the entry, press <kbd>CTRL</kbd> + <kbd>M</kbd> and KeePassRDP will show a dialog with filtered account entries (matching the titles by a configurable regular expression, *e.g. domain-admin, local user, ...*).
+
+>![Credential selection dialog](doc/credential_picker.jpg)
+
+Finally you only need to select the credential you want to use and click "GO" (or press <kbd>Enter</kbd>).
+
+<br>
+
+><small id="individual-entry-settings">Individual entry settings can be set from the KeePassRDP tab on the edit entry form *(since v2.0)*.</small>
+>
+>>![Entry settings](doc/entry_settings.jpg)
+
+### Keyboard shortcuts
+
+>Fully configurable from within the KeePassRDP options form.
+>
+>>![Keyboard shortcuts](doc/keyboard_shortcuts.jpg)
+
+### Context menu / toolbar items
+
+>Visibility configurable from within the KeePassRDP options form.
+>
+>>![Visibility settings](doc/visibility_settings.jpg)
+
+### Credential picker
+
+>Customizable from within the KeePassRDP options form.
+>
+>>![Credential picker settings](doc/credential_picker_settings.jpg)
 
 ## How it works
-The plugin basically just calls the default `mstsc.exe` with the `/v:<address>` (and optionally other) parameter(s) to connect.
+Basically the plugin calls the default `mstsc.exe` with the `/v:<address>` (and optionally other) parameter(s) to connect.
 
-If you choose to open a connection *with credentials* it stores the credentials into the Windows Credential Manager ("Vault") for usage by the `mstsc.exe` process.
+If you choose to open a connection ***with credentials*** it stores the selected credentials into the Windows credential manager ("vault") for usage by the `mstsc.exe` process.
 
-These Credentials then get removed again after about 10 seconds.
+The credentials will then be removed depending on what is configured in the KeePassRDP options.
 
-## Third-party Software
-This plugin uses the following third-party libraries:
-- the *awesome* "ListView" wrapper [**ObjectListView**](http://objectlistview.sourceforge.net/cs/index.html) by Phillip Piper
-- the *awesome* "Windows Credential Management API" wrapper [**CredentialManagement**](https://github.com/ilyalozovyy/credentialmanagement) by [iLya Lozovyy](https://github.com/ilyalozovyy)
+### Credential lifetime
+
+>Configurable from within the KeePassRDP options form.
+>
+>>![Credential settings](doc/credential_settings.jpg)
+
+## Third-party software
+KeePassRDP makes use of the following third-party libraries:
+- the *awesome* [**Json.NET**](https://github.com/JamesNK/Newtonsoft.Json) by James Newton-King
+- [**Visual Studio 2022 Image Library**](https://www.microsoft.com/en-us/download/details.aspx?id=35825) by Microsoft
+
+## Building instructions
+Just clone the repository:
+
+```bash
+git clone https://github.com/iSnackyCracky/KeePassRDP.git
+```
+
+Open the solution file (KeePassRDP.sln) with Visual Studio and build the KeePassRDP project:
+
+>![Build project](doc/build_project.jpg)
+
+You should get a ready-to-use .plgx and .zip file like the ones from the releases.

@@ -1,0 +1,548 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="&amp;Cancel" xml:space="preserve">
+    <value>&amp;Abbrechen</value>
+  </data>
+  <data name="&amp;GO" xml:space="preserve">
+    <value>&amp;LOS</value>
+  </data>
+  <data name="&amp;No" xml:space="preserve">
+    <value>Nein</value>
+  </data>
+  <data name="&amp;Quit" xml:space="preserve">
+    <value>&amp;Beenden</value>
+  </data>
+  <data name="&amp;Wait" xml:space="preserve">
+    <value>&amp;Warten</value>
+  </data>
+  <data name="&amp;Yes" xml:space="preserve">
+    <value>Ja</value>
+  </data>
+  <data name="About" xml:space="preserve">
+    <value>Über</value>
+  </data>
+  <data name="Adaptive lifetime" xml:space="preserve">
+    <value>Adaptive Verweildauer</value>
+  </data>
+  <data name="Add excluded group" xml:space="preserve">
+    <value>Ausgeschlossene Gruppe hinzufügen</value>
+  </data>
+  <data name="Add included group" xml:space="preserve">
+    <value>Einbezogene Gruppe hinzufügen</value>
+  </data>
+  <data name="Add mstsc.exe parameter" xml:space="preserve">
+    <value>mstsc.exe Parameter hinzufügen</value>
+  </data>
+  <data name="Add RegEx pattern" xml:space="preserve">
+    <value>RegEx-Muster hinzufügen</value>
+  </data>
+  <data name="Add RegEx postfix" xml:space="preserve">
+    <value>RegEx-Postfix hinzufügen</value>
+  </data>
+  <data name="Add RegEx prefix" xml:space="preserve">
+    <value>RegEx-Präfix hinzufügen</value>
+  </data>
+  <data name="Add selected context menu item(s)" xml:space="preserve">
+    <value>Ausgewählte Kontextmenüeinträge hinzufügen</value>
+  </data>
+  <data name="Add selected toolbar item(s)" xml:space="preserve">
+    <value>Ausgewählte Werkzeugleistenelemente hinzufügen</value>
+  </data>
+  <data name="Additional mstsc.exe parameters:" xml:space="preserve">
+    <value>Zusätzliche mstsc.exe Parameter:</value>
+  </data>
+  <data name="Additional RegEx patterns:" xml:space="preserve">
+    <value>Zusätzliche RegEx-Muster:</value>
+  </data>
+  <data name="Already connected to URL/target '{0}'." xml:space="preserve">
+    <value>Bereits zum Ziel '{0}' verbunden.</value>
+  </data>
+  <data name="Already connected with the same credentials to URL/target '{0}'." xml:space="preserve">
+    <value>Bereits mit diesen Zugangsdaten zum Ziel '{0}' verbunden.</value>
+  </data>
+  <data name="Always confirm duplicate&#xD;&#xA;connection attempts" xml:space="preserve">
+    <value>Doppelte Verbindungs-
+versuche immer bestätigen</value>
+  </data>
+  <data name="Always hide entry from credential picker if checked." xml:space="preserve">
+    <value>Eintrag immer im Credential Picker verstecken wenn aktiviert.</value>
+  </data>
+  <data name="Always include selected entries with credentials in credential picker list." xml:space="preserve">
+    <value>Ausgewählte Einträge immer zum Credential Picker hinzufügen.</value>
+  </data>
+  <data name="Always remove credential when mstsc.exe exits (ignoring TTL).&#xD;&#xA;Set TTL to 0 to remove credentials on exit only." xml:space="preserve">
+    <value>Zugangsdaten immer löschen sobald mstsc.exe beendet wird (TTL ignorieren).
+TTL kann auf 0 gesetzt werden um Zugangsdaten nur beim Beenden zu löschen.</value>
+  </data>
+  <data name="Automatically continue connecting to hosts with self-signed certificates." xml:space="preserve">
+    <value>Verbindungen mit selbst signierten Zertifikaten automatisch fortsetzen.</value>
+  </data>
+  <data name="Automatically save last credential picker column sort order." xml:space="preserve">
+    <value>Sortierreihenfolge der Spalten des Credential Picker automatisch speichern.</value>
+  </data>
+  <data name="Automatically save last credential picker window size." xml:space="preserve">
+    <value>Fenstergröße des Credential Picker automatisch speichern.</value>
+  </data>
+  <data name="Confirm self-signed certificate" xml:space="preserve">
+    <value>Selbst signiertes Zertifikat bestätigen</value>
+  </data>
+  <data name="Connect to all" xml:space="preserve">
+    <value>Zu allen verbinden</value>
+  </data>
+  <data name="connecting to" xml:space="preserve">
+    <value>verbindet zu</value>
+  </data>
+  <data name="Context menu" xml:space="preserve">
+    <value>Kontextmenü</value>
+  </data>
+  <data name="Continue?" xml:space="preserve">
+    <value>Fortfahren?</value>
+  </data>
+  <data name="Credential TTL:" xml:space="preserve">
+    <value>Zugangsdaten TTL:</value>
+  </data>
+  <data name="Credentials" xml:space="preserve">
+    <value>Zugangsdaten</value>
+  </data>
+  <data name="Custom trigger group:" xml:space="preserve">
+    <value>Benutzerdefinierte Gruppe:</value>
+  </data>
+  <data name="Define a custom group name that triggers the credential picker.&#xD;&#xA;Defaults to &quot;RDP&quot; if unset." xml:space="preserve">
+    <value>Benutzerdefinierten Namen der Gruppe die den Credential Picker auslöst festlegen.
+Verwendet "RDP" als Standard.</value>
+  </data>
+  <data name="Discard changes" xml:space="preserve">
+    <value>Änderungen verwerfen</value>
+  </data>
+  <data name="Enable or disable resolving of references for entries shown in credential picker." xml:space="preserve">
+    <value>(De-)Aktivieren des Auflösens von Verweisen in Einträgen die im Credential Picker angezeigt werden.</value>
+  </data>
+  <data name="Enable recursive searching through all childs of entrys parent group." xml:space="preserve">
+    <value>Rekursive Durchsuchung aller untergeordneten Gruppen der Elterngruppe des Eintrags aktivieren.</value>
+  </data>
+  <data name="Enlarge row height of entries shown in credential picker list." xml:space="preserve">
+    <value>Höhe von Reihen der angezeigten Einträge im Credential Picker vergrößern.</value>
+  </data>
+  <data name="Entries" xml:space="preserve">
+    <value>Einträge</value>
+  </data>
+  <data name="Excluded group UUIDs:" xml:space="preserve">
+    <value>Ausgeschlossene Gruppen-UUIDs:</value>
+  </data>
+  <data name="Executable" xml:space="preserve">
+    <value>Programmdatei</value>
+  </data>
+  <data name="Force authenticating as local user when username starts with target hostname,&#xD;&#xA;or when hostname is empty." xml:space="preserve">
+    <value>Erzwingt Anmeldung als lokaler Benutzer wenn Benutzername mit Ziel-Host beginnt,
+oder wenn Hostname leer ist.</value>
+  </data>
+  <data name="Force local user" xml:space="preserve">
+    <value>Lokalen Benutzer erzwingen</value>
+  </data>
+  <data name="Force overwriting of existing credentials in Windows vault that are not managed by KeePassRDP." xml:space="preserve">
+    <value>Überschreiben von Zugangsdaten welche nicht von KeePassRDP verwaltet werden im Windows-Tresor erzwingen.</value>
+  </data>
+  <data name="Force registering of hotkeys after all KeePass plugins have initialized.&#xD;&#xA;Only enable when necessary. Can have unwanted side-effects." xml:space="preserve">
+    <value>Registrierung von Tastaturkürzeln nach allen anderen KeePass-Plugins erzwingen.
+Nur bei Notwendigkeit aktivieren. Kann unerwartetes Verhalten verursachen.</value>
+  </data>
+  <data name="General" xml:space="preserve">
+    <value>Allgemein</value>
+  </data>
+  <data name="Height - /h:" xml:space="preserve">
+    <value>Höhe - /h:</value>
+  </data>
+  <data name="Here you can configure all KeePassRDP related options." xml:space="preserve">
+    <value>Hier können alle KeePassRDP Optionen konfiguriert werden.</value>
+  </data>
+  <data name="Ignore" xml:space="preserve">
+    <value>Ignorieren</value>
+  </data>
+  <data name="Ignore entry credentials" xml:space="preserve">
+    <value>Zugangsdaten von Eintrag ignorieren</value>
+  </data>
+  <data name="Include default parameters" xml:space="preserve">
+    <value>Standard-Parameter einbeziehen</value>
+  </data>
+  <data name="Include default RegEx" xml:space="preserve">
+    <value>Standard-RegEx einbeziehen</value>
+  </data>
+  <data name="Include mstsc.exe parameters from main KeePassRDP options." xml:space="preserve">
+    <value>Mstsc.exe Parameter aus KeePassRDP Optionen einbeziehen.</value>
+  </data>
+  <data name="Include RegEx from main KeePassRDP options." xml:space="preserve">
+    <value>RegEx aus KeePassRDP Optionen einbeziehen.</value>
+  </data>
+  <data name="Included group UUIDs:" xml:space="preserve">
+    <value>Einbezogene Gruppen-UUIDs:</value>
+  </data>
+  <data name="Increase TTL of credential until mstsc.exe is connected and remove instantly." xml:space="preserve">
+    <value>TTL von Zugangsdaten erhöhen bis mstsc.exe verbunden ist und sofort löschen.</value>
+  </data>
+  <data name="Inlcude selected" xml:space="preserve">
+    <value>Ausgewählte einbeziehen</value>
+  </data>
+  <data name="KeePassRDP Options" xml:space="preserve">
+    <value>KeePassRDP Optionen</value>
+  </data>
+  <data name="KeePassRDP Website" xml:space="preserve">
+    <value>KeePassRDP Webseite</value>
+  </data>
+  <data name="Keyboard settings" xml:space="preserve">
+    <value>Tastatureinstellungen</value>
+  </data>
+  <data name="Larger rows" xml:space="preserve">
+    <value>Höhere Reihen</value>
+  </data>
+  <data name="License" xml:space="preserve">
+    <value>Lizenz</value>
+  </data>
+  <data name="More" xml:space="preserve">
+    <value>Mehr</value>
+  </data>
+  <data name="mstsc.exe automation" xml:space="preserve">
+    <value>mstsc.exe Automatisierung</value>
+  </data>
+  <data name="mstsc.exe parameters" xml:space="preserve">
+    <value>mstsc.exe Parameter</value>
+  </data>
+  <data name="Never open credential picker for entry if unchecked." xml:space="preserve">
+    <value>Credential Picker niemals für Eintrag öffnen wenn deaktiviert.</value>
+  </data>
+  <data name="Notes" xml:space="preserve">
+    <value>Kommentare</value>
+  </data>
+  <data name="Open RDP connection" xml:space="preserve">
+    <value>RDP-Verbindung starten</value>
+  </data>
+  <data name="Open RDP connection (/admin)" xml:space="preserve">
+    <value>RDP-Verbindung starten (/admin)</value>
+  </data>
+  <data name="Open RDP connection without credentials" xml:space="preserve">
+    <value>RDP-Verbindung ohne Zugangsdaten starten</value>
+  </data>
+  <data name="Open RDP connection without credentials (/admin)" xml:space="preserve">
+    <value>RDP-Verbindung ohne Zugangsdaten starten (/admin)</value>
+  </data>
+  <data name="Overwrite credential pickers window height." xml:space="preserve">
+    <value>Fensterhöhe des Credential Picker überschreiben.</value>
+  </data>
+  <data name="Overwrite credential pickers window width." xml:space="preserve">
+    <value>Fensterbreite des Credential Picker überschreiben.</value>
+  </data>
+  <data name="Overwrite credentials" xml:space="preserve">
+    <value>Zugangsdaten überschreiben</value>
+  </data>
+  <data name="Path" xml:space="preserve">
+    <value>Pfad</value>
+  </data>
+  <data name="Please open a KeePass database first." xml:space="preserve">
+    <value>Bitte zuerst eine KeePass-Datenbank öffnen.</value>
+  </data>
+  <data name="Please select a credential from the list." xml:space="preserve">
+    <value>Bitte Zugangsdaten aus der Liste auswählen.</value>
+  </data>
+  <data name="Please select an entry first." xml:space="preserve">
+    <value>Bitte zuerst einen Eintrag auswählen.</value>
+  </data>
+  <data name="Press right mouse button to open group picker,&#xD;&#xA;or enter hexstring of group UUID." xml:space="preserve">
+    <value>Rechte Maustaste drücken um Gruppenauswahl zu öffnen,
+oder Hexstring der Gruppen-UUID eingeben.</value>
+  </data>
+  <data name="Recursive group search" xml:space="preserve">
+    <value>Rekursive Gruppen-Suche</value>
+  </data>
+  <data name="Refresh credentials list" xml:space="preserve">
+    <value>Liste der Zugangsdaten aktualisieren</value>
+  </data>
+  <data name="RegEx postfixes:" xml:space="preserve">
+    <value>RegEx-Postfixe:</value>
+  </data>
+  <data name="RegEx prefixes:" xml:space="preserve">
+    <value>RegEx-Präfixe:</value>
+  </data>
+  <data name="Register last" xml:space="preserve">
+    <value>Als letztes registrieren</value>
+  </data>
+  <data name="Remember size" xml:space="preserve">
+    <value>Größe merken</value>
+  </data>
+  <data name="Remember sort order" xml:space="preserve">
+    <value>Sortierreihenfolge merken</value>
+  </data>
+  <data name="Remove on close" xml:space="preserve">
+    <value>Beim Beenden löschen</value>
+  </data>
+  <data name="Remove selected context menu item(s)" xml:space="preserve">
+    <value>Ausgewählte Kontextmenüeinträge entfernen</value>
+  </data>
+  <data name="Remove selected excluded group(s)" xml:space="preserve">
+    <value>Ausgewählte ausgeschlossene Gruppen entfernen</value>
+  </data>
+  <data name="Remove selected included group(s)" xml:space="preserve">
+    <value>Ausgewählte einbezogene Gruppen entfernen</value>
+  </data>
+  <data name="Remove selected mstsc.exe parameter(s)" xml:space="preserve">
+    <value>Ausgewählte mstsc.exe Parameter entfernen</value>
+  </data>
+  <data name="Remove selected RegEx pattern(s)" xml:space="preserve">
+    <value>Ausgewählte RegEx-Muster entfernen</value>
+  </data>
+  <data name="Remove selected RegEx postfix(es)" xml:space="preserve">
+    <value>Ausgewählte RegEx-Postfixe entfernen</value>
+  </data>
+  <data name="Remove selected RegEx prefix(es)" xml:space="preserve">
+    <value>Ausgewählte RegEx-Präfixe entfernen</value>
+  </data>
+  <data name="Remove selected toolbar item(s)" xml:space="preserve">
+    <value>Ausgewählte Werkzeugleistenelemente entfernen</value>
+  </data>
+  <data name="Replace window title" xml:space="preserve">
+    <value>Fenstertitel ersetzen</value>
+  </data>
+  <data name="Reset context menu items to default" xml:space="preserve">
+    <value>Kontextmenüeinträge auf Standardwert zurücksetzen</value>
+  </data>
+  <data name="Reset excluded groups to default" xml:space="preserve">
+    <value>Ausgeschlossene Gruppen auf Standardwert zurücksetzen</value>
+  </data>
+  <data name="Reset included groups to default" xml:space="preserve">
+    <value>Einbezogene Gruppen auf Standardwert zurücksetzen</value>
+  </data>
+  <data name="Reset mstsc.exe parameters to default" xml:space="preserve">
+    <value>mstsc.exe Paramter auf Standardwert zurücksetzen</value>
+  </data>
+  <data name="Reset RegEx patterns to default" xml:space="preserve">
+    <value>RegEx-Muster auf Standardwert zurücksetzen</value>
+  </data>
+  <data name="Reset RegEx postfixes to default" xml:space="preserve">
+    <value>RegEx-Postfixe auf Standardwert zurücksetzen</value>
+  </data>
+  <data name="Reset RegEx prefixes to default" xml:space="preserve">
+    <value>RegEx-Präfixe auf Standardwert zurücksetzen</value>
+  </data>
+  <data name="Reset shortcut to default" xml:space="preserve">
+    <value>Tastaturkürzel auf Standardwert zurücksetzen</value>
+  </data>
+  <data name="Reset toolbar items to default" xml:space="preserve">
+    <value>Werkzeugleistenelemente auf Standardwert zurücksetzen</value>
+  </data>
+  <data name="Resolve references" xml:space="preserve">
+    <value>Verweise auflösen</value>
+  </data>
+  <data name="Save changes" xml:space="preserve">
+    <value>Änderungen speichern</value>
+  </data>
+  <data name="Save credentials to Windows vault as &quot;domain&quot; instead of &quot;generic&quot; credentials. Might fail with&#xD;&#xA;NTLM-Auth when activated on a domain member, as it is probably prohibited for external machines.&#xD;&#xA;Recommended to keep enabled for security reasons, unless you experience any issues." xml:space="preserve">
+    <value>Im Windows-Tresor als "Domain"- anstelle von "Generischen"-Zugangsdaten speichern. Kann auf Domänen-
+Mitgliedern mit NTLM-Auth fehlschlagen, da dies vermutlich für externe Geräte nicht erlaubt ist.
+Sollte aus Sicherheitsgründen aktiviert bleiben, wenn keine Einschränkungen auftreten.</value>
+  </data>
+  <data name="Set mstsc.exe window title to title of entry." xml:space="preserve">
+    <value>Fenstertitel von mstsc.exe auf Titel des Eintrags setzen.</value>
+  </data>
+  <data name="Shortcut" xml:space="preserve">
+    <value>Tastaturkürzel</value>
+  </data>
+  <data name="Show all credentials" xml:space="preserve">
+    <value>Alle Zugangsdaten anzeigen</value>
+  </data>
+  <data name="Show in groups" xml:space="preserve">
+    <value>In Gruppen anzeigen</value>
+  </data>
+  <data name="Show more settings" xml:space="preserve">
+    <value>Mehr Einstellungen anzeigen</value>
+  </data>
+  <data name="Show selectable credential entries in groups if checked." xml:space="preserve">
+    <value>Auswählbare Zugangsdaten im Credential Picker gruppieren.</value>
+  </data>
+  <data name="skipped" xml:space="preserve">
+    <value>übersprungen</value>
+  </data>
+  <data name="Specify duration (in seconds) that credentials reside in Windows vault.&#xD;&#xA;0 disables expiration." xml:space="preserve">
+    <value>Legt die Verweildauer (in Sekunden) von Zugangsdaten im Windows-Tresor fest.
+0 deaktiviert Verfall.</value>
+  </data>
+  <data name="Store as Windows credentials" xml:space="preserve">
+    <value>Als Windows-Zugangsdaten speichern</value>
+  </data>
+  <data name="The URL/target '{0}' of the selected entry could not be parsed." xml:space="preserve">
+    <value>URL/Ziel '{0}' des ausgewählten Eintrags konnte nicht vearbeitet werden.</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>Titel</value>
+  </data>
+  <data name="Toggle between always asking for confirmation when connecting&#xD;&#xA;to the same target, or only when using the same credentials." xml:space="preserve">
+    <value>Wechseln zwischen doppelte Verbindungsversuche immer bestätigen,
+oder nur wenn die selben Zugangsdaten verwendet werden.</value>
+  </data>
+  <data name="Toggle opening RDP for all selected entries or last selected entry only.&#xD;&#xA;Shows credential picker once for each parent group with all entry settings merged." xml:space="preserve">
+    <value>Wechseln zwischen RDP-Verbindung für alle ausgewählten Einträge oder nur den letzten Eintrag öffnen.
+Öffnet Credential Picker je übergeordneter Gruppe mit zusammengeführten Einstellungen aller Einträge.</value>
+  </data>
+  <data name="Toggle showing only credentials managed by KeePassRDP or all." xml:space="preserve">
+    <value>Wechseln zwischen nur Zugangsdaten die durch KeePassRDP verwaltet werden und allen anzeigen.</value>
+  </data>
+  <data name="Toolbar" xml:space="preserve">
+    <value>Werkzeugleiste</value>
+  </data>
+  <data name="Trigger" xml:space="preserve">
+    <value>Auslöser</value>
+  </data>
+  <data name="Unable to persist credentials in Windows vault." xml:space="preserve">
+    <value>Speichern von Zugangsdaten in Windows-Tresor nicht möglich.</value>
+  </data>
+  <data name="Use credential picker" xml:space="preserve">
+    <value>Credential Picker aktiv</value>
+  </data>
+  <data name="User Name" xml:space="preserve">
+    <value>Benutzername</value>
+  </data>
+  <data name="Username is required when connecting with credentials." xml:space="preserve">
+    <value>Benutzername wird benötigt wenn mit Zugangsdaten verbunden wird.</value>
+  </data>
+  <data name="Vault" xml:space="preserve">
+    <value>Tresor</value>
+  </data>
+  <data name="Visibility settings" xml:space="preserve">
+    <value>Anzeigeeinstellungen</value>
+  </data>
+  <data name="Width - /w:" xml:space="preserve">
+    <value>Breite - /w:</value>
+  </data>
+  <data name="Window height:" xml:space="preserve">
+    <value>Fensterhöhe:</value>
+  </data>
+  <data name="Window width:" xml:space="preserve">
+    <value>Fensterbreite:</value>
+  </data>
+  <data name="{0} connection is still open." xml:space="preserve">
+    <value>{0} Verbindung ist noch geöffnet.</value>
+  </data>
+  <data name="{0} connections are still open." xml:space="preserve">
+    <value>{0} Verbindungen sind noch geöffnet.</value>
+  </data>
+  <data name="{0} entries of {1} selected." xml:space="preserve">
+    <value>{0} Einträgen von {1} ausgewählten.</value>
+  </data>
+  <data name="{0} entry of {1} selected." xml:space="preserve">
+    <value>{0} Eintrag von {1} ausgewählten.</value>
+  </data>
+</root>
