@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018-2020 iSnackyCracky
+ *  Copyright (C) 2018 - 2023 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -19,144 +19,172 @@
  */
 
 using KeePass.App.Configuration;
+using KeePassRDP.Extensions;
+using System;
 
 namespace KeePassRDP
 {
-    public class KprConfig
+    public partial class KprConfig
     {
+        #region Constants
+        private const string KeePassShowResolvedReferencesKey = "KPR_keepassShowResolvedReferences";
+        private const string KeePassConfirmOnCloseKey = "KPR_keepassConfirmOnClose";
+        private const string KeePassConnectToAllKey = "KPR_keepassConnectToAll";
+        private const string KeePassAlwaysConfirmKey = "KPR_keePassAlwaysConfirm";
+        private const string KeePassHotkeysRegisterLastKey = "KPR_keePassHotkeysRegisterLast";
+        private const string KeePassContextMenuItemsKey = "KPR_keePassContextMenuItems";
+        private const string KeePassToolbarItemsKey = "KPR_keePassToolbarItems";
+        private const string CredVaultUseWindowsKey = "KPR_credVaultUseWindows";
+        private const string CredVaultOverwriteExistingKey = "KPR_credVaultOverwriteExisting";
+        private const string CredVaultRemoveOnExitKey = "KPR_credVaultRemoveOnExit";
+        private const string CredVaultTtlKey = "KPR_credVaultTtl";
+        private const string CredVaultAdaptiveTtlKey = "KPR_credVaultAdaptiveTtl";
+        private const string MstscUseFullscreenKey = "KPR_mstscUseFullscreen";
+        private const string MstscUsePublicKey = "KPR_mstscUsePublic";
+        private const string MstscUseAdminKey = "KPR_mstscUseAdmin";
+        private const string MstscUseRestrictedAdminKey = "KPR_mstscUseRestrictedAdmin";
+        private const string MstscUseRemoteGuardKey = "KPR_mstscUseRemoteGuard";
+        private const string MstscUseSpanKey = "KPR_mstscUseSpan";
+        private const string MstscUseMultimonKey = "KPR_mstscUseMultimon";
+        private const string MstscWidthKey = "KPR_mstscWidth";
+        private const string MstscHeightKey = "KPR_mstscHeight";
+        private const string MstscReplaceTitleKey = "KPR_mstscReplaceTitle";
+        private const string MstscConfirmCertificateKey = "KPR_mstscConfirmCertificate";
+
+        private const string CredPickerRememberSizeKey = "KPR_credPickerRememberSize";
+        private const string CredPickerRememberSortOrderKey = "KPR_credPickerRememberSortOrder";
+        private const string CredPickerSortOrderKey = "KPR_credPickerSortOrder";
+        private const string CredPickerShowInGroupsKey = "KPR_credPickerShowInGroups";
+        private const string CredPickerIncludeSelectedKey = "KPR_credPickerIncludeSelected";
+        private const string CredPickerLargeRowsKey = "KPR_credPickerLargeRows";
+        private const string CredPickerWidthKey = "KPR_credPickerWidth";
+        private const string CredPickerHeightKey = "KPR_credPickerHeight";
+        private const string CredPickerCustomGroupKey = "KPR_credPickerCustomGroup";
+        private const string CredPickerRegExPreKey = "KPR_credPickerRegExPrefix";
+        private const string CredPickerRegExPostKey = "KPR_credPickerRegExPostfix";
+
+        private const string ShortcutOpenRdpConnectionKey = "KPR_shortcutOpenRdpConnection";
+        private const string ShortcutOpenRdpConnectionAdminKey = "KPR_shortcutOpenRdpConnectionAdmin";
+        private const string ShortcutOpenRdpConnectionNoCredKey = "KPR_shortcutOpenRdpConnectionNoCred";
+        private const string ShortcutOpenRdpConnectionNoCredAdminKey = "KPR_shortcutOpenRdpConnectionNoCredAdmin";
+        private const string ShortcutIgnoreCredentialsKey = "KPR_shortcutIgnoreCredentials";
+        #endregion
+
         private readonly AceCustomConfig _config;
-        const string KeePassShowResolvedReferencesKey = "KPR_keepassShowResolvedReferences";
-        const string CredVaultUseWindowsKey = "KPR_credVaultUseWindows";
-        const string CredVaultTtlKey = "KPR_credVaultTtl";
-        const string MstscUseFullscreenKey = "KPR_mstscUseFullscreen";
-        const string MstscUseAdminKey = "KPR_mstscUseAdmin";
-        const string MstscUseSpanKey = "KPR_mstscUseSpan";
-        const string MstscUseMultimonKey = "KPR_mstscUseMultimon";
-        const string MstscWidthKey = "KPR_mstscWidth";
-        const string MstscHeightKey = "KPR_mstscHeight";
 
-        const string CredPickerRememberSizeKey = "KPR_credPickerRememberSize";
-        const string CredPickerWidthKey = "KPR_credPickerWidth";
-        const string CredPickerHeightKey = "KPR_credPickerHeight";
-        const string CredPickerRegExPreKey = "KPR_credPickerRegExPrefix";
-        const string CredPickerRegExPostKey = "KPR_credPickerRegExPostfix";
-
-        const string ShortcutOpenRdpConnectionKey = "KPR_shortcutOpenRdpConnection";
-        const string ShortcutOpenRdpConnectionAdminKey = "KPR_shortcutOpenRdpConnectionAdmin";
-        const string ShortcutOpenRdpConnectionNoCredKey = "KPR_shortcutOpenRdpConnectionNoCred";
-        const string ShortcutOpenRdpConnectionNoCredAdminKey = "KPR_shortcutOpenRdpConnectionNoCredAdmin";
-        const string ShortcutIgnoreCredentialsKey = "KPR_shortcutIgnoreCredentials";
-
-        public KprConfig(AceCustomConfig config) { _config = config; }
-
-        public bool KeePassShowResolvedReferences
+        public KprConfig(AceCustomConfig config)
         {
-            get { return _config.GetBool(KeePassShowResolvedReferencesKey, true); }
-            set { _config.SetBool(KeePassShowResolvedReferencesKey, value); }
+            _config = config;
         }
 
-        public bool CredVaultUseWindows
+        #region Getter/setter helper functions
+        private bool BoolGetter(string strID, ref bool cached, ref bool cachedValue, bool defaultValue = false)
         {
-            get { return _config.GetBool(CredVaultUseWindowsKey, true); }
-            set { _config.SetBool(CredVaultUseWindowsKey, value); }
+            if (cached)
+                return cachedValue;
+            cached = true;
+            cachedValue = _config.GetBool(strID, defaultValue);
+            _config.RemoveIfDefault(strID, cachedValue, defaultValue);
+            return cachedValue;
         }
 
-        public ulong CredVaultTtl
+        private void BoolSetter(string strID, bool value, ref bool cached, ref bool cachedValue, bool defaultValue = false)
         {
-            get { return _config.GetULong(CredVaultTtlKey, 10); }
-            set { _config.SetULong(CredVaultTtlKey, value); }
+            if (cachedValue == value)
+                return;
+            if (!cached)
+                cached = true;
+            cachedValue = value;
+            if (!_config.RemoveIfDefault(strID, value, defaultValue))
+                _config.SetBool(strID, value);
         }
 
-        public bool MstscUseFullscreen
+        private long LongGetter(string strID, ref bool cached, ref long cachedValue, long defaultValue = 0L)
         {
-            get { return _config.GetBool(MstscUseFullscreenKey, false); }
-            set { _config.SetBool(MstscUseFullscreenKey, value); }
+            if (cached)
+                return cachedValue;
+            cached = true;
+            cachedValue = _config.GetLong(strID, defaultValue);
+            _config.RemoveIfDefault(strID, cachedValue, defaultValue);
+            return cachedValue;
         }
 
-        public bool MstscUseAdmin
+        private void LongSetter(string strID, long value, ref bool cached, ref long cachedValue, long defaultValue = 0L)
         {
-            get { return _config.GetBool(MstscUseAdminKey, false); }
-            set { _config.SetBool(MstscUseAdminKey, value); }
+            if (cachedValue == value)
+                return;
+            if (!cached)
+                cached = true;
+            cachedValue = value;
+            if (!_config.RemoveIfDefault(strID, value, defaultValue))
+                _config.SetLong(strID, value);
         }
 
-        public bool MstscUseSpan
+        private ulong UlongGetter(string strID, ref bool cached, ref ulong cachedValue, ulong defaultValue = 0UL)
         {
-            get { return _config.GetBool(MstscUseSpanKey, false); }
-            set { _config.SetBool(MstscUseSpanKey, value); }
+            if (cached)
+                return cachedValue;
+            cached = true;
+            cachedValue = _config.GetULong(strID, defaultValue);
+            _config.RemoveIfDefault(strID, cachedValue, defaultValue);
+            return cachedValue;
         }
 
-        public bool MstscUseMultimon
+        private void UlongSetter(string strID, ulong value, ref bool cached, ref ulong cachedValue, ulong defaultValue = 0UL)
         {
-            get { return _config.GetBool(MstscUseMultimonKey, false); }
-            set { _config.SetBool(MstscUseMultimonKey, value); }
+            if (cachedValue == value)
+                return;
+            if (!cached)
+                cached = true;
+            cachedValue = value;
+            if (!_config.RemoveIfDefault(strID, value, defaultValue))
+                _config.SetULong(strID, value);
         }
 
-        public ulong MstscWidth
+        private string StringGetter(string strID, ref bool cached, ref string cachedValue, string defaultValue = null)
         {
-            get { return _config.GetULong(MstscWidthKey, 0); }
-            set { _config.SetULong(MstscWidthKey, value); }
+            if (cached)
+                return cachedValue;
+            cached = true;
+            cachedValue = _config.GetString(strID, defaultValue);
+            _config.RemoveIfDefault(strID, cachedValue, defaultValue);
+            return cachedValue;
         }
 
-        public ulong MstscHeight
+        private void StringSetter(string strID, string value, ref bool cached, ref string cachedValue, string defaultValue = null)
         {
-            get { return _config.GetULong(MstscHeightKey, 0); }
-            set { _config.SetULong(MstscHeightKey, value); }
+            if (cachedValue == value)
+                return;
+            if (!cached)
+                cached = true;
+            cachedValue = value;
+            if (!_config.RemoveIfDefault(strID, value, defaultValue))
+                _config.SetString(strID, value);
         }
 
-        public bool CredPickerRememberSize
+        private T EnumGetter<T>(string strID, ref bool cached, ref T cachedValue, T defaultValue) where T : struct
         {
-            get { return _config.GetBool(CredPickerRememberSizeKey, true); }
-            set { _config.SetBool(CredPickerRememberSizeKey, value); }
+            if (cached)
+                return cachedValue;
+            cached = true;
+            T items;
+            if (!Enum.TryParse(_config.GetString(strID) ?? string.Empty, out items))
+                items = defaultValue;
+            cachedValue = items;
+            _config.RemoveIfDefault(strID, cachedValue, defaultValue);
+            return cachedValue;
         }
 
-        public ulong CredPickerWidth
+        private void EnumSetter<T>(string strID, T value, ref bool cached, ref T cachedValue, T defaultValue) where T : struct
         {
-            get { return _config.GetULong(CredPickerWidthKey, 937); }
-            set { _config.SetULong(CredPickerWidthKey, value); }
+            if (cachedValue.Equals(value))
+                return;
+            if (!cached)
+                cached = true;
+            cachedValue = value;
+            if (!_config.RemoveIfDefault(strID, value, defaultValue))
+                _config.SetString(strID, value.ToString());
         }
-
-        public ulong CredPickerHeight
-        {
-            get { return _config.GetULong(CredPickerHeightKey, 467); }
-            set { _config.SetULong(CredPickerHeightKey, value); }
-        }
-
-        public string CredPickerRegExPre
-        {
-            get { return _config.GetString(CredPickerRegExPreKey, Util.DefaultCredPickRegExPre); }
-            set { _config.SetString(CredPickerRegExPreKey, value); }
-        }
-
-        public string CredPickerRegExPost
-        {
-            get { return _config.GetString(CredPickerRegExPostKey, Util.DefaultCredPickRegExPost); }
-            set { _config.SetString(CredPickerRegExPostKey, value); }
-        }
-
-        public ulong ShortcutOpenRdpConnection
-        {
-            get { return _config.GetULong(ShortcutOpenRdpConnectionKey, KprMenu.DefaultOpenRdpConnectionShortcut); }
-            set { _config.SetULong(ShortcutOpenRdpConnectionKey, value); }
-        }
-        public ulong ShortcutOpenRdpConnectionAdmin
-        {
-            get { return _config.GetULong(ShortcutOpenRdpConnectionAdminKey, KprMenu.DefaultOpenRdpConnectionAdminShortcut); }
-            set { _config.SetULong(ShortcutOpenRdpConnectionAdminKey, value); }
-        }
-        public ulong ShortcutOpenRdpConnectionNoCred
-        {
-            get { return _config.GetULong(ShortcutOpenRdpConnectionNoCredKey, 0); }
-            set { _config.SetULong(ShortcutOpenRdpConnectionNoCredKey, value); }
-        }
-        public ulong ShortcutOpenRdpConnectionNoCredAdmin
-        {
-            get { return _config.GetULong(ShortcutOpenRdpConnectionNoCredAdminKey, 0); }
-            set { _config.SetULong(ShortcutOpenRdpConnectionNoCredAdminKey, value); }
-        }
-        public ulong ShortcutIgnoreCredentials
-        {
-            get { return _config.GetULong(ShortcutIgnoreCredentialsKey, 0); }
-            set { _config.SetULong(ShortcutIgnoreCredentialsKey, value); }
-        }
+        #endregion
     }
 }

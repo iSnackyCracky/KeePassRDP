@@ -1,0 +1,121 @@
+﻿<#@ template compilerOptions="optimize+" hostspecific="true" language="C#" #>
+<#@ output extension=".cs" #>
+<#@ import namespace="System.IO" #>
+<#@ import namespace="System.IO.Compression" #>
+<#@ import namespace="System.Security.Cryptography" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Text.RegularExpressions" #>
+<#
+    var directory = Path.GetDirectoryName(Host.TemplateFile);
+    var className = Path.GetFileNameWithoutExtension(Host.TemplateFile);
+    var namespaceString = Path.GetFileNameWithoutExtension(directory);
+    var parent = Directory.GetParent(directory).FullName;
+
+    var buildDate = DateTime.UtcNow;
+    var informationalVersion = string.Empty;
+    var assemblyVersion = string.Empty;
+    var copyright = string.Empty;
+
+    var assemblyInfo = File.ReadAllText(Path.Combine(directory, @"Properties\AssemblyInfo.cs"));
+    var match = Regex.Match(assemblyInfo, "\\[assembly: AssemblyInformationalVersion\\(\"([^\"]+)\"\\)\\]");
+    if (match.Success)
+        informationalVersion = match.Groups[1].Value;
+
+    match = Regex.Match(assemblyInfo, "\\[assembly: AssemblyVersion\\(\"([^\"]+)\"\\)\\]");
+    if (match.Success)
+    {
+        assemblyVersion = match.Groups[1].Value;
+        if (string.IsNullOrEmpty(informationalVersion))
+            informationalVersion = assemblyVersion;
+    }
+
+    match = Regex.Match(assemblyInfo, "\\[assembly: AssemblyCopyright\\(\"([^\"]+)\"\\)\\]");
+    if (match.Success)
+        copyright += match.Groups[1].Value;
+
+    /*match = Regex.Match(assemblyInfo, "\\[assembly: AssemblyCompany\\(\"([^\"]+)\"\\)\\]");
+    if (match.Success)
+        copyright += (!string.IsNullOrEmpty(copyright) ? " " : "") + match.Groups[1].Value;*/
+
+    var pubKey = string.Empty;
+    using (var rsa = new RSACryptoServiceProvider(4096)
+    {
+        PersistKeyInCsp = false
+    })
+    {
+        var versionFile = Path.Combine(parent, "KeePassRDP.ver");
+
+        var pubKeyFile = versionFile + ".public";
+        if (!File.Exists(pubKeyFile))
+            File.WriteAllText(pubKeyFile, pubKey = rsa.ToXmlString(false));
+        else
+            pubKey = File.ReadAllText(pubKeyFile);
+
+        var privKeyFile = versionFile + ".private";
+        if (File.Exists(privKeyFile))
+        {
+            rsa.FromXmlString(File.ReadAllText(privKeyFile));
+            rsa.PersistKeyInCsp = false;
+        }
+        else
+            File.WriteAllText(privKeyFile, rsa.ToXmlString(true));
+
+        if (!File.Exists(versionFile) || !File.Exists(versionFile + ".gz") || File.ReadAllLines(versionFile)[1].Split(':')[1] != assemblyVersion)
+        {
+            var versionInfo = string.Format(@":
+KeePassRDP:{0}
+:", assemblyVersion);
+
+            File.WriteAllText(versionFile, versionInfo, Encoding.UTF8);
+
+            using (var sha512 = SHA512.Create())
+            {
+                var signed = Convert.ToBase64String(rsa.SignData(Encoding.UTF8.GetBytes(versionInfo.Replace("\r\n", "\n")), sha512));
+                using (var compressedFileStream = File.Create(versionFile + ".gz"))
+                using (var compressor = new GZipStream(compressedFileStream, CompressionMode.Compress))
+                {
+	                var buffer = Encoding.UTF8.GetBytes(signed + Environment.NewLine + versionInfo);
+	                compressor.Write(buffer, 0, buffer.Length);
+                }
+            }
+        }
+    }
+#>
+/*
+ *  Copyright (C) 2018 - 2023 iSnackyCracky, NETertainer
+ *
+ *  This file is part of KeePassRDP.
+ *
+ *  KeePassRDP is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  KeePassRDP is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with KeePassRDP.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+namespace <#= namespaceString #>.Resources
+{
+    public static class <#= className #>
+    {
+        public const string Copyright = "<#= copyright #>";
+
+        public const string Revision = "r<#= buildDate.ToString("yyyyMMddHHmmss").Substring(2, "yyyyMMddHHmmss".Length - 3) #>0";
+
+        public const string Version =
+#if DEBUG
+            "v<#= informationalVersion #>.debug";
+#else
+            "v<#= informationalVersion #>";
+#endif
+
+        internal const string FileSigKey = "<#= pubKey #>";
+    }
+}
