@@ -3,6 +3,35 @@
 ###############################################################################
 * text=auto
 
+*.rtf       linguist-documentation
+
+*.sln       text eol=crlf
+*.csproj    text eol=crlf
+*.vbproj    text eol=crlf
+*.vcxproj   text eol=crlf
+*.vcproj    text eol=crlf
+*.dbproj    text eol=crlf
+*.fsproj    text eol=crlf
+*.lsproj    text eol=crlf
+*.wixproj   text eol=crlf
+*.modelproj text eol=crlf
+*.sqlproj   text eol=crlf
+*.wwaproj   text eol=crlf
+
+*.xproj     text eol=crlf
+*.props     text eol=crlf
+*.filters   text eol=crlf
+*.vcxitems  text eol=crlf
+
+*.ps1       text eol=crlf
+*.ps1x      text eol=crlf
+*.psm1      text eol=crlf
+*.psd1      text eol=crlf
+*.ps1xml    text eol=crlf
+*.pssc      text eol=crlf
+*.psrc      text eol=crlf
+*.cdxml     text eol=crlf
+
 ###############################################################################
 # Set default behavior for command prompt diff.
 #
@@ -17,7 +46,7 @@
 #
 # Merging from the command prompt will add diff markers to the files if there
 # are conflicts (Merging from VS is not affected by the settings below, in VS
-# the diff markers are never inserted). Diff markers may cause the following 
+# the diff markers are never inserted). Diff markers may cause the following
 # file extensions to fail to load in VS. An alternative would be to treat
 # these files as binary and thus will always conflict and require user
 # intervention with every merge. To do so, just uncomment the entries below
@@ -46,9 +75,9 @@
 
 ###############################################################################
 # diff behavior for common document formats
-# 
+#
 # Convert binary document formats to text before diffing them. This feature
-# is only available from the command line. Turn it on by uncommenting the 
+# is only available from the command line. Turn it on by uncommenting the
 # entries below.
 ###############################################################################
 #*.doc   diff=astextplain
