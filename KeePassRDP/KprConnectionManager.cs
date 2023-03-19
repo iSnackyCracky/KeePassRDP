@@ -235,7 +235,7 @@ namespace KeePassRDP
                                     null :
                                     credEntry.GetResolvedReferencesEntry(new SprContext(credEntry, mainForm.ActiveDatabase, SprCompileFlags.NonActive)
                                     {
-                                        ForcePlainTextPasswords = false
+                                        ForcePlainTextPasswords = true // true is default, PwDefs.PasswordField is replaced with PwDefs.HiddenPassword during SprEngine.Compile otherwise.
                                     });
                             }
                         }
@@ -245,7 +245,7 @@ namespace KeePassRDP
                     {
                         var ctx = new SprContext(connPwEntry, mainForm.ActiveDatabase, SprCompileFlags.NonActive)
                         {
-                            ForcePlainTextPasswords = false
+                            ForcePlainTextPasswords = true
                         };
 
                         var host = SprEngine.Compile(connPwEntry.Strings.ReadSafe(PwDefs.UrlField), ctx);
