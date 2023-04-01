@@ -1,4 +1,4 @@
-[latest]: https://github.com/iSnackyCracky/KeePassRDP/releases/latest/download/KeePassRDP_v2.0.1.zip
+[latest]: https://github.com/iSnackyCracky/KeePassRDP/releases/latest/download/KeePassRDP_v2.0.2.zip
 
 # KeePassRDP
 [![Latest version](https://img.shields.io/github/v/release/iSnackyCracky/KeePassRDP?style=flat-square)](https://github.com/iSnackyCracky/KeePassRDP/releases/latest)

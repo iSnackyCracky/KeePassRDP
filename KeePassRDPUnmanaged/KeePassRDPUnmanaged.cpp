@@ -24,33 +24,50 @@
 #define DECLSPEC_EXPORT __declspec(dllexport)
 #endif // !DECLSPEC_DLLEXPORT
 
-EXTERN_C DECLSPEC_EXPORT STDMETHODIMP_(PVOID) KprSecureZeroMemory(_In_ PVOID ptr, _In_ SIZE_T cnt)
+EXTERN_C DECLSPEC_EXPORT DECLSPEC_NOINLINE STDMETHODIMP_(PVOID) KprSecureZeroMemory(_In_ PVOID __restrict ptr, _In_ SIZE_T cnt)
 {
     return SecureZeroMemory(ptr, cnt);
 }
 
-EXTERN_C DECLSPEC_EXPORT STDMETHODIMP KprDoDefaultAction(_In_ PVOID ptr)
+EXTERN_C DECLSPEC_EXPORT STDMETHODIMP KprDoDefaultAction(_In_ PVOID __restrict ptr)
 {
     IUIAutomation* uiAutomation = NULL;
-    if (FAILED(CoCreateInstance(__uuidof(CUIAutomation8), NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&uiAutomation))) || uiAutomation == NULL)
-        return E_FAIL;
-
     IUIAutomationElement* parent = NULL;
-    if (FAILED(uiAutomation->ElementFromHandle(ptr, &parent)) || parent == NULL)
-        return E_FAIL;
-
     IUIAutomationLegacyIAccessiblePattern* pattern = NULL;
-    if (FAILED(parent->GetCurrentPatternAs(UIA_LegacyIAccessiblePatternId, IID_PPV_ARGS(&pattern))) || pattern == NULL)
+    HRESULT result = S_OK;
+
+    if (FAILED(CoCreateInstance(__uuidof(CUIAutomation8), NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&uiAutomation))) || uiAutomation == NULL)
+    {
+        if (uiAutomation != NULL)
+            uiAutomation->Release();
         return E_FAIL;
+    }
+
+    if (FAILED(uiAutomation->ElementFromHandle(ptr, &parent)) || parent == NULL)
+    {
+        if (parent != NULL)
+            parent->Release();
+        uiAutomation->Release();
+        return E_FAIL;
+    }
+
+    if (FAILED(parent->GetCurrentPatternAs(UIA_LegacyIAccessiblePatternId, IID_PPV_ARGS(&pattern))) || pattern == NULL)
+    {
+        if (pattern != NULL)
+            pattern->Release();
+        parent->Release();
+        uiAutomation->Release();
+        return E_FAIL;
+    }
 
     if (FAILED(pattern->DoDefaultAction()))
-        return E_FAIL;
+        result = E_FAIL;
 
     pattern->Release();
     parent->Release();
     uiAutomation->Release();
 
-    return S_OK;
+    return result;
 }
 
 /*EXTERN_C DECLSPEC_EXPORT STDMETHODIMP KprDoDefaultAction(_In_ PVOID ptr, _In_ PWSTR automationId)
