@@ -52,8 +52,10 @@
             this.chkCredVaultOverwriteExisting = new System.Windows.Forms.CheckBox();
             this.chkCredVaultUseWindows = new System.Windows.Forms.CheckBox();
             this.grpEntryOptions = new System.Windows.Forms.GroupBox();
+            this.chkKeePassAlwaysConfirm = new System.Windows.Forms.CheckBox();
             this.chkKeePassConnectToAll = new System.Windows.Forms.CheckBox();
             this.grpHotkeyOptions = new System.Windows.Forms.GroupBox();
+            this.chkKeePassContextMenuOnScreen = new System.Windows.Forms.CheckBox();
             this.chkKeePassHotkeysRegisterLast = new System.Windows.Forms.CheckBox();
             this.chkSavedCredsShowAll = new System.Windows.Forms.CheckBox();
             this.cmdRefreshCredentials = new System.Windows.Forms.Button();
@@ -110,7 +112,7 @@
             this.chkMstscReplaceTitle = new System.Windows.Forms.CheckBox();
             this.ttCredentials = new KeePassRDP.KprToolTip(this.components);
             this.ttEntries = new KeePassRDP.KprToolTip(this.components);
-            this.ttHotkeys = new KeePassRDP.KprToolTip(this.components);
+            this.ttUI = new KeePassRDP.KprToolTip(this.components);
             this.ttGeneral = new KeePassRDP.KprToolTip(this.components);
             this.ttGeneric = new KeePassRDP.KprToolTip(this.components);
             this.cmdOpenRdpAdminKeyReset = new System.Windows.Forms.Button();
@@ -164,7 +166,6 @@
             this.tblKprOptionsForm = new System.Windows.Forms.TableLayoutPanel();
             this.pbKprOptionsForm = new System.Windows.Forms.PictureBox();
             this.ttMstscAutomation = new KeePassRDP.KprToolTip(this.components);
-            this.chkKeePassAlwaysConfirm = new System.Windows.Forms.CheckBox();
             flpOptions = new System.Windows.Forms.FlowLayoutPanel();
             flpCredVaultTtl = new System.Windows.Forms.FlowLayoutPanel();
             flpSavedCredentials = new System.Windows.Forms.FlowLayoutPanel();
@@ -372,6 +373,20 @@
             this.grpEntryOptions.TabStop = false;
             this.grpEntryOptions.Text = "Entries";
             // 
+            // chkKeePassAlwaysConfirm
+            // 
+            this.chkKeePassAlwaysConfirm.AutoSize = true;
+            this.chkKeePassAlwaysConfirm.BackColor = System.Drawing.Color.Transparent;
+            this.chkKeePassAlwaysConfirm.Location = new System.Drawing.Point(6, 42);
+            this.chkKeePassAlwaysConfirm.Margin = new System.Windows.Forms.Padding(0);
+            this.chkKeePassAlwaysConfirm.Name = "chkKeePassAlwaysConfirm";
+            this.chkKeePassAlwaysConfirm.Size = new System.Drawing.Size(154, 30);
+            this.chkKeePassAlwaysConfirm.TabIndex = 1;
+            this.chkKeePassAlwaysConfirm.Text = "Always confirm duplicate\r\nconnection attempts";
+            this.ttEntries.SetToolTip(this.chkKeePassAlwaysConfirm, "Toggle between always asking for confirmation when connecting\r\nto the same target" +
+        ", or only when using the same credentials.");
+            this.chkKeePassAlwaysConfirm.UseVisualStyleBackColor = false;
+            // 
             // chkKeePassConnectToAll
             // 
             this.chkKeePassConnectToAll.AutoSize = true;
@@ -390,28 +405,42 @@
             // 
             this.grpHotkeyOptions.AutoSize = true;
             this.grpHotkeyOptions.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.grpHotkeyOptions.Controls.Add(this.chkKeePassContextMenuOnScreen);
             this.grpHotkeyOptions.Controls.Add(this.chkKeePassHotkeysRegisterLast);
             this.grpHotkeyOptions.Location = new System.Drawing.Point(350, 0);
             this.grpHotkeyOptions.Margin = new System.Windows.Forms.Padding(3, 0, 0, 0);
             this.grpHotkeyOptions.MinimumSize = new System.Drawing.Size(100, 0);
             this.grpHotkeyOptions.Name = "grpHotkeyOptions";
             this.grpHotkeyOptions.Padding = new System.Windows.Forms.Padding(0);
-            this.grpHotkeyOptions.Size = new System.Drawing.Size(100, 53);
+            this.grpHotkeyOptions.Size = new System.Drawing.Size(130, 79);
             this.grpHotkeyOptions.TabIndex = 2;
             this.grpHotkeyOptions.TabStop = false;
-            this.grpHotkeyOptions.Text = "Hotkeys";
+            this.grpHotkeyOptions.Text = "UI";
+            // 
+            // chkKeePassContextMenuOnScreen
+            // 
+            this.chkKeePassContextMenuOnScreen.AutoSize = true;
+            this.chkKeePassContextMenuOnScreen.BackColor = System.Drawing.Color.Transparent;
+            this.chkKeePassContextMenuOnScreen.Location = new System.Drawing.Point(6, 15);
+            this.chkKeePassContextMenuOnScreen.Margin = new System.Windows.Forms.Padding(0);
+            this.chkKeePassContextMenuOnScreen.Name = "chkKeePassContextMenuOnScreen";
+            this.chkKeePassContextMenuOnScreen.Size = new System.Drawing.Size(124, 30);
+            this.chkKeePassContextMenuOnScreen.TabIndex = 1;
+            this.chkKeePassContextMenuOnScreen.Text = "Keep context menu\r\non screen";
+            this.ttUI.SetToolTip(this.chkKeePassContextMenuOnScreen, "Make the context menu stay on the same screen when opening.");
+            this.chkKeePassContextMenuOnScreen.UseVisualStyleBackColor = false;
             // 
             // chkKeePassHotkeysRegisterLast
             // 
             this.chkKeePassHotkeysRegisterLast.AutoSize = true;
             this.chkKeePassHotkeysRegisterLast.BackColor = System.Drawing.Color.Transparent;
-            this.chkKeePassHotkeysRegisterLast.Location = new System.Drawing.Point(6, 21);
+            this.chkKeePassHotkeysRegisterLast.Location = new System.Drawing.Point(6, 47);
             this.chkKeePassHotkeysRegisterLast.Margin = new System.Windows.Forms.Padding(0);
             this.chkKeePassHotkeysRegisterLast.Name = "chkKeePassHotkeysRegisterLast";
-            this.chkKeePassHotkeysRegisterLast.Size = new System.Drawing.Size(89, 17);
+            this.chkKeePassHotkeysRegisterLast.Size = new System.Drawing.Size(119, 17);
             this.chkKeePassHotkeysRegisterLast.TabIndex = 0;
-            this.chkKeePassHotkeysRegisterLast.Text = "Register last";
-            this.ttHotkeys.SetToolTip(this.chkKeePassHotkeysRegisterLast, "Force registering of hotkeys after all KeePass plugins have initialized.\r\nOnly en" +
+            this.chkKeePassHotkeysRegisterLast.Text = "Overwrite hotkeys";
+            this.ttUI.SetToolTip(this.chkKeePassHotkeysRegisterLast, "Force registering of hotkeys after all KeePass plugins have initialized.\r\nOnly en" +
         "able when necessary. Can have unwanted side-effects.");
             this.chkKeePassHotkeysRegisterLast.UseVisualStyleBackColor = false;
             // 
@@ -1316,12 +1345,12 @@
             this.ttEntries.ReshowDelay = 100;
             this.ttEntries.ToolTipTitle = "Entries";
             // 
-            // ttHotkeys
+            // ttUI
             // 
-            this.ttHotkeys.AutoPopDelay = 10000;
-            this.ttHotkeys.InitialDelay = 500;
-            this.ttHotkeys.ReshowDelay = 100;
-            this.ttHotkeys.ToolTipTitle = "Hotkeys";
+            this.ttUI.AutoPopDelay = 10000;
+            this.ttUI.InitialDelay = 500;
+            this.ttUI.ReshowDelay = 100;
+            this.ttUI.ToolTipTitle = "UI";
             // 
             // ttGeneral
             // 
@@ -2161,20 +2190,6 @@
             this.ttMstscAutomation.ReshowDelay = 100;
             this.ttMstscAutomation.ToolTipTitle = "mstsc.exe automation";
             // 
-            // chkKeePassAlwaysConfirm
-            // 
-            this.chkKeePassAlwaysConfirm.AutoSize = true;
-            this.chkKeePassAlwaysConfirm.BackColor = System.Drawing.Color.Transparent;
-            this.chkKeePassAlwaysConfirm.Location = new System.Drawing.Point(6, 42);
-            this.chkKeePassAlwaysConfirm.Margin = new System.Windows.Forms.Padding(0);
-            this.chkKeePassAlwaysConfirm.Name = "chkKeePassAlwaysConfirm";
-            this.chkKeePassAlwaysConfirm.Size = new System.Drawing.Size(154, 30);
-            this.chkKeePassAlwaysConfirm.TabIndex = 1;
-            this.chkKeePassAlwaysConfirm.Text = "Always confirm duplicate\r\nconnection attempts";
-            this.ttEntries.SetToolTip(this.chkKeePassAlwaysConfirm, "Toggle between always asking for confirmation when connecting\r\nto the same target" +
-        ", or only when using the same credentials.");
-            this.chkKeePassAlwaysConfirm.UseVisualStyleBackColor = false;
-            // 
             // KprOptionsForm
             // 
             this.AcceptButton = this.cmdOk;
@@ -2371,7 +2386,7 @@
         private KprToolTip ttGeneric;
         private KprToolTip ttCredentials;
         private KprToolTip ttEntries;
-        private KprToolTip ttHotkeys;
+        private KprToolTip ttUI;
         private KprToolTip ttMstscParameters;
         private KprToolTip ttGeneral;
         private System.Windows.Forms.GroupBox grpCredentialOptions;
@@ -2396,5 +2411,6 @@
         private System.Windows.Forms.CheckBox chkMstscReplaceTitle;
         private KprToolTip ttMstscAutomation;
         private System.Windows.Forms.CheckBox chkKeePassAlwaysConfirm;
+        private System.Windows.Forms.CheckBox chkKeePassContextMenuOnScreen;
     }
 }

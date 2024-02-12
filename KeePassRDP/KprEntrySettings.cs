@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2023 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -19,6 +19,7 @@
  */
 
 using KeePassRDP.Extensions;
+using KeePassRDP.Generator;
 using KeePassRDP.Utils;
 using Newtonsoft.Json;
 using System;
@@ -44,6 +45,10 @@ namespace KeePassRDP
         [DefaultValue(true)]
         public bool UseCredpicker { get { return _useCredpicker; } set { if (_isReadOnly) throw new InvalidOperationException(); _useCredpicker = value; } }
 
+        [DefaultValue(null)]
+        public RdpFile RdpFile { get { return _rdpFile; } set { if (_isReadOnly) throw new InvalidOperationException(); _rdpFile = value; } }
+        public bool ShouldSerializeRdpFile() { return _rdpFile != null && !_rdpFile.IsEmpty; }
+
         [DefaultValue(true)]
         public bool CpRecurseGroups { get { return _cpRecurseGroups; } set { if (_isReadOnly) throw new InvalidOperationException(); _cpRecurseGroups = value; } }
 
@@ -56,17 +61,17 @@ namespace KeePassRDP
         [DefaultValue(false)]
         public bool ForceLocalUser { get { return _forceLocalUser; } set { if (_isReadOnly) throw new InvalidOperationException(); _forceLocalUser = value; } }
 
-        public bool ShouldSerializeCpGroupUUIDs() { return _cpGroupUUIDs != null && _cpGroupUUIDs.Count > 0; }
         public ICollection<string> CpGroupUUIDs { get { return IsReadOnly && !_cpGroupUUIDs.IsReadOnly ? _cpGroupUUIDs.AsReadOnly() : _cpGroupUUIDs; } }
+        public bool ShouldSerializeCpGroupUUIDs() { return _cpGroupUUIDs != null && _cpGroupUUIDs.Count > 0; }
 
-        public bool ShouldSerializeCpExcludedGroupUUIDs() { return _cpExcludedGroupUUIDs != null && _cpExcludedGroupUUIDs.Count > 0; }
         public ICollection<string> CpExcludedGroupUUIDs { get { return IsReadOnly && !_cpExcludedGroupUUIDs.IsReadOnly ? _cpExcludedGroupUUIDs.AsReadOnly() : _cpExcludedGroupUUIDs; } }
+        public bool ShouldSerializeCpExcludedGroupUUIDs() { return _cpExcludedGroupUUIDs != null && _cpExcludedGroupUUIDs.Count > 0; }
 
-        public bool ShouldSerializeCpRegExPatterns() { return _cpRegExPatterns != null && _cpRegExPatterns.Count > 0; }
         public ICollection<string> CpRegExPatterns { get { return IsReadOnly && !_cpRegExPatterns.IsReadOnly ? _cpRegExPatterns.AsReadOnly() : _cpRegExPatterns; } }
+        public bool ShouldSerializeCpRegExPatterns() { return _cpRegExPatterns != null && _cpRegExPatterns.Count > 0; }
 
-        public bool ShouldSerializeMstscParameters() { return _mstscParameters != null && _mstscParameters.Count > 0; }
         public ICollection<string> MstscParameters { get { return IsReadOnly && !_mstscParameters.IsReadOnly ? _mstscParameters.AsReadOnly() : _mstscParameters; } }
+        public bool ShouldSerializeMstscParameters() { return _mstscParameters != null && _mstscParameters.Count > 0; }
 
         private readonly ISet<string> _cpGroupUUIDs;
         private readonly ISet<string> _cpExcludedGroupUUIDs;
@@ -76,6 +81,7 @@ namespace KeePassRDP
         private bool _isReadOnly;
         private bool _ignore;
         private bool _useCredpicker;
+        private RdpFile _rdpFile;
         private bool _cpRecurseGroups;
         private bool _cpIncludeDefaultRegex;
         private bool _includeDefaultParameters;
@@ -90,6 +96,7 @@ namespace KeePassRDP
             _isReadOnly = false;
             _ignore = false;
             _useCredpicker = true;
+            _rdpFile = null;
             _cpRecurseGroups = true;
             _cpIncludeDefaultRegex = true;
             _includeDefaultParameters = true;
@@ -108,15 +115,6 @@ namespace KeePassRDP
             }
         }
 
-        public override string ToString()
-        {
-            return Regex.Replace(
-                JsonConvert.SerializeObject(this, Util.JsonSerializerSettings),
-                "^{}$",
-                string.Empty,
-                RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-        }
-
         public void Clear()
         {
             if (!_cpGroupUUIDs.IsReadOnly)
@@ -132,6 +130,23 @@ namespace KeePassRDP
         public void Dispose()
         {
             Clear();
+            if (_rdpFile != null)
+                _rdpFile.Dispose();
+        }
+
+        public override string ToString()
+        {
+            if (_rdpFile != null && _rdpFile.IsEmpty)
+            {
+                using (_rdpFile)
+                    _rdpFile = null;
+            }
+
+            return Regex.Replace(
+                JsonConvert.SerializeObject(this, Util.JsonSerializerSettings),
+                "^{}$",
+                string.Empty,
+                RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         }
 
         public static implicit operator string(KprEntrySettings kprEntrySettings)

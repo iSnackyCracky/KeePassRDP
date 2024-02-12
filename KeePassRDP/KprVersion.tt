@@ -1,5 +1,7 @@
 ﻿<#@ template compilerOptions="optimize+" hostspecific="true" language="C#" #>
 <#@ output extension=".cs" #>
+<#@ assembly name="EnvDTE" #>
+<#@ import namespace="Microsoft.VisualStudio.TextTemplating" #>
 <#@ import namespace="System.IO" #>
 <#@ import namespace="System.IO.Compression" #>
 <#@ import namespace="System.Security.Cryptography" #>
@@ -28,6 +30,28 @@
         if (string.IsNullOrEmpty(informationalVersion))
             informationalVersion = assemblyVersion;
     }
+
+    /*
+    // Build time.
+    var configName = Host.ResolveParameterValue("-", "-", "Configuration");
+    if (string.IsNullOrWhiteSpace(configName))
+    {
+        try
+        {
+            // Design time.
+            var serviceProvider = (IServiceProvider)Host;
+            var dte = (EnvDTE.DTE)serviceProvider.GetService(typeof(EnvDTE.DTE));
+            configName = dte.Solution.SolutionBuild.ActiveConfiguration.Name;
+        }
+        catch (Exception ex)
+        {
+            configName = ex.Message;
+        }
+    }
+
+    if (configName == "Debug")
+        informationalVersion = informationalVersion + ".debug";
+    */
 
     match = Regex.Match(assemblyInfo, "\\[assembly: AssemblyCopyright\\(\"([^\"]+)\"\\)\\]");
     if (match.Success)
@@ -82,7 +106,7 @@ KeePassRDP:{0}
     }
 #>
 /*
- *  Copyright (C) 2018 - 2023 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -111,9 +135,9 @@ namespace <#= namespaceString #>.Resources
 
         public const string Version =
 #if DEBUG
-            "v<#= informationalVersion #>.debug";
+        "v<#= informationalVersion #>.debug";
 #else
-            "v<#= informationalVersion #>";
+        "v<#= informationalVersion #>";
 #endif
 
         internal const string FileSigKey = "<#= pubKey #>";

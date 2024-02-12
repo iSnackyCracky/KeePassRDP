@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2023 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -19,9 +19,11 @@
  */
 
 using KeePass.Plugins;
+using KeePass.UI;
 using KeePassLib;
 using KeePassLib.Delegates;
 using KeePassLib.Utility;
+using KeePassRDP.Generator;
 using KeePassRDP.Utils;
 using System;
 using System.Collections.Generic;
@@ -115,6 +117,7 @@ namespace KeePassRDP
                 cbIgnore,
                 cbUseCredpicker,
                 cbCpRecurseGroups,
+                btnRdpFile,
                 btnMore,
                 lblCpGroupUUIDs,
                 lblCpExcludedGroupUUIDs,
@@ -358,6 +361,7 @@ namespace KeePassRDP
             {
                 foreach (ToolStripItem item in cmsMore.Items)
                     item.Enabled = false;
+
                 cbIgnore.Enabled =
                     cbUseCredpicker.Enabled =
                     cbCpRecurseGroups.Enabled =
@@ -423,6 +427,21 @@ namespace KeePassRDP
                 return;
 
             _pwEntrySettings.CpRecurseGroups = cbCpRecurseGroups.Checked;
+        }
+
+        private void cmdRdpFile_Click(object sender, EventArgs e)
+        {
+            var disposeRdpFile = _pwEntrySettings.RdpFile != null;
+            var rdpFileForm = new KprRdpFileForm(_pwEntrySettings.RdpFile)
+            {
+                IsReadOnly = _pwEntrySettings.IsReadOnly
+            };
+            if (UIUtil.ShowDialogAndDestroy(rdpFileForm) == DialogResult.OK)
+            {
+                _pwEntrySettings.RdpFile = new RdpFile(rdpFileForm.RdpFile, false);
+                if (disposeRdpFile)
+                    rdpFileForm.RdpFile.Dispose();
+            }
         }
 
         private void btnMore_Click(object sender, EventArgs e)

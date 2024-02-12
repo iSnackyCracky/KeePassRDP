@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2023 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -227,8 +227,8 @@ namespace KeePassRDP
                 KprResourceManager.Instance["Here you can configure all KeePassRDP related options."],
                 true);
 
-            UseWaitCursor = false;
             ResumeLayout(false);
+            UseWaitCursor = false;
 
             MessageFilter.ListBoxMouseWheelHandler.Enable(true);
             MessageFilter.FormClickHandler.Enable(true);
@@ -371,6 +371,7 @@ namespace KeePassRDP
                             chkCredVaultAdaptiveTtl,
                             chkKeePassConnectToAll,
                             chkKeePassAlwaysConfirm,
+                            chkKeePassContextMenuOnScreen,
                             chkKeePassHotkeysRegisterLast
                         );
 
@@ -385,6 +386,7 @@ namespace KeePassRDP
 
                         chkKeePassConnectToAll.Checked = _config.KeePassConnectToAll;
                         chkKeePassAlwaysConfirm.Checked = _config.KeePassAlwaysConfirm;
+                        chkKeePassContextMenuOnScreen.Checked = _config.KeePassContextMenuOnScreen;
                         chkKeePassHotkeysRegisterLast.Checked = _config.KeePassHotkeysRegisterLast;
 
                         txtOpenRdpKey.Hotkey = _config.ShortcutOpenRdpConnection;
@@ -417,8 +419,8 @@ namespace KeePassRDP
                         lstKeePassToolbarItems.DataSource = keePassToolbarItems;
                         lstKeePassToolbarItemsAvailable.DataSource = keePassToolbarItemsAvailable;
 
-                        tabIntegration.UseWaitCursor = false;
                         tabIntegration.ResumeLayout(false);
+                        tabIntegration.UseWaitCursor = false;
 
                         KprOptionsForm_ResizeEnd(null, EventArgs.Empty);
                     }));
@@ -495,8 +497,8 @@ namespace KeePassRDP
                     else
                         lstRegExPost.DataSource = new BindingList<string>();
 
-                    tabPicker.UseWaitCursor = false;
                     tabPicker.ResumeLayout(false);
+                    tabPicker.UseWaitCursor = false;
                 }
             }
             else if (e.TabPage == tabExecutable)
@@ -540,8 +542,8 @@ namespace KeePassRDP
 
                     grpMstscParameters.Enabled = File.Exists(KeePassRDPExt.MstscPath);
 
-                    tabExecutable.UseWaitCursor = false;
                     tabExecutable.ResumeLayout(false);
+                    tabExecutable.UseWaitCursor = false;
                 }
             }
             else if (e.TabPage == tabVault)
@@ -574,8 +576,8 @@ namespace KeePassRDP
                         chkSavedCredsShowAll
                     );
 
-                    tabVault.UseWaitCursor = false;
                     tabVault.ResumeLayout(false);
+                    tabVault.UseWaitCursor = false;
                     lvVault.ResumeLayout(false);
                 }
 
@@ -605,8 +607,8 @@ namespace KeePassRDP
                     tblAbout.RowStyles[0] = new RowStyle(SizeType.Absolute, (int)Math.Max(DpiUtil.ScaleIntY(256), tblAbout.RowStyles[0].Height / DpiUtil.FactorY));
                     tblAbout.Location = new Point(tabAbout.Width / 2 - tblAbout.Width / 2, tabAbout.Height / 2 - tblAbout.Height / 2);
 
-                    tabAbout.UseWaitCursor = false;
                     tabAbout.ResumeLayout(false);
+                    tabAbout.UseWaitCursor = false;
                     tblAbout.ResumeLayout(false);
                 }
             }
@@ -626,6 +628,7 @@ namespace KeePassRDP
 
                 _config.KeePassConnectToAll = chkKeePassConnectToAll.Checked;
                 _config.KeePassAlwaysConfirm = chkKeePassAlwaysConfirm.Checked;
+                _config.KeePassContextMenuOnScreen = chkKeePassContextMenuOnScreen.Checked;
                 _config.KeePassHotkeysRegisterLast = chkKeePassHotkeysRegisterLast.Checked;
 
                 _config.ShortcutOpenRdpConnection = txtOpenRdpKey.Hotkey;

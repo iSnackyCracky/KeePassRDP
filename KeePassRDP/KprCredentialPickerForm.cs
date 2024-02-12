@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2023 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -99,8 +99,8 @@ namespace KeePassRDP
             {
                 if (UseWaitCursor)
                 {
-                    UseWaitCursor = false;
                     ResumeLayout(false);
+                    UseWaitCursor = false;
 
                     lvEntries.SuspendLayout();
 
@@ -582,8 +582,8 @@ namespace KeePassRDP
                     lvEntries.Select();
                 }
 
-                lvEntries.UseWaitCursor = false;
                 lvEntries.EndUpdate();
+                lvEntries.UseWaitCursor = false;
             }));
 
             if (!invoke.IsCompleted)

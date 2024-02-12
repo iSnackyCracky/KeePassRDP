@@ -121,7 +121,7 @@
     <value>False</value>
   </metadata>
   <metadata name="ttCredentials.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>400, 17</value>
+    <value>402, 17</value>
   </metadata>
   <metadata name="flpCredVaultTtl.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>False</value>
@@ -132,19 +132,19 @@ NTLM-Auth when activated on a domain member, as it is probably prohibited for ex
 Recommended to keep enabled for security reasons, unless you experience any issues.</value>
   </data>
   <metadata name="ttEntries.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>622, 17</value>
+    <value>625, 17</value>
   </metadata>
-  <metadata name="ttHotkeys.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>718, 17</value>
+  <metadata name="ttUI.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>722, 17</value>
   </metadata>
   <metadata name="flpSavedCredentials.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>False</value>
   </metadata>
   <metadata name="ttGeneric.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>521, 17</value>
+    <value>523, 17</value>
   </metadata>
   <metadata name="kprImageList.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>127, 17</value>
+    <value>128, 17</value>
   </metadata>
   <metadata name="flpCommandButtons.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>False</value>
@@ -162,7 +162,7 @@ Recommended to keep enabled for security reasons, unless you experience any issu
     <value>False</value>
   </metadata>
   <metadata name="ttGeneral.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>921, 17</value>
+    <value>893, 17</value>
   </metadata>
   <metadata name="pnlKeePassToolbarItemsCmds.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>False</value>
@@ -183,7 +183,7 @@ Recommended to keep enabled for security reasons, unless you experience any issu
     <value>False</value>
   </metadata>
   <metadata name="ttMstscParameters.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>248, 17</value>
+    <value>250, 17</value>
   </metadata>
   <data name="chkMstscUseSpan.ToolTip" xml:space="preserve">
     <value>/span
@@ -204,10 +204,10 @@ if you connect to a compromised device. Unlike Restricted Administrator mode, Re
 connections made from the remote PC by redirecting all requests back to your device.</value>
   </data>
   <metadata name="ttMstscAutomation.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>1023, 17</value>
+    <value>995, 17</value>
   </metadata>
   <metadata name="ttTrigger.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>822, 17</value>
+    <value>795, 17</value>
   </metadata>
   <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>51</value>

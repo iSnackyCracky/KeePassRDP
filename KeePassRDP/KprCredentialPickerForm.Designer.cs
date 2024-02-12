@@ -41,6 +41,7 @@
             this.columnPath = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.tblCredentialPickerForm = new System.Windows.Forms.TableLayoutPanel();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.ttGeneral = new KeePassRDP.KprToolTip(this.components);
             this.flpCommandButtons.SuspendLayout();
             this.tblCredentialPickerForm.SuspendLayout();
             this.SuspendLayout();
@@ -63,6 +64,7 @@
             this.cmdCancel.Text = "&Cancel";
             this.cmdCancel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.cmdCancel.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.ttGeneral.SetToolTip(this.cmdCancel, "Abort current operation");
             this.cmdCancel.UseVisualStyleBackColor = true;
             this.cmdCancel.Click += new System.EventHandler(this.cmdCancel_Click);
             // 
@@ -109,6 +111,7 @@
             this.cmdOk.Text = "&GO";
             this.cmdOk.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.cmdOk.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.ttGeneral.SetToolTip(this.cmdOk, "Continue with selected credentials");
             this.cmdOk.UseVisualStyleBackColor = true;
             this.cmdOk.Click += new System.EventHandler(this.cmdOk_Click);
             // 
@@ -152,7 +155,6 @@
             this.tblCredentialPickerForm.Controls.Add(this.lvEntries, 0, 0);
             this.tblCredentialPickerForm.Controls.Add(this.flpCommandButtons, 0, 1);
             this.tblCredentialPickerForm.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tblCredentialPickerForm.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tblCredentialPickerForm.Location = new System.Drawing.Point(0, 0);
             this.tblCredentialPickerForm.Margin = new System.Windows.Forms.Padding(0);
             this.tblCredentialPickerForm.Name = "tblCredentialPickerForm";
@@ -168,6 +170,12 @@
             this.backgroundWorker1.WorkerSupportsCancellation = true;
             this.backgroundWorker1.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker1_DoWork);
             // 
+            // ttGeneral
+            // 
+            this.ttGeneral.AutoPopDelay = 10000;
+            this.ttGeneral.InitialDelay = 500;
+            this.ttGeneral.ReshowDelay = 100;
+            // 
             // KprCredentialPickerForm
             // 
             this.AcceptButton = this.cmdOk;
@@ -178,6 +186,7 @@
             this.ClientSize = new System.Drawing.Size(1134, 461);
             this.Controls.Add(this.tblCredentialPickerForm);
             this.DoubleBuffered = true;
+            this.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.MinimumSize = new System.Drawing.Size(300, 200);
@@ -209,5 +218,6 @@
         private System.Windows.Forms.ColumnHeader columnUserName;
         private System.Windows.Forms.ColumnHeader columnNotes;
         private System.Windows.Forms.Button cmdCancel;
+        private KprToolTip ttGeneral;
     }
 }

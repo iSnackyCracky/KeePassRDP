@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2023 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -23,12 +23,15 @@ using KeePass.Resources;
 using KeePass.UI;
 using KeePass.Util.Spr;
 using KeePassLib;
+using KeePassRDP.Commands;
 using KeePassRDP.Extensions;
+using KeePassRDP.Generator;
 using KeePassRDP.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -51,11 +54,12 @@ namespace KeePassRDP
                 action,
                 state,
                 cancellationTokenSource.Token,
+                TaskCreationOptions.AttachedToParent |
                 TaskCreationOptions.PreferFairness |
-                    TaskCreationOptions.AttachedToParent |
-                    TaskCreationOptions.LongRunning)
+                TaskCreationOptions.LongRunning)
             {
                 _cancellationTokenSource = cancellationTokenSource;
+                Start();
             }
 
             public void Cancel()
@@ -99,7 +103,23 @@ namespace KeePassRDP
 
         public int Count { get { return _tasks.Count; } }
 
-        public bool IsCompleted { get { return !_tasks.Values.Any(x => !x.IsCompleted); } }
+        public bool IsCompleted
+        {
+            get
+            {
+                return !_tasks.Values.Any(x =>
+                {
+                    try
+                    {
+                        return !x.IsCompleted;
+                    }
+                    catch
+                    {
+                        return true;
+                    }
+                });
+            }
+        }
 
         internal Lazy<KprCredentialPicker> CredentialPicker { get { return _credentialPicker; } }
 
@@ -122,7 +142,17 @@ namespace KeePassRDP
         {
             try
             {
-                return Task.WaitAll(_tasks.Values.Where(x => !x.IsCompleted).ToArray(), TimeSpan.FromSeconds(seconds));
+                return Task.WaitAll(_tasks.Values.Where(x =>
+                {
+                    try
+                    {
+                        return !x.IsCompleted;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                }).ToArray(), TimeSpan.FromSeconds(seconds));
             }
             catch
             {
@@ -132,8 +162,24 @@ namespace KeePassRDP
 
         public void Cancel()
         {
-            foreach (var task in _tasks.Values.Where(x => !x.IsCompleted && !x.IsCancellationRequested))
-                task.Cancel();
+            foreach (var task in _tasks.Values.Where(x =>
+            {
+                try
+                {
+                    return !x.IsCompleted && !x.IsCancellationRequested;
+                }
+                catch
+                {
+                    return false;
+                }
+            }))
+                try
+                {
+                    task.Cancel();
+                }
+                catch
+                {
+                }
         }
 
         public void Dispose()
@@ -161,8 +207,8 @@ namespace KeePassRDP
                 var totalCount = parentGroups.Aggregate(0, (a, b) => a + b.Count());
 
                 var postfix = string.Format(KprResourceManager.Instance["{0} entr" + (totalCount == 1 ? "y" : "ies") + " of {1} selected."], totalCount, selectedEntries.Length);
-                var connectingTo = " " + KprResourceManager.Instance["connecting to"] + " ";
-                var skipped = " " + KprResourceManager.Instance["skipped"];
+                var connectingTo = string.Format(" {0} ", KprResourceManager.Instance["connecting to"]);
+                var skipped = string.Format(" {0}", KprResourceManager.Instance["skipped"]);
 
                 mainForm.SetStatusEx(string.Format("{0}{1}{2}", Util.KeePassRDP, connectingTo, postfix));
 
@@ -233,7 +279,7 @@ namespace KeePassRDP
                             {
                                 credEntry = Util.IsEntryIgnored(credEntry) ?
                                     null :
-                                    credEntry.GetResolvedReferencesEntry(new SprContext(credEntry, mainForm.ActiveDatabase, SprCompileFlags.NonActive)
+                                    credEntry.GetResolvedReferencesEntry(new SprContext(credEntry, mainForm.ActiveDatabase, _config.KeePassSprCompileFlags)
                                     {
                                         ForcePlainTextPasswords = true // true is default, PwDefs.PasswordField is replaced with PwDefs.HiddenPassword during SprEngine.Compile otherwise.
                                     });
@@ -243,7 +289,7 @@ namespace KeePassRDP
 
                     foreach (var connPwEntry in entries)
                     {
-                        var ctx = new SprContext(connPwEntry, mainForm.ActiveDatabase, SprCompileFlags.NonActive)
+                        var ctx = new SprContext(connPwEntry, mainForm.ActiveDatabase, _config.KeePassSprCompileFlags)
                         {
                             ForcePlainTextPasswords = true
                         };
@@ -286,7 +332,7 @@ namespace KeePassRDP
                             VistaTaskDialog.ShowMessageBoxEx(
                                 string.Format(KprResourceManager.Instance["The URL/target '{0}' of the selected entry could not be parsed."], host),
                                 null,
-                                Util.KeePassRDP + " - " + KPRes.Error,
+                                string.Format("{0} - {1}", Util.KeePassRDP, KPRes.Error),
                                 VtdIcon.Error,
                                 _host.MainWindow,
                                 null, 0, null, 0);
@@ -314,7 +360,7 @@ namespace KeePassRDP
                                 if (tmpEntry == null)
                                     continue;
 
-                                taskUuid += "-" + tmpEntry.Uuid.ToHexString();
+                                taskUuid = string.Format("{0}-{1}", taskUuid, tmpEntry.Uuid.ToHexString());
 
                                 var username = tmpEntry.Strings.GetSafe(PwDefs.UserNameField);
                                 // Do not connect to entry if username is empty.
@@ -353,7 +399,7 @@ namespace KeePassRDP
                                 //password = password.Remove(0, password.Length);
 
                                 // Add KprCredential to KprCredentialManager.
-                                _credManager.Value.Add(cred);
+                                //_credManager.Value.Add(cred);
                             }
 
                             if ((tmpUseCreds || _config.KeePassAlwaysConfirm) && _tasks.ContainsKey(taskUuid) && !_tasks[taskUuid].IsCompleted)
@@ -367,76 +413,116 @@ namespace KeePassRDP
                                     _host.MainWindow,
                                     KprResourceManager.Instance["&Yes"], 0,
                                     KprResourceManager.Instance["&No"], 1) == 1)
+                                {
+                                    if (cred != null)
+                                    {
+                                        cred.Dispose();
+                                        cred = null;
+                                    }
                                     continue;
+                                }
 
-                            var argumentsBuilder = new StringBuilder();
+                            var command = new MstscCommand
+                            {
+                                HostPort = host + port
+                            };
+
+                            /*var argumentsBuilder = new StringBuilder();
                             argumentsBuilder.Append("/v:");
                             argumentsBuilder.Append(host);
-                            argumentsBuilder.Append(port);
+                            argumentsBuilder.Append(port);*/
 
                             if (entrySettings.IncludeDefaultParameters)
                             {
                                 if (tmpMstscUseAdmin || _config.MstscUseAdmin)
                                 {
-                                    argumentsBuilder.Append(" /admin");
+                                    command.Admin = true; // argumentsBuilder.Append(" /admin");
                                     if (_config.MstscUseRestrictedAdmin)
-                                        argumentsBuilder.Append(" /restrictedAdmin");
+                                        command.RestrictedAdmin = true; // argumentsBuilder.Append(" /restrictedAdmin");
                                 }
                                 if (_config.MstscUsePublic)
-                                    argumentsBuilder.Append(" /public");
+                                    command.Public = true; // argumentsBuilder.Append(" /public");
                                 if (_config.MstscUseRemoteGuard)
-                                    argumentsBuilder.Append(" /remoteGuard");
+                                    command.RemoteGuard = true; // argumentsBuilder.Append(" /remoteGuard");
                                 if (_config.MstscUseFullscreen)
-                                    argumentsBuilder.Append(" /f");
+                                    command.Fullscreen = true; // argumentsBuilder.Append(" /f");
                                 if (_config.MstscUseSpan)
-                                    argumentsBuilder.Append(" /span");
+                                    command.Span = true; // argumentsBuilder.Append(" /span");
                                 if (_config.MstscUseMultimon)
-                                    argumentsBuilder.Append(" /multimon");
+                                    command.Multimon = true; // argumentsBuilder.Append(" /multimon");
                                 if (_config.MstscWidth > 0)
                                 {
-                                    argumentsBuilder.Append(" /w:");
-                                    argumentsBuilder.Append(_config.MstscWidth);
+                                    /*argumentsBuilder.Append(" /w:");
+                                    argumentsBuilder.Append(_config.MstscWidth);*/
+                                    command.Width = _config.MstscWidth;
                                 }
                                 if (_config.MstscHeight > 0)
                                 {
-                                    argumentsBuilder.Append(" /h:");
-                                    argumentsBuilder.Append(_config.MstscHeight);
+                                    /*argumentsBuilder.Append(" /h:");
+                                    argumentsBuilder.Append(_config.MstscHeight);*/
+                                    command.Height = _config.MstscHeight;
                                 }
                             }
                             else if (tmpMstscUseAdmin)
                             {
-                                argumentsBuilder.Append(" /admin");
+                                command.Admin = true; // argumentsBuilder.Append(" /admin");
                             }
+
+                            RdpFile rdpFile = null;
+                            if (entrySettings.RdpFile != null)
+                            {
+                                rdpFile = new RdpFile(entrySettings.RdpFile);
+                                command.Filename = rdpFile.ToString();
+                            }
+
+                            var argumentsBuilder = new StringBuilder(command.ToString());
 
                             foreach (var argument in entrySettings.MstscParameters)
                             {
-                                argumentsBuilder.Append(" ");
                                 argumentsBuilder.Append(argument);
+                                argumentsBuilder.Append(' ');
                             }
 
-                            // Start RDP / mstsc.exe.
-                            var rdpProcess = new ProcessStartInfo
+                            if (argumentsBuilder.Length == 0)
                             {
-                                WindowStyle = ProcessWindowStyle.Normal,
-                                FileName = KeePassRDPExt.MstscPath,
-                                Arguments = argumentsBuilder.ToString(),
-                                ErrorDialog = true,
-                                ErrorDialogParentHandle = Form.ActiveForm.Handle,
-                                LoadUserProfile = false,
-                                WorkingDirectory = Environment.ExpandEnvironmentVariables("%TEMP%")
-                            };
+                                if (cred != null)
+                                {
+                                    cred.Dispose();
+                                    cred = null;
+                                }
 
-                            var title = string.Empty;
-                            if (_config.MstscReplaceTitle)
-                            {
-                                title = SprEngine.Compile(connPwEntry.Strings.ReadSafe(PwDefs.TitleField), ctx);
-                                title = string.Format("{0} - {1}", string.IsNullOrEmpty(title) ? host : title, Util.KeePassRDP);
+                                continue;
                             }
 
-                            (_tasks[taskUuid] = new TaskWithCancellationToken(thisTaskUuid =>
+                            _tasks[taskUuid] = new TaskWithCancellationToken(thisTaskUuid =>
                             {
+                                var waitForRdpFile = rdpFile != null;
+
                                 try
                                 {
+                                    // Start RDP / mstsc.exe.
+                                    var rdpProcess = new ProcessStartInfo
+                                    {
+                                        WindowStyle = ProcessWindowStyle.Normal,
+                                        FileName = command.ExecutablePath, // KeePassRDPExt.MstscPath,
+                                        Arguments = argumentsBuilder.ToString().TrimEnd(),
+                                        ErrorDialog = true,
+                                        ErrorDialogParentHandle = Form.ActiveForm.Handle,
+                                        LoadUserProfile = false,
+                                        WorkingDirectory = Path.GetTempPath() // Environment.ExpandEnvironmentVariables("%TEMP%")
+                                    };
+
+                                    var title = string.Empty;
+                                    if (_config.MstscReplaceTitle)
+                                    {
+                                        title = SprEngine.Compile(connPwEntry.Strings.ReadSafe(PwDefs.TitleField), ctx);
+                                        title = string.Format("{0} - {1}", string.IsNullOrEmpty(title) ? host : title, Util.KeePassRDP);
+                                    }
+
+                                    // Add KprCredential to KprCredentialManager.
+                                    if (cred != null)
+                                        _credManager.Value.Add(cred);
+
                                     using (var process = Process.Start(rdpProcess))
                                     {
                                         var inc = _config.CredVaultTtl > 0 && _config.CredVaultAdaptiveTtl && cred != null ?
@@ -467,10 +553,68 @@ namespace KeePassRDP
                                                     var oldTitle = process.MainWindowTitle;
 
                                                     if (!string.IsNullOrEmpty(title))
-                                                        SetWindowText(process.MainWindowHandle, title);
+                                                        NativeMethods.SetWindowText(process.MainWindowHandle, title);
 
                                                     // Find progress bar.
-                                                    var pbHandle = FindWindowEx(process.MainWindowHandle, IntPtr.Zero, "msctls_progress32", null);
+                                                    var pbHandle = NativeMethods.FindWindowEx(process.MainWindowHandle, IntPtr.Zero, "msctls_progress32", null);
+
+                                                    if (waitForRdpFile)
+                                                    {
+                                                        // Check for (un-)signed .rdp file dialog.
+                                                        var ms = (int)TimeSpan.FromMilliseconds(750).TotalMilliseconds;
+                                                        if (!process.HasExited && !process.WaitForExit(ms))
+                                                        {
+                                                            process.Refresh();
+
+                                                            if (process.MainWindowHandle != IntPtr.Zero)
+                                                            {
+                                                                var lastPopup = NativeMethods.GetLastActivePopup(process.MainWindowHandle);
+
+                                                                // Continue when popup is open.
+                                                                if (lastPopup != process.MainWindowHandle)
+                                                                {
+                                                                    var element = AutomationElement.FromHandle(lastPopup);
+                                                                    var button = element.FindFirst(
+                                                                        TreeScope.Children,
+                                                                        new PropertyCondition(AutomationElement.AutomationIdProperty, "13498"));
+
+                                                                    if (button != null && button.Current.ControlType == ControlType.Image)
+                                                                    {
+                                                                        if (_config.MstscConfirmCertificate)
+                                                                        {
+                                                                            button = element.FindFirst(
+                                                                                TreeScope.Children,
+                                                                                new PropertyCondition(AutomationElement.AutomationIdProperty, "1"));
+
+                                                                            if (button != null && button.Current.ControlType == ControlType.Button)
+                                                                            {
+                                                                                var buttonHandle = new IntPtr(button.Current.NativeWindowHandle);
+
+                                                                                // Try LegacyIAccessible.DoDefaultAction() first, fallback to emulating click on button.
+                                                                                try
+                                                                                {
+                                                                                    if (KprDoDefaultAction(buttonHandle) != 0)
+                                                                                        throw new Exception();
+                                                                                }
+                                                                                catch
+                                                                                {
+                                                                                    NativeMethods.SendMessage(buttonHandle, NativeMethods.WM_LBUTTONDOWN, 0, 0);
+                                                                                    NativeMethods.SendMessage(buttonHandle, NativeMethods.WM_LBUTTONUP, 0, 0);
+                                                                                    NativeMethods.SendMessage(buttonHandle, NativeMethods.BM_CLICK, 0, 0);
+                                                                                }
+
+                                                                                waitForRdpFile = false;
+                                                                                continue;
+                                                                            }
+                                                                        }
+
+                                                                        continue;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
                                                     if (pbHandle != IntPtr.Zero)
                                                     {
                                                         var ms = (int)TimeSpan.FromMilliseconds(750).TotalMilliseconds;
@@ -484,16 +628,11 @@ namespace KeePassRDP
                                                             if (process.MainWindowHandle == IntPtr.Zero)
                                                                 break;
 
-                                                            var lastPopup = GetLastActivePopup(process.MainWindowHandle);
+                                                            var lastPopup = NativeMethods.GetLastActivePopup(process.MainWindowHandle);
 
                                                             // Continue when popup is open.
                                                             if (lastPopup != process.MainWindowHandle)
                                                             {
-                                                                /*var sb = new char[GetWindowTextLength(lastPopup) + 1];
-                                                                if (GetWindowText(lastPopup, sb, sb.Length) != 0 && new string(sb).Equals(oldTitle, StringComparison.OrdinalIgnoreCase))
-                                                                {
-                                                                }*/
-
                                                                 var element = AutomationElement.FromHandle(lastPopup);
 
                                                                 // Connection failed error box.
@@ -501,7 +640,7 @@ namespace KeePassRDP
                                                                     TreeScope.Children,
                                                                     new PropertyCondition(AutomationElement.AutomationIdProperty, "CommandButton_1"));
 
-                                                                if (button != null && button.Current.ClassName == "Button")
+                                                                if (button != null && button.Current.ControlType == ControlType.Button)
                                                                     break;
 
                                                                 if (_config.MstscConfirmCertificate)
@@ -511,9 +650,10 @@ namespace KeePassRDP
                                                                         TreeScope.Children,
                                                                         new PropertyCondition(AutomationElement.AutomationIdProperty, "14004"));
 
-                                                                    if (button != null && button.Current.ClassName == "Button")
+                                                                    if (button != null && button.Current.ControlType == ControlType.Button)
                                                                     {
                                                                         var buttonHandle = new IntPtr(button.Current.NativeWindowHandle);
+
                                                                         // Try LegacyIAccessible.DoDefaultAction() first, fallback to emulating click on button.
                                                                         try
                                                                         {
@@ -522,10 +662,11 @@ namespace KeePassRDP
                                                                         }
                                                                         catch
                                                                         {
-                                                                            SendMessage(buttonHandle, WM_LBUTTONDOWN, 0, 0);
-                                                                            SendMessage(buttonHandle, WM_LBUTTONUP, 0, 0);
-                                                                            SendMessage(buttonHandle, BM_CLICK, 0, 0);
+                                                                            NativeMethods.SendMessage(buttonHandle, NativeMethods.WM_LBUTTONDOWN, 0, 0);
+                                                                            NativeMethods.SendMessage(buttonHandle, NativeMethods.WM_LBUTTONUP, 0, 0);
+                                                                            NativeMethods.SendMessage(buttonHandle, NativeMethods.BM_CLICK, 0, 0);
                                                                         }
+
                                                                         continue;
                                                                     }
                                                                 }
@@ -533,8 +674,8 @@ namespace KeePassRDP
                                                             else
                                                             {
                                                                 // Break when progress bar is gone.
-                                                                //if (FindWindowEx(process.MainWindowHandle, IntPtr.Zero, "BBarWindowClass", "BBar") != IntPtr.Zero)
-                                                                if (FindWindowEx(process.MainWindowHandle, IntPtr.Zero, "msctls_progress32", null) == IntPtr.Zero)
+                                                                //if (NativeMethods.FindWindowEx(process.MainWindowHandle, IntPtr.Zero, "BBarWindowClass", "BBar") != IntPtr.Zero)
+                                                                if (NativeMethods.FindWindowEx(process.MainWindowHandle, IntPtr.Zero, "msctls_progress32", null) == IntPtr.Zero)
                                                                     break;
                                                             }
 
@@ -562,7 +703,7 @@ namespace KeePassRDP
                                         {
                                             process.Refresh();
                                             if (!string.IsNullOrEmpty(title) && process.MainWindowHandle != IntPtr.Zero)
-                                                SetWindowText(process.MainWindowHandle, title);
+                                                NativeMethods.SetWindowText(process.MainWindowHandle, title);
 
                                             if (!process.HasExited && !process.WaitForExit(200))
                                             {
@@ -570,10 +711,11 @@ namespace KeePassRDP
 
                                                 // Set title twice to try to make sure to catch the right window handle.
                                                 if (!string.IsNullOrEmpty(title) && process.MainWindowHandle != IntPtr.Zero)
-                                                    SetWindowText(process.MainWindowHandle, title);
+                                                    NativeMethods.SetWindowText(process.MainWindowHandle, title);
 
+                                                var timeout = 5000;
                                                 // Check if a window is still alive from time to time.
-                                                while (!process.WaitForExit(30000))
+                                                while (!process.WaitForExit(timeout))
                                                 {
                                                     process.Refresh();
 
@@ -584,6 +726,19 @@ namespace KeePassRDP
                                                             process.Kill();
                                                         break;
                                                     }
+
+                                                    // Assume something went wrong when threads get stuck.
+                                                    /*var allThreads = process.Threads.Cast<ProcessThread>();
+                                                    if (!allThreads.Any(thread => thread.ThreadState != System.Diagnostics.ThreadState.Wait) &&
+                                                         allThreads.Any(thread => thread.WaitReason != ThreadWaitReason.Suspended))
+                                                    {
+                                                        if (!process.HasExited)
+                                                            process.Kill();
+                                                        break;
+                                                    }*/
+
+                                                    if (timeout < 60000)
+                                                        timeout += 5000;
                                                 }
                                             }
                                         }
@@ -598,6 +753,9 @@ namespace KeePassRDP
                                         if (_config.CredVaultRemoveOnExit)
                                             cred.Dispose();
                                     }
+
+                                    if (rdpFile != null)
+                                        rdpFile.Dispose();
                                 }
 
                                 TaskWithCancellationToken oldtask;
@@ -614,7 +772,7 @@ namespace KeePassRDP
                                             oldtask.Dispose();
                                         }
                                     });
-                            }, taskUuid, new CancellationTokenSource())).Start();
+                            }, taskUuid, new CancellationTokenSource());
                         }
                     }
                 }
@@ -628,29 +786,5 @@ namespace KeePassRDP
 
         /*[DllImport("KeePassRDP.unmanaged.dll", EntryPoint = "KprDoDefaultAction", SetLastError = false)]
         private static extern int KprDoDefaultAction([In] IntPtr parent, [In] string automationId);*/
-
-        [DllImport("User32.dll", EntryPoint = "FindWindowExW", CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern IntPtr FindWindowEx(IntPtr parentHandle, IntPtr hWndChildAfter, string className, string windowTitle);
-
-        /*[DllImport("User32.dll", EntryPoint = "GetWindowTextLengthW", CharSet = CharSet.Unicode)]
-        private static extern int GetWindowTextLength(IntPtr hWnd);
-
-        [DllImport("User32.dll", EntryPoint = "GetWindowTextW", CharSet = CharSet.Unicode)]
-        private static extern int GetWindowText(IntPtr hWnd, [Out] char[] lpString, int nMaxCount);*/
-
-        [DllImport("User32.dll", EntryPoint = "SetWindowTextW", CharSet = CharSet.Unicode, SetLastError = false)]
-        private static extern int SetWindowText(IntPtr hWnd, string text);
-
-        [DllImport("User32.dll", EntryPoint = "GetLastActivePopup", SetLastError = true)]
-        private static extern IntPtr GetLastActivePopup(IntPtr hWnd);
-
-        private const uint BM_CLICK = 0x00F5;
-
-        private const uint WM_LBUTTONDOWN = 0x0201;
-
-        private const uint WM_LBUTTONUP = 0x0202;
-
-        [DllImport("User32.dll", EntryPoint = "SendMessageW", CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
     }
 }

@@ -18,23 +18,26 @@
  *
  */
 
-using System.Reflection;
-using System.Runtime.InteropServices;
+using System;
 
-// General Information
-[assembly: AssemblyTitle("KeePassRDP")]
-[assembly: AssemblyDescription("A plugin for KeePass to conveniently connect to RDP.")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("iSnackyCracky")]
-[assembly: AssemblyProduct("KeePass Plugin")]
-[assembly: AssemblyCopyright("Copyright © 2018 - 2024")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+namespace KeePassRDP.Commands
+{
+    [AttributeUsage(AttributeTargets.Property)]
+    internal class CommandArgumentAttribute : Attribute
+    {
+        public int Position { get; set; }
+        public string Parameter { get; set; }
+        public char Delimiter { get; set; }
+        public char Prefix { get; set; }
 
-[assembly: ComVisible(false)]
-[assembly: Guid("404935cb-8f30-4801-a3e6-6a88ad963544")]
+        public CommandArgumentAttribute() : this('/') { }
 
-// Version information
-[assembly: AssemblyVersion("2.1")]
-[assembly: AssemblyFileVersion("2.1")]
-[assembly: AssemblyInformationalVersion("2.1")]
+        public CommandArgumentAttribute(char prefix)
+        {
+            Position = int.MaxValue;
+            Parameter = string.Empty;
+            Delimiter = char.MinValue;
+            Prefix = prefix;
+        }
+    }
+}

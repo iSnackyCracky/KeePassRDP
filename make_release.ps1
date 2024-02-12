@@ -1,5 +1,5 @@
 <#
- #  Copyright (C) 2018 - 2022 iSnackyCracky, NETertainer
+ #  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
  #
  #  This file is part of KeePassRDP.
  #
@@ -38,3 +38,6 @@ $archive = New-Object System.IO.Compression.ZipArchive($zipFile, [System.IO.Comp
 
 $archive.Dispose();
 $zipFile.Dispose();
+
+Start-Sleep -Seconds 1
+& iexpress /n /q /m KeePassRDP\KeePassRDPexe.SED

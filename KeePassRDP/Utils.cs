@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2023 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -23,11 +23,13 @@ using KeePass.UI;
 using KeePassLib;
 using KeePassLib.Security;
 using KeePassRDP.Extensions;
+using Microsoft.Win32.SafeHandles;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -59,7 +61,7 @@ namespace KeePassRDP.Utils
 
         private static readonly Lazy<JsonSerializerSettings> _jsonSerializerSettings = new Lazy<JsonSerializerSettings>(() => new JsonSerializerSettings()
         {
-            DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate,
+            DefaultValueHandling = DefaultValueHandling.Ignore,
             ContractResolver = new DefaultContractResolver
             {
                 NamingStrategy = new CamelCaseNamingStrategy
@@ -555,4 +557,43 @@ namespace KeePassRDP.Utils
             return false;
         }
     }
+
+    /*public static class TempFileUtil
+    {
+        [DllImport("Kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern SafeFileHandle CreateFile(
+            string lpFileName,
+            uint dwDesiredAccess,
+            uint dwShareMode,
+            IntPtr lpSecurityAttributes,
+            uint dwCreationDisposition,
+            uint dwFlagsAndAttributes,
+            IntPtr hTemplateFile);
+
+        private const uint OPEN_EXISTING = 3;
+        private const uint GENERIC_READ = 0x80000000;
+        private const uint GENERIC_WRITE = 0x40000000;
+        private const uint FILE_ATTRIBUTE_TEMPORARY = 0x100;
+        private const uint FILE_FLAG_DELETE_ON_CLOSE = 0x04000000;
+
+        public static FileStream OpenTempFile(string path = null)
+        {
+            if (string.IsNullOrEmpty(path))
+                path = Path.GetTempFileName();
+
+            var handle = CreateFile(
+                path,
+                GENERIC_READ | GENERIC_WRITE,
+                (uint)(FileShare.Read | FileShare.Delete),
+                IntPtr.Zero,
+                OPEN_EXISTING,
+                FILE_ATTRIBUTE_TEMPORARY | FILE_FLAG_DELETE_ON_CLOSE,
+                IntPtr.Zero);
+
+            if (handle.IsInvalid)
+                Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
+
+            return new FileStream(handle, FileAccess.ReadWrite, 1024);
+        }
+    }*/
 }

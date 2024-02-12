@@ -123,17 +123,26 @@
   <data name="&amp;GO" xml:space="preserve">
     <value>&amp;LOS</value>
   </data>
+  <data name="&amp;Import" xml:space="preserve">
+    <value>&amp;Importieren</value>
+  </data>
   <data name="&amp;No" xml:space="preserve">
-    <value>Nein</value>
+    <value>&amp;Nein</value>
   </data>
   <data name="&amp;Quit" xml:space="preserve">
     <value>&amp;Beenden</value>
+  </data>
+  <data name="&amp;Save" xml:space="preserve">
+    <value>&amp;Speichern</value>
   </data>
   <data name="&amp;Wait" xml:space="preserve">
     <value>&amp;Warten</value>
   </data>
   <data name="&amp;Yes" xml:space="preserve">
-    <value>Ja</value>
+    <value>&amp;Ja</value>
+  </data>
+  <data name="Abort current operation" xml:space="preserve">
+    <value>Aktuellen Vorgang abbrechen</value>
   </data>
   <data name="About" xml:space="preserve">
     <value>Über</value>
@@ -200,6 +209,9 @@ TTL kann auf 0 gesetzt werden um Zugangsdaten nur beim Beenden zu löschen.</val
   <data name="Automatically save last credential picker window size." xml:space="preserve">
     <value>Fenstergröße des Credential Picker automatisch speichern.</value>
   </data>
+  <data name="Configure extended settings via .rdp file" xml:space="preserve">
+    <value>Erweiterte Einstellung über .rdp-Datei konfigurieren</value>
+  </data>
   <data name="Confirm self-signed certificate" xml:space="preserve">
     <value>Selbst signiertes Zertifikat bestätigen</value>
   </data>
@@ -211,6 +223,9 @@ TTL kann auf 0 gesetzt werden um Zugangsdaten nur beim Beenden zu löschen.</val
   </data>
   <data name="Context menu" xml:space="preserve">
     <value>Kontextmenü</value>
+  </data>
+  <data name="Continue with selected credentials" xml:space="preserve">
+    <value>Mit ausgewählten Zugangsdaten fortfahren</value>
   </data>
   <data name="Continue?" xml:space="preserve">
     <value>Fortfahren?</value>
@@ -249,6 +264,9 @@ Verwendet "RDP" als Standard.</value>
   <data name="Executable" xml:space="preserve">
     <value>Programmdatei</value>
   </data>
+  <data name="File '{0}' not found." xml:space="preserve">
+    <value>Datei '{0}' nicht gefunden.</value>
+  </data>
   <data name="Force authenticating as local user when username starts with target hostname,&#xD;&#xA;or when hostname is empty." xml:space="preserve">
     <value>Erzwingt Anmeldung als lokaler Benutzer wenn Benutzername mit Ziel-Host beginnt,
 oder wenn Hostname leer ist.</value>
@@ -278,6 +296,9 @@ Nur bei Notwendigkeit aktivieren. Kann unerwartetes Verhalten verursachen.</valu
   <data name="Ignore entry credentials" xml:space="preserve">
     <value>Zugangsdaten von Eintrag ignorieren</value>
   </data>
+  <data name="Import from .rdp file" xml:space="preserve">
+    <value>Aus .rdp-Datei importieren</value>
+  </data>
   <data name="Include default parameters" xml:space="preserve">
     <value>Standard-Parameter einbeziehen</value>
   </data>
@@ -299,6 +320,10 @@ Nur bei Notwendigkeit aktivieren. Kann unerwartetes Verhalten verursachen.</valu
   <data name="Inlcude selected" xml:space="preserve">
     <value>Ausgewählte einbeziehen</value>
   </data>
+  <data name="Keep context menu&#xD;&#xA;on screen" xml:space="preserve">
+    <value>Kontextmenü auf
+Monitor behalten</value>
+  </data>
   <data name="KeePassRDP Options" xml:space="preserve">
     <value>KeePassRDP Optionen</value>
   </data>
@@ -313,6 +338,9 @@ Nur bei Notwendigkeit aktivieren. Kann unerwartetes Verhalten verursachen.</valu
   </data>
   <data name="License" xml:space="preserve">
     <value>Lizenz</value>
+  </data>
+  <data name="Make the context menu stay on the same screen when opening." xml:space="preserve">
+    <value>Öffnen des Kontextmenüs auf dem selben Monitor bevorzugen.</value>
   </data>
   <data name="More" xml:space="preserve">
     <value>Mehr</value>
@@ -350,6 +378,9 @@ Nur bei Notwendigkeit aktivieren. Kann unerwartetes Verhalten verursachen.</valu
   <data name="Overwrite credentials" xml:space="preserve">
     <value>Zugangsdaten überschreiben</value>
   </data>
+  <data name="Overwrite hotkeys" xml:space="preserve">
+    <value>Hotkeys überschreiben</value>
+  </data>
   <data name="Path" xml:space="preserve">
     <value>Pfad</value>
   </data>
@@ -378,14 +409,14 @@ oder Hexstring der Gruppen-UUID eingeben.</value>
   <data name="RegEx prefixes:" xml:space="preserve">
     <value>RegEx-Präfixe:</value>
   </data>
-  <data name="Register last" xml:space="preserve">
-    <value>Als letztes registrieren</value>
-  </data>
   <data name="Remember size" xml:space="preserve">
     <value>Größe merken</value>
   </data>
   <data name="Remember sort order" xml:space="preserve">
     <value>Sortierreihenfolge merken</value>
+  </data>
+  <data name="Remotedesktop (RDP) Files" xml:space="preserve">
+    <value>Remotedesktop (RDP)-Datein</value>
   </data>
   <data name="Remove on close" xml:space="preserve">
     <value>Beim Beenden löschen</value>
@@ -523,6 +554,12 @@ oder nur wenn die selben Zugangsdaten verwendet werden.</value>
   </data>
   <data name="Visibility settings" xml:space="preserve">
     <value>Anzeigeeinstellungen</value>
+  </data>
+  <data name="waiting for 1 connection..." xml:space="preserve">
+    <value>warte auf 1 Verbindung...</value>
+  </data>
+  <data name="waiting for {0} connections..." xml:space="preserve">
+    <value>warte auf {0} Verbindungen...</value>
   </data>
   <data name="Width - /w:" xml:space="preserve">
     <value>Breite - /w:</value>

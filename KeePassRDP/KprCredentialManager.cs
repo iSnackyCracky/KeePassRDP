@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2023 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -24,6 +24,7 @@ using KeePassRDP.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Timers;
 
@@ -112,12 +113,18 @@ namespace KeePassRDP
                     VtdIcon.Error,
                     null, null, 0, null, 0);
 
-            NativeCredentials.Credential[] ncredentials;
-            if (NativeCredentials.CredEnumerate(null, out ncredentials) && ncredentials.Length > 0)
+            try
             {
-                _credentials.AddRange(ncredentials.Where(cred => cred.Comment == KprCredential.CredentialComment).Select(cred => new KprCredential(cred)).Cast<T>());
-                foreach (var ncred in ncredentials.Where(cred => cred.Comment != KprCredential.CredentialComment))
-                    ncred.ZeroMemory();
+                NativeCredentials.Credential[] ncredentials;
+                if (NativeCredentials.CredEnumerate(null, out ncredentials) && ncredentials.Length > 0)
+                {
+                    _credentials.AddRange(ncredentials.Where(cred => cred.Comment == KprCredential.CredentialComment).Select(cred => new KprCredential(cred)).Cast<T>());
+                    foreach (var ncred in ncredentials.Where(cred => cred.Comment != KprCredential.CredentialComment))
+                        ncred.ZeroMemory();
+                }
+            }
+            catch (Win32Exception)
+            {
             }
 
             if (_credentials.Count > 0)

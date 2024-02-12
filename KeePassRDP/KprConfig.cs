@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2023 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -27,10 +27,12 @@ namespace KeePassRDP
     public partial class KprConfig
     {
         #region Constants
+        private const string KeePassSprCompileFlagsKey = "KPR_keepassSprCompileFlags";
         private const string KeePassShowResolvedReferencesKey = "KPR_keepassShowResolvedReferences";
         private const string KeePassConfirmOnCloseKey = "KPR_keepassConfirmOnClose";
         private const string KeePassConnectToAllKey = "KPR_keepassConnectToAll";
         private const string KeePassAlwaysConfirmKey = "KPR_keePassAlwaysConfirm";
+        private const string KeePassContextMenuOnScreenKey = "KPR_keePassContextMenuOnScreen";
         private const string KeePassHotkeysRegisterLastKey = "KPR_keePassHotkeysRegisterLast";
         private const string KeePassContextMenuItemsKey = "KPR_keePassContextMenuItems";
         private const string KeePassToolbarItemsKey = "KPR_keePassToolbarItems";

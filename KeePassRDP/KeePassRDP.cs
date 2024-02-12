@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2023 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -163,21 +163,20 @@ namespace KeePassRDP
                     {
                         if (_isWaitingOnCloseSignal != null)
                             _isWaitingOnCloseSignal.Reset();
-                        if (!_connectionManager.Value.IsCompleted &&
-                                VistaTaskDialog.ShowMessageBoxEx(
-                                    string.Format(KprResourceManager.Instance["{0} connection" + (_connectionManager.Value.Count == 1 ? " is" : "s are") + " still open."], _connectionManager.Value.Count),
-                                    KprResourceManager.Instance["Continue?"],
-                                    Util.KeePassRDP,
-                                    VtdIcon.Information,
-                                    _host.MainWindow,
-                                    KprResourceManager.Instance["&Wait"], 0,
-                                    KprResourceManager.Instance["&Quit"], 1) == 0)
+
+                        if (!_connectionManager.Value.IsCompleted && (_isWaitingOnCloseStart == null || _isWaitingOnCloseSignal != null))
                         {
-                            if (_isWaitingOnCloseStart == null)
+                            var firstRun = _isWaitingOnCloseStart == null;
+                            if (firstRun)
                             {
-                                _isWaitingOnCloseSignal = new ManualResetEventSlim(true);
-                                _isWaitingOnCloseStart = DateTimeOffset.UtcNow;
                                 _host.MainWindow.UseWaitCursor = true;
+                                _host.MainWindow.SuspendLayout();
+                                foreach (var control in _host.MainWindow.Controls.OfType<Control>())
+                                    control.Enabled = false;
+
+                                _isWaitingOnCloseStart = DateTimeOffset.UtcNow;
+                                _isWaitingOnCloseSignal = new ManualResetEventSlim(false);
+
                                 Task.Factory.StartNew(() =>
                                 {
                                     try
@@ -186,29 +185,77 @@ namespace KeePassRDP
                                             !_connectionManager.Value.IsCompleted &&
                                             !_connectionManager.Value.Wait(5))
                                         {
-                                            if (!_isWaitingOnCloseSignal.IsSet)
-                                                _isWaitingOnCloseSignal.Wait();
+                                            if (_isWaitingOnCloseSignal != null && !_isWaitingOnCloseSignal.IsSet && !_isWaitingOnCloseSignal.Wait(TimeSpan.FromSeconds(5)))
+                                                continue;
                                             if (DateTimeOffset.UtcNow - _isWaitingOnCloseStart >= TimeSpan.FromSeconds(15))
                                                 _host.MainWindow.Close();
                                         }
+
+                                        if (_isWaitingOnCloseSignal != null && !_isWaitingOnCloseSignal.IsSet)
+                                        {
+                                            var lastPopup = NativeMethods.GetLastActivePopup(_host.MainWindow.Handle);
+                                            var sb = new char[NativeMethods.GetWindowTextLength(lastPopup) + 1];
+                                            if (NativeMethods.GetWindowText(lastPopup, sb, sb.Length) != 0 && new string(sb).TrimEnd('\0').Equals(Util.KeePassRDP, StringComparison.OrdinalIgnoreCase))
+                                                NativeMethods.SendMessage(lastPopup, NativeMethods.WM_CLOSE, 0, 0);
+                                        }
+
                                         _host.MainWindow.Close();
                                     }
                                     catch
                                     {
                                     }
-                                }, CancellationToken.None, TaskCreationOptions.PreferFairness | TaskCreationOptions.AttachedToParent, TaskScheduler.Default);
+                                }, CancellationToken.None, TaskCreationOptions.AttachedToParent | TaskCreationOptions.PreferFairness, TaskScheduler.Default);
                             }
                             else
+                                _host.MainWindow.SetStatusEx(
+                                    string.Format("{0} {1}",
+                                        Util.KeePassRDP,
+                                        _connectionManager.Value.Count == 1 ?
+                                            KprResourceManager.Instance["waiting for 1 connection..."] :
+                                            string.Format(KprResourceManager.Instance["waiting for {0} connections..."], _connectionManager.Value.Count)));
+
+                            if (_isWaitingOnCloseSignal != null && !_isWaitingOnCloseSignal.IsSet)
                             {
-                                _isWaitingOnCloseStart = DateTimeOffset.UtcNow;
-                                _isWaitingOnCloseSignal.Set();
+                                Task.Factory.StartNew(() =>
+                                {
+                                    if (VistaTaskDialog.ShowMessageBoxEx(
+                                        string.Format(KprResourceManager.Instance["{0} connection" + (_connectionManager.Value.Count == 1 ? " is" : "s are") + " still open."], _connectionManager.Value.Count),
+                                        KprResourceManager.Instance["Continue?"],
+                                        Util.KeePassRDP,
+                                        VtdIcon.Information,
+                                        _host.MainWindow,
+                                        KprResourceManager.Instance["&Wait"], 0,
+                                        KprResourceManager.Instance["&Quit"], 1) == 0)
+                                    {
+                                        if (_isWaitingOnCloseSignal != null)
+                                        {
+                                            _isWaitingOnCloseStart = DateTimeOffset.UtcNow;
+                                            _isWaitingOnCloseSignal.Set();
+                                        }
+
+                                        if (firstRun)
+                                            _host.MainWindow.SetStatusEx(
+                                                string.Format("{0} {1}",
+                                                    Util.KeePassRDP,
+                                                    _connectionManager.Value.Count == 1 ?
+                                                        KprResourceManager.Instance["waiting for 1 connection..."] :
+                                                        string.Format(KprResourceManager.Instance["waiting for {0} connections..."], _connectionManager.Value.Count)));
+                                    }
+                                    else if(_isWaitingOnCloseSignal != null)
+                                    {
+                                        using (_isWaitingOnCloseSignal)
+                                            if (!_isWaitingOnCloseSignal.IsSet)
+                                                _isWaitingOnCloseSignal.Set();
+                                        _isWaitingOnCloseSignal = null;
+
+                                        _host.MainWindow.Close();
+                                    }
+                                }, CancellationToken.None, TaskCreationOptions.AttachedToParent | TaskCreationOptions.PreferFairness, TaskScheduler.Default);
+
+                                e.Cancel = true;
+                                return;
                             }
-
-                            e.Cancel = true;
-                            return;
                         }
-
-                        _host.MainWindow.UseWaitCursor = false;
                     }
 
                     _connectionManager.Value.Dispose();
@@ -219,9 +266,9 @@ namespace KeePassRDP
 
             if (_isWaitingOnCloseSignal != null)
             {
-                if (!_isWaitingOnCloseSignal.IsSet)
-                    _isWaitingOnCloseSignal.Set();
-                _isWaitingOnCloseSignal.Dispose();
+                using (_isWaitingOnCloseSignal)
+                    if (!_isWaitingOnCloseSignal.IsSet)
+                        _isWaitingOnCloseSignal.Set();
                 _isWaitingOnCloseSignal = null;
             }
         }
@@ -524,7 +571,25 @@ namespace KeePassRDP
             UIUtil.SetChecked(
                 (ToolStripMenuItem)_toolStripMenuItem.DropDownItems[4], //KprMenu.MenuItem.IgnoreCredentials.ToString()],
                 !string.IsNullOrEmpty(_toolbarItems[KprMenu.MenuItem.IgnoreCredentials].ImageKey));
-                //isValid && /*tsmiIgnoreCredEntry.Enabled &&*/ Util.IsEntryIgnored(_host.MainWindow.GetSelectedEntry(true, true)));
+            //isValid && /*tsmiIgnoreCredEntry.Enabled &&*/ Util.IsEntryIgnored(_host.MainWindow.GetSelectedEntry(true, true)));
+
+            var menuItem = sender as ToolStripMenuItem;
+            if (menuItem == null || !menuItem.HasDropDownItems)
+                return;
+
+            if (_config.KeePassContextMenuOnScreen)
+            {
+
+                var bounds = menuItem.GetCurrentParent().Bounds;
+                var currentScreen = Screen.FromPoint(bounds.Location);
+                var maxWidth = menuItem.DropDownItems.OfType<ToolStripMenuItem>().Max(x => x.Width);
+
+                menuItem.DropDownDirection =
+                    bounds.Left - maxWidth >= currentScreen.Bounds.Left &&
+                    bounds.Right + maxWidth + 5 >= currentScreen.Bounds.Right ? ToolStripDropDownDirection.Left : ToolStripDropDownDirection.Right;
+            }
+            else
+                menuItem.DropDownDirection = ToolStripDropDownDirection.Default;
         }
 
         private void EntryMenuOpening(object sender, EventArgs e)

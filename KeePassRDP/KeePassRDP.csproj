@@ -74,6 +74,25 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\KeePassRDPResources\Resources.Designer.cs">
+      <Link>Properties\Resources.Designer.cs</Link>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </None>
+    <Compile Include="Commands\CommandArgumentAttribute.cs" />
+    <Compile Include="Commands\Command.cs" />
+    <Compile Include="Commands\MstscCommand.cs" />
+    <Compile Include="Generator\RdpFile.cs" />
+    <Compile Include="Generator\KprRdpFileForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Generator\KprRdpFileForm.Designer.cs">
+      <DependentUpon>KprRdpFileForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Generator\RdpFileJsonSerializer.cs" />
+    <Compile Include="Generator\RdpFileSettings.cs" />
+    <Compile Include="Generator\RdpSettingAttribute.cs" />
     <Compile Include="KprConnectionManager.cs" />
     <Compile Include="KprPictureBox.cs">
       <SubType>Component</SubType>
@@ -149,11 +168,15 @@
     </Compile>
     <Compile Include="MessageFilter.cs" />
     <Compile Include="NativeCredentials.cs" />
+    <Compile Include="NativeMethods.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReadOnlySet.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Generator\KprRdpFileForm.resx">
+      <DependentUpon>KprRdpFileForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="KprCredentialPickerForm.resx">
       <DependentUpon>KprCredentialPickerForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -167,6 +190,8 @@
     <None Include="..\KeePassRDPResources\Resources.resx">
       <Link>Properties\Resources.resx</Link>
       <ExcludeFromPlgx />
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </None>
     <None Include="KeePassRDP.snk">
       <ExcludeFromPlgx />
@@ -182,7 +207,23 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
+  <!--<ItemGroup>
+    <T4ParameterValues Include="Configuration">
+      <Value>$(Configuration)</Value>
+      <Visible>false</Visible>
+    </T4ParameterValues>
+  </ItemGroup>-->
   <ItemGroup>
+    <None Include="KeePassRDPexe.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>KeePassRDPexe.SED</LastGenOutput>
+      <ExcludeFromPlgx />
+    </None>
+    <None Include="KeePassRDPexe.SED">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>KeePassRDPexe.tt</DependentUpon>
+    </None>
     <None Include="KprVersion.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>KprVersion.cs</LastGenOutput>

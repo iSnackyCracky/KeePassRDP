@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2023 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -18,12 +18,27 @@
  *
  */
 
+using KeePass.Util.Spr;
 using System.Windows.Forms;
 
 namespace KeePassRDP
 {
     public partial class KprConfig
     {
+        private bool _cachedKeePassSprCompileFlags = false;
+        private SprCompileFlags _cachedKeePassSprCompileFlagsValue = SprCompileFlags.All;
+        public SprCompileFlags KeePassSprCompileFlags
+        {
+            get
+            {
+                return EnumGetter(KeePassSprCompileFlagsKey, ref _cachedKeePassSprCompileFlags, ref _cachedKeePassSprCompileFlagsValue, SprCompileFlags.All);
+            }
+            set
+            {
+                EnumSetter(KeePassSprCompileFlagsKey, value, ref _cachedKeePassSprCompileFlags, ref _cachedKeePassSprCompileFlagsValue, SprCompileFlags.All);
+            }
+        }
+
         private bool _cachedKeePassConfirmOnClose = false;
         private bool _cachedKeePassConfirmOnCloseValue = true;
         public bool KeePassConfirmOnClose
@@ -64,6 +79,20 @@ namespace KeePassRDP
             set
             {
                 BoolSetter(KeePassAlwaysConfirmKey, value, ref _cachedKeePassAlwaysConfirm, ref _cachedKeePassAlwaysConfirmValue);
+            }
+        }
+
+        private bool _cachedKeePassContextMenuOnScreenKey = false;
+        private bool _cachedKeePassContextMenuOnScreenKeyValue = true;
+        public bool KeePassContextMenuOnScreen
+        {
+            get
+            {
+                return BoolGetter(KeePassContextMenuOnScreenKey, ref _cachedKeePassContextMenuOnScreenKey, ref _cachedKeePassContextMenuOnScreenKeyValue, true);
+            }
+            set
+            {
+                BoolSetter(KeePassContextMenuOnScreenKey, value, ref _cachedKeePassContextMenuOnScreenKey, ref _cachedKeePassContextMenuOnScreenKeyValue, true);
             }
         }
 

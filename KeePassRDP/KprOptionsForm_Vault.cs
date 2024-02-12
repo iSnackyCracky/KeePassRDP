@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2023 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -18,8 +18,11 @@
  *
  */
 
+using KeePass.Resources;
 using KeePass.UI;
+using KeePassRDP.Utils;
 using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
@@ -71,8 +74,8 @@ namespace KeePassRDP
 
                 lvVault_SizeChanged(null, EventArgs.Empty);
 
-                lvVault.UseWaitCursor = false;
                 lvVault.EndUpdate();
+                lvVault.UseWaitCursor = false;
             }));
 
             if (!invoke.IsCompleted)
@@ -110,7 +113,19 @@ namespace KeePassRDP
         {
             CleanCredentials();
 
-            NativeCredentials.CredEnumerate(null, out _credentials);
+            try
+            {
+                NativeCredentials.CredEnumerate(null, out _credentials);
+            }
+            catch (Win32Exception ex)
+            {
+                VistaTaskDialog.ShowMessageBoxEx(
+                    ex.Message,
+                    null,
+                    Util.KeePassRDP + " - " + KPRes.Warning,
+                    VtdIcon.Warning,
+                    null, null, 0, null, 0);
+            }
 
             LoadCredentials();
 

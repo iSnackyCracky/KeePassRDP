@@ -68,6 +68,7 @@
             this.flpCheckboxes = new System.Windows.Forms.FlowLayoutPanel();
             this.ttGroupPicker = new KeePassRDP.KprToolTip(this.components);
             this.cmsMore = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.btnRdpFile = new System.Windows.Forms.Button();
             pnlMstscParameters = new System.Windows.Forms.Panel();
             pnlCpRegExPatterns = new System.Windows.Forms.Panel();
             pnlCpGroupUUIDs = new System.Windows.Forms.Panel();
@@ -91,10 +92,10 @@
             pnlMstscParameters.Controls.Add(this.cmdMstscParametersRemove);
             pnlMstscParameters.Controls.Add(this.cmdMstscParametersAdd);
             pnlMstscParameters.Dock = System.Windows.Forms.DockStyle.Fill;
-            pnlMstscParameters.Location = new System.Drawing.Point(250, 191);
+            pnlMstscParameters.Location = new System.Drawing.Point(250, 194);
             pnlMstscParameters.Margin = new System.Windows.Forms.Padding(0, 3, 3, 3);
             pnlMstscParameters.Name = "pnlMstscParameters";
-            pnlMstscParameters.Size = new System.Drawing.Size(247, 156);
+            pnlMstscParameters.Size = new System.Drawing.Size(247, 153);
             pnlMstscParameters.TabIndex = 4;
             // 
             // lblMstscParameters
@@ -114,7 +115,7 @@
             this.cmdMstscParametersReset.Enabled = false;
             this.cmdMstscParametersReset.ImageKey = "Refresh";
             this.cmdMstscParametersReset.ImageList = this.imageList1;
-            this.cmdMstscParametersReset.Location = new System.Drawing.Point(221, 128);
+            this.cmdMstscParametersReset.Location = new System.Drawing.Point(221, 126);
             this.cmdMstscParametersReset.Name = "cmdMstscParametersReset";
             this.cmdMstscParametersReset.Padding = new System.Windows.Forms.Padding(1);
             this.cmdMstscParametersReset.Size = new System.Drawing.Size(24, 24);
@@ -129,7 +130,7 @@
             this.lstMstscParameters.FormattingEnabled = true;
             this.lstMstscParameters.HorizontalScrollbar = true;
             this.lstMstscParameters.IntegralHeight = false;
-            this.lstMstscParameters.Location = new System.Drawing.Point(6, 47);
+            this.lstMstscParameters.Location = new System.Drawing.Point(6, 45);
             this.lstMstscParameters.Name = "lstMstscParameters";
             this.lstMstscParameters.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
             this.lstMstscParameters.Size = new System.Drawing.Size(211, 104);
@@ -139,7 +140,7 @@
             // txtMstscParameters
             // 
             this.txtMstscParameters.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtMstscParameters.Location = new System.Drawing.Point(6, 21);
+            this.txtMstscParameters.Location = new System.Drawing.Point(6, 19);
             this.txtMstscParameters.Name = "txtMstscParameters";
             this.txtMstscParameters.Size = new System.Drawing.Size(211, 22);
             this.txtMstscParameters.TabIndex = 1;
@@ -155,7 +156,7 @@
             this.cmdMstscParametersRemove.Enabled = false;
             this.cmdMstscParametersRemove.ImageKey = "Remove";
             this.cmdMstscParametersRemove.ImageList = this.imageList1;
-            this.cmdMstscParametersRemove.Location = new System.Drawing.Point(221, 46);
+            this.cmdMstscParametersRemove.Location = new System.Drawing.Point(221, 44);
             this.cmdMstscParametersRemove.Name = "cmdMstscParametersRemove";
             this.cmdMstscParametersRemove.Padding = new System.Windows.Forms.Padding(1);
             this.cmdMstscParametersRemove.Size = new System.Drawing.Size(24, 24);
@@ -172,7 +173,7 @@
             this.cmdMstscParametersAdd.Enabled = false;
             this.cmdMstscParametersAdd.ImageKey = "Add";
             this.cmdMstscParametersAdd.ImageList = this.imageList1;
-            this.cmdMstscParametersAdd.Location = new System.Drawing.Point(221, 20);
+            this.cmdMstscParametersAdd.Location = new System.Drawing.Point(221, 18);
             this.cmdMstscParametersAdd.Name = "cmdMstscParametersAdd";
             this.cmdMstscParametersAdd.Padding = new System.Windows.Forms.Padding(1);
             this.cmdMstscParametersAdd.Size = new System.Drawing.Size(24, 24);
@@ -192,10 +193,10 @@
             pnlCpRegExPatterns.Controls.Add(this.cmdCpRegExPatternsRemove);
             pnlCpRegExPatterns.Controls.Add(this.cmdCpRegExPatternsAdd);
             pnlCpRegExPatterns.Dock = System.Windows.Forms.DockStyle.Fill;
-            pnlCpRegExPatterns.Location = new System.Drawing.Point(3, 191);
+            pnlCpRegExPatterns.Location = new System.Drawing.Point(3, 194);
             pnlCpRegExPatterns.Margin = new System.Windows.Forms.Padding(3, 3, 0, 3);
             pnlCpRegExPatterns.Name = "pnlCpRegExPatterns";
-            pnlCpRegExPatterns.Size = new System.Drawing.Size(247, 156);
+            pnlCpRegExPatterns.Size = new System.Drawing.Size(247, 153);
             pnlCpRegExPatterns.TabIndex = 3;
             // 
             // lblCpRegExPatterns
@@ -215,7 +216,7 @@
             this.cmdCpRegExPatternsReset.Enabled = false;
             this.cmdCpRegExPatternsReset.ImageKey = "Refresh";
             this.cmdCpRegExPatternsReset.ImageList = this.imageList1;
-            this.cmdCpRegExPatternsReset.Location = new System.Drawing.Point(221, 128);
+            this.cmdCpRegExPatternsReset.Location = new System.Drawing.Point(221, 126);
             this.cmdCpRegExPatternsReset.Name = "cmdCpRegExPatternsReset";
             this.cmdCpRegExPatternsReset.Padding = new System.Windows.Forms.Padding(1);
             this.cmdCpRegExPatternsReset.Size = new System.Drawing.Size(24, 24);
@@ -230,7 +231,7 @@
             this.lstCpRegExPatterns.FormattingEnabled = true;
             this.lstCpRegExPatterns.HorizontalScrollbar = true;
             this.lstCpRegExPatterns.IntegralHeight = false;
-            this.lstCpRegExPatterns.Location = new System.Drawing.Point(6, 47);
+            this.lstCpRegExPatterns.Location = new System.Drawing.Point(6, 45);
             this.lstCpRegExPatterns.Name = "lstCpRegExPatterns";
             this.lstCpRegExPatterns.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
             this.lstCpRegExPatterns.Size = new System.Drawing.Size(211, 104);
@@ -240,7 +241,7 @@
             // txtCpRegExPatterns
             // 
             this.txtCpRegExPatterns.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtCpRegExPatterns.Location = new System.Drawing.Point(6, 21);
+            this.txtCpRegExPatterns.Location = new System.Drawing.Point(6, 19);
             this.txtCpRegExPatterns.Name = "txtCpRegExPatterns";
             this.txtCpRegExPatterns.Size = new System.Drawing.Size(211, 22);
             this.txtCpRegExPatterns.TabIndex = 1;
@@ -256,7 +257,7 @@
             this.cmdCpRegExPatternsRemove.Enabled = false;
             this.cmdCpRegExPatternsRemove.ImageKey = "Remove";
             this.cmdCpRegExPatternsRemove.ImageList = this.imageList1;
-            this.cmdCpRegExPatternsRemove.Location = new System.Drawing.Point(221, 46);
+            this.cmdCpRegExPatternsRemove.Location = new System.Drawing.Point(221, 44);
             this.cmdCpRegExPatternsRemove.Name = "cmdCpRegExPatternsRemove";
             this.cmdCpRegExPatternsRemove.Padding = new System.Windows.Forms.Padding(1);
             this.cmdCpRegExPatternsRemove.Size = new System.Drawing.Size(24, 24);
@@ -273,7 +274,7 @@
             this.cmdCpRegExPatternsAdd.Enabled = false;
             this.cmdCpRegExPatternsAdd.ImageKey = "Add";
             this.cmdCpRegExPatternsAdd.ImageList = this.imageList1;
-            this.cmdCpRegExPatternsAdd.Location = new System.Drawing.Point(221, 20);
+            this.cmdCpRegExPatternsAdd.Location = new System.Drawing.Point(221, 18);
             this.cmdCpRegExPatternsAdd.Name = "cmdCpRegExPatternsAdd";
             this.cmdCpRegExPatternsAdd.Padding = new System.Windows.Forms.Padding(1);
             this.cmdCpRegExPatternsAdd.Size = new System.Drawing.Size(24, 24);
@@ -293,10 +294,10 @@
             pnlCpGroupUUIDs.Controls.Add(this.cmdCpGroupUUIDsRemove);
             pnlCpGroupUUIDs.Controls.Add(this.cmdCpGroupUUIDsReset);
             pnlCpGroupUUIDs.Dock = System.Windows.Forms.DockStyle.Fill;
-            pnlCpGroupUUIDs.Location = new System.Drawing.Point(3, 29);
+            pnlCpGroupUUIDs.Location = new System.Drawing.Point(3, 35);
             pnlCpGroupUUIDs.Margin = new System.Windows.Forms.Padding(3, 3, 0, 3);
             pnlCpGroupUUIDs.Name = "pnlCpGroupUUIDs";
-            pnlCpGroupUUIDs.Size = new System.Drawing.Size(247, 156);
+            pnlCpGroupUUIDs.Size = new System.Drawing.Size(247, 153);
             pnlCpGroupUUIDs.TabIndex = 1;
             // 
             // lblCpGroupUUIDs
@@ -314,7 +315,7 @@
             this.lstCpGroupUUIDs.FormattingEnabled = true;
             this.lstCpGroupUUIDs.HorizontalScrollbar = true;
             this.lstCpGroupUUIDs.IntegralHeight = false;
-            this.lstCpGroupUUIDs.Location = new System.Drawing.Point(6, 47);
+            this.lstCpGroupUUIDs.Location = new System.Drawing.Point(6, 45);
             this.lstCpGroupUUIDs.Name = "lstCpGroupUUIDs";
             this.lstCpGroupUUIDs.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
             this.lstCpGroupUUIDs.Size = new System.Drawing.Size(211, 104);
@@ -325,7 +326,7 @@
             // 
             this.txtCpGroupUUIDs.AcceptsReturn = true;
             this.txtCpGroupUUIDs.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtCpGroupUUIDs.Location = new System.Drawing.Point(6, 21);
+            this.txtCpGroupUUIDs.Location = new System.Drawing.Point(6, 19);
             this.txtCpGroupUUIDs.Name = "txtCpGroupUUIDs";
             this.txtCpGroupUUIDs.Size = new System.Drawing.Size(211, 22);
             this.txtCpGroupUUIDs.TabIndex = 1;
@@ -346,7 +347,7 @@
             this.cmdCpGroupUUIDsAdd.Enabled = false;
             this.cmdCpGroupUUIDsAdd.ImageKey = "Add";
             this.cmdCpGroupUUIDsAdd.ImageList = this.imageList1;
-            this.cmdCpGroupUUIDsAdd.Location = new System.Drawing.Point(221, 20);
+            this.cmdCpGroupUUIDsAdd.Location = new System.Drawing.Point(221, 18);
             this.cmdCpGroupUUIDsAdd.Name = "cmdCpGroupUUIDsAdd";
             this.cmdCpGroupUUIDsAdd.Padding = new System.Windows.Forms.Padding(1);
             this.cmdCpGroupUUIDsAdd.Size = new System.Drawing.Size(24, 24);
@@ -363,7 +364,7 @@
             this.cmdCpGroupUUIDsRemove.Enabled = false;
             this.cmdCpGroupUUIDsRemove.ImageKey = "Remove";
             this.cmdCpGroupUUIDsRemove.ImageList = this.imageList1;
-            this.cmdCpGroupUUIDsRemove.Location = new System.Drawing.Point(221, 46);
+            this.cmdCpGroupUUIDsRemove.Location = new System.Drawing.Point(221, 44);
             this.cmdCpGroupUUIDsRemove.Name = "cmdCpGroupUUIDsRemove";
             this.cmdCpGroupUUIDsRemove.Padding = new System.Windows.Forms.Padding(1);
             this.cmdCpGroupUUIDsRemove.Size = new System.Drawing.Size(24, 24);
@@ -380,7 +381,7 @@
             this.cmdCpGroupUUIDsReset.Enabled = false;
             this.cmdCpGroupUUIDsReset.ImageKey = "Refresh";
             this.cmdCpGroupUUIDsReset.ImageList = this.imageList1;
-            this.cmdCpGroupUUIDsReset.Location = new System.Drawing.Point(221, 128);
+            this.cmdCpGroupUUIDsReset.Location = new System.Drawing.Point(221, 126);
             this.cmdCpGroupUUIDsReset.Name = "cmdCpGroupUUIDsReset";
             this.cmdCpGroupUUIDsReset.Padding = new System.Windows.Forms.Padding(1);
             this.cmdCpGroupUUIDsReset.Size = new System.Drawing.Size(24, 24);
@@ -400,10 +401,10 @@
             pnlCpExcludedGroupUUIDs.Controls.Add(this.cmdCpExcludedGroupUUIDsRemove);
             pnlCpExcludedGroupUUIDs.Controls.Add(this.cmdCpExcludedGroupUUIDsAdd);
             pnlCpExcludedGroupUUIDs.Dock = System.Windows.Forms.DockStyle.Fill;
-            pnlCpExcludedGroupUUIDs.Location = new System.Drawing.Point(250, 29);
+            pnlCpExcludedGroupUUIDs.Location = new System.Drawing.Point(250, 35);
             pnlCpExcludedGroupUUIDs.Margin = new System.Windows.Forms.Padding(0, 3, 3, 3);
             pnlCpExcludedGroupUUIDs.Name = "pnlCpExcludedGroupUUIDs";
-            pnlCpExcludedGroupUUIDs.Size = new System.Drawing.Size(247, 156);
+            pnlCpExcludedGroupUUIDs.Size = new System.Drawing.Size(247, 153);
             pnlCpExcludedGroupUUIDs.TabIndex = 2;
             // 
             // lblCpExcludedGroupUUIDs
@@ -423,7 +424,7 @@
             this.cmdCpExcludedGroupUUIDsReset.Enabled = false;
             this.cmdCpExcludedGroupUUIDsReset.ImageKey = "Refresh";
             this.cmdCpExcludedGroupUUIDsReset.ImageList = this.imageList1;
-            this.cmdCpExcludedGroupUUIDsReset.Location = new System.Drawing.Point(221, 128);
+            this.cmdCpExcludedGroupUUIDsReset.Location = new System.Drawing.Point(221, 126);
             this.cmdCpExcludedGroupUUIDsReset.Name = "cmdCpExcludedGroupUUIDsReset";
             this.cmdCpExcludedGroupUUIDsReset.Padding = new System.Windows.Forms.Padding(1);
             this.cmdCpExcludedGroupUUIDsReset.Size = new System.Drawing.Size(24, 24);
@@ -438,7 +439,7 @@
             this.lstCpExcludedGroupUUIDs.FormattingEnabled = true;
             this.lstCpExcludedGroupUUIDs.HorizontalScrollbar = true;
             this.lstCpExcludedGroupUUIDs.IntegralHeight = false;
-            this.lstCpExcludedGroupUUIDs.Location = new System.Drawing.Point(6, 47);
+            this.lstCpExcludedGroupUUIDs.Location = new System.Drawing.Point(6, 45);
             this.lstCpExcludedGroupUUIDs.Name = "lstCpExcludedGroupUUIDs";
             this.lstCpExcludedGroupUUIDs.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
             this.lstCpExcludedGroupUUIDs.Size = new System.Drawing.Size(211, 104);
@@ -448,7 +449,7 @@
             // txtCpExcludedGroupUUIDs
             // 
             this.txtCpExcludedGroupUUIDs.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtCpExcludedGroupUUIDs.Location = new System.Drawing.Point(6, 21);
+            this.txtCpExcludedGroupUUIDs.Location = new System.Drawing.Point(6, 19);
             this.txtCpExcludedGroupUUIDs.Name = "txtCpExcludedGroupUUIDs";
             this.txtCpExcludedGroupUUIDs.Size = new System.Drawing.Size(211, 22);
             this.txtCpExcludedGroupUUIDs.TabIndex = 1;
@@ -469,7 +470,7 @@
             this.cmdCpExcludedGroupUUIDsRemove.Enabled = false;
             this.cmdCpExcludedGroupUUIDsRemove.ImageKey = "Remove";
             this.cmdCpExcludedGroupUUIDsRemove.ImageList = this.imageList1;
-            this.cmdCpExcludedGroupUUIDsRemove.Location = new System.Drawing.Point(221, 46);
+            this.cmdCpExcludedGroupUUIDsRemove.Location = new System.Drawing.Point(221, 44);
             this.cmdCpExcludedGroupUUIDsRemove.Name = "cmdCpExcludedGroupUUIDsRemove";
             this.cmdCpExcludedGroupUUIDsRemove.Padding = new System.Windows.Forms.Padding(1);
             this.cmdCpExcludedGroupUUIDsRemove.Size = new System.Drawing.Size(24, 24);
@@ -486,7 +487,7 @@
             this.cmdCpExcludedGroupUUIDsAdd.Enabled = false;
             this.cmdCpExcludedGroupUUIDsAdd.ImageKey = "Add";
             this.cmdCpExcludedGroupUUIDsAdd.ImageList = this.imageList1;
-            this.cmdCpExcludedGroupUUIDsAdd.Location = new System.Drawing.Point(221, 20);
+            this.cmdCpExcludedGroupUUIDsAdd.Location = new System.Drawing.Point(221, 18);
             this.cmdCpExcludedGroupUUIDsAdd.Name = "cmdCpExcludedGroupUUIDsAdd";
             this.cmdCpExcludedGroupUUIDsAdd.Padding = new System.Windows.Forms.Padding(1);
             this.cmdCpExcludedGroupUUIDsAdd.Size = new System.Drawing.Size(24, 24);
@@ -505,8 +506,8 @@
             // 
             this.cbIgnore.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.cbIgnore.AutoSize = true;
-            this.cbIgnore.Location = new System.Drawing.Point(0, 0);
-            this.cbIgnore.Margin = new System.Windows.Forms.Padding(0);
+            this.cbIgnore.Location = new System.Drawing.Point(0, 4);
+            this.cbIgnore.Margin = new System.Windows.Forms.Padding(0, 2, 0, 0);
             this.cbIgnore.Name = "cbIgnore";
             this.cbIgnore.Size = new System.Drawing.Size(60, 17);
             this.cbIgnore.TabIndex = 0;
@@ -519,8 +520,8 @@
             // 
             this.cbUseCredpicker.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.cbUseCredpicker.AutoSize = true;
-            this.cbUseCredpicker.Location = new System.Drawing.Point(61, 0);
-            this.cbUseCredpicker.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
+            this.cbUseCredpicker.Location = new System.Drawing.Point(61, 4);
+            this.cbUseCredpicker.Margin = new System.Windows.Forms.Padding(1, 2, 0, 0);
             this.cbUseCredpicker.Name = "cbUseCredpicker";
             this.cbUseCredpicker.Size = new System.Drawing.Size(133, 17);
             this.cbUseCredpicker.TabIndex = 1;
@@ -533,8 +534,8 @@
             // 
             this.cbCpRecurseGroups.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.cbCpRecurseGroups.AutoSize = true;
-            this.cbCpRecurseGroups.Location = new System.Drawing.Point(195, 0);
-            this.cbCpRecurseGroups.Margin = new System.Windows.Forms.Padding(1, 0, 0, 0);
+            this.cbCpRecurseGroups.Location = new System.Drawing.Point(195, 4);
+            this.cbCpRecurseGroups.Margin = new System.Windows.Forms.Padding(1, 2, 0, 0);
             this.cbCpRecurseGroups.Name = "cbCpRecurseGroups";
             this.cbCpRecurseGroups.Size = new System.Drawing.Size(145, 17);
             this.cbCpRecurseGroups.TabIndex = 3;
@@ -554,7 +555,7 @@
             this.btnMore.Name = "btnMore";
             this.btnMore.Padding = new System.Windows.Forms.Padding(0, 1, 1, 2);
             this.btnMore.Size = new System.Drawing.Size(22, 18);
-            this.btnMore.TabIndex = 4;
+            this.btnMore.TabIndex = 5;
             this.ttGeneral.SetToolTip(this.btnMore, "Show more settings");
             this.btnMore.UseVisualStyleBackColor = true;
             this.btnMore.Click += new System.EventHandler(this.btnMore_Click);
@@ -590,10 +591,11 @@
             this.flpCheckboxes.Controls.Add(this.cbIgnore);
             this.flpCheckboxes.Controls.Add(this.cbUseCredpicker);
             this.flpCheckboxes.Controls.Add(this.cbCpRecurseGroups);
-            this.flpCheckboxes.Location = new System.Drawing.Point(80, 6);
+            this.flpCheckboxes.Controls.Add(this.btnRdpFile);
+            this.flpCheckboxes.Location = new System.Drawing.Point(68, 6);
             this.flpCheckboxes.Margin = new System.Windows.Forms.Padding(3, 6, 3, 3);
             this.flpCheckboxes.Name = "flpCheckboxes";
-            this.flpCheckboxes.Size = new System.Drawing.Size(340, 17);
+            this.flpCheckboxes.Size = new System.Drawing.Size(363, 23);
             this.flpCheckboxes.TabIndex = 0;
             // 
             // ttGroupPicker
@@ -609,6 +611,27 @@
             this.cmsMore.Name = "cmsMore";
             this.cmsMore.ShowImageMargin = false;
             this.cmsMore.Size = new System.Drawing.Size(36, 4);
+            // 
+            // btnRdpFile
+            // 
+            this.btnRdpFile.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.btnRdpFile.AutoSize = true;
+            this.btnRdpFile.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btnRdpFile.BackColor = System.Drawing.Color.Gainsboro;
+            this.btnRdpFile.FlatAppearance.BorderSize = 0;
+            this.btnRdpFile.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnRdpFile.Font = new System.Drawing.Font("Segoe UI", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnRdpFile.ImageKey = "RemoteDesktop";
+            this.btnRdpFile.ImageList = this.imageList1;
+            this.btnRdpFile.Location = new System.Drawing.Point(340, 0);
+            this.btnRdpFile.Margin = new System.Windows.Forms.Padding(0, 0, 1, 0);
+            this.btnRdpFile.Name = "btnRdpFile";
+            this.btnRdpFile.Padding = new System.Windows.Forms.Padding(0, 0, 0, 1);
+            this.btnRdpFile.Size = new System.Drawing.Size(22, 23);
+            this.btnRdpFile.TabIndex = 4;
+            this.ttGeneral.SetToolTip(this.btnRdpFile, "Configure extended settings via .rdp file");
+            this.btnRdpFile.UseVisualStyleBackColor = false;
+            this.btnRdpFile.Click += new System.EventHandler(this.cmdRdpFile_Click);
             // 
             // KprEntrySettingsTab
             // 
@@ -673,5 +696,6 @@
         private System.Windows.Forms.Label lblCpExcludedGroupUUIDs;
         private System.Windows.Forms.ContextMenuStrip cmsMore;
         private System.Windows.Forms.Button btnMore;
+        private System.Windows.Forms.Button btnRdpFile;
     }
 }

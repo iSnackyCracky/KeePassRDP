@@ -91,6 +91,9 @@
   <ItemGroup>
     <None Include="Resources\Expander.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\OpenFile.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>"$(SolutionDir)KeePassRDPResourcesWriter\bin\$(ConfigurationName)\KeePassRDPResourcesWriter.exe" "\"$(ProjectDir)\""</PreBuildEvent>

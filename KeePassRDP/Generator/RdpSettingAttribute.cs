@@ -18,23 +18,13 @@
  *
  */
 
-using System.Reflection;
-using System.Runtime.InteropServices;
+using System;
 
-// General Information
-[assembly: AssemblyTitle("KeePassRDP")]
-[assembly: AssemblyDescription("A plugin for KeePass to conveniently connect to RDP.")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("iSnackyCracky")]
-[assembly: AssemblyProduct("KeePass Plugin")]
-[assembly: AssemblyCopyright("Copyright © 2018 - 2024")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
-
-[assembly: ComVisible(false)]
-[assembly: Guid("404935cb-8f30-4801-a3e6-6a88ad963544")]
-
-// Version information
-[assembly: AssemblyVersion("2.1")]
-[assembly: AssemblyFileVersion("2.1")]
-[assembly: AssemblyInformationalVersion("2.1")]
+namespace KeePassRDP.Generator
+{
+    [AttributeUsage(AttributeTargets.Property)]
+    public class RdpSettingAttribute : Attribute
+    {
+        public string Template { get; set; }
+    }
+}

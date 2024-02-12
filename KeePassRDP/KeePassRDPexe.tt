@@ -1,0 +1,93 @@
+﻿<#@ template compilerOptions="optimize+" hostspecific="true" language="C#" #>
+<#@ output extension=".SED" encoding="us-ascii" #>
+<#@ assembly name="EnvDTE" #>
+<#@ import namespace="Microsoft.VisualStudio.TextTemplating" #>
+<#@ import namespace="System.IO" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Text.RegularExpressions" #>
+<#
+    var directory = Path.GetDirectoryName(Host.TemplateFile);
+    var className = Path.GetFileNameWithoutExtension(Host.TemplateFile);
+    var namespaceString = Path.GetFileNameWithoutExtension(directory);
+    var parent = Directory.GetParent(directory).FullName;
+
+    var buildDate = DateTime.UtcNow;
+    var informationalVersion = string.Empty;
+    var assemblyVersion = string.Empty;
+    var copyright = string.Empty;
+
+    var assemblyInfo = File.ReadAllText(Path.Combine(directory, @"Properties\AssemblyInfo.cs"));
+    var match = Regex.Match(assemblyInfo, "\\[assembly: AssemblyInformationalVersion\\(\"([^\"]+)\"\\)\\]");
+    if (match.Success)
+        informationalVersion = match.Groups[1].Value;
+
+    match = Regex.Match(assemblyInfo, "\\[assembly: AssemblyVersion\\(\"([^\"]+)\"\\)\\]");
+    if (match.Success)
+    {
+        assemblyVersion = match.Groups[1].Value;
+        if (string.IsNullOrEmpty(informationalVersion))
+            informationalVersion = assemblyVersion;
+    }
+
+    /*
+    // Build time.
+    var configName = Host.ResolveParameterValue("-", "-", "Configuration");
+    if (string.IsNullOrWhiteSpace(configName))
+    {
+        try
+        {
+            // Design time.
+            var serviceProvider = (IServiceProvider)Host;
+            var dte = (EnvDTE.DTE)serviceProvider.GetService(typeof(EnvDTE.DTE));
+            configName = dte.Solution.SolutionBuild.ActiveConfiguration.Name;
+        }
+        catch (Exception ex)
+        {
+            configName = ex.Message;
+        }
+    }
+
+    if (configName == "Debug")
+        informationalVersion = informationalVersion + ".debug";
+    */
+
+    var configName = "Release";
+    var sourceFiles = Path.Combine(directory, "bin", configName);
+#>
+[Version]
+Class=IEXPRESS
+SEDVersion=3
+[Options]
+PackagePurpose=ExtractOnly
+ShowInstallProgramWindow=0
+HideExtractAnimation=0
+UseLongFileName=1
+InsideCompressed=0
+CAB_FixedSize=0
+CAB_ResvCodeSigning=0
+RebootMode=N
+InstallPrompt=%InstallPrompt%
+DisplayLicense=%DisplayLicense%
+FinishMessage=%FinishMessage%
+TargetName=%TargetName%
+FriendlyName=%FriendlyName%
+AppLaunched=%AppLaunched%
+PostInstallCmd=%PostInstallCmd%
+AdminQuietInstCmd=%AdminQuietInstCmd%
+UserQuietInstCmd=%UserQuietInstCmd%
+SourceFiles=SourceFiles
+[Strings]
+InstallPrompt=
+DisplayLicense=<#= parent #>\COPYING
+FinishMessage=
+TargetName=<#= parent #>\KeePassRDP_v<#= informationalVersion #>.exe
+FriendlyName=KeePassRDP v<#= informationalVersion #>
+AppLaunched=
+PostInstallCmd=
+AdminQuietInstCmd=
+UserQuietInstCmd=
+FILE0="KeePassRDP.plgx"
+[SourceFiles]
+SourceFiles0=<#= sourceFiles #>\
+[SourceFiles0]
+%FILE0%=

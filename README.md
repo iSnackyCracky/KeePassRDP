@@ -1,26 +1,29 @@
-[latest]: https://github.com/iSnackyCracky/KeePassRDP/releases/latest/download/KeePassRDP_v2.0.2.zip
+[zip]: https://github.com/iSnackyCracky/KeePassRDP/releases/latest/download/KeePassRDP_v2.1.zip
+[exe]: https://github.com/iSnackyCracky/KeePassRDP/releases/latest/download/KeePassRDP_v2.1.exe
 
 # KeePassRDP
 [![Latest version](https://img.shields.io/github/v/release/iSnackyCracky/KeePassRDP?style=flat-square)](https://github.com/iSnackyCracky/KeePassRDP/releases/latest)
-[![Download KeePassRDP](https://img.shields.io/badge/download-KeePassRDP.zip-blue?style=flat-square&color=yellow)][latest]
-![Total downloads](https://img.shields.io/github/downloads/iSnackyCracky/KeePassRDP/total?style=flat-square)
+[![Download KeePassRDP.zip](https://img.shields.io/badge/download-KeePassRDP.zip-blue?style=flat-square&color=yellow)][zip]
+[![Download KeePassRDP.exe](https://img.shields.io/badge/download-KeePassRDP.exe-blue?style=flat-square&color=chocolate)][exe]
+[![Downloads total](https://img.shields.io/github/downloads/iSnackyCracky/KeePassRDP/total?style=flat-square)](https://github.com/iSnackyCracky/KeePassRDP/releases/latest)
+[![Downloads latest](https://img.shields.io/github/downloads/iSnackyCracky/KeePassRDP/latest/total?style=flat-square)](https://github.com/iSnackyCracky/KeePassRDP/releases/latest)
 [![License](https://img.shields.io/github/license/iSnackyCracky/KeePassRDP?style=flat-square)](COPYING)
-![GitHub top language](https://img.shields.io/github/languages/top/iSnackyCracky/KeePassRDP?style=flat-square&color=blueviolet)
+[![GitHub top language](https://img.shields.io/github/languages/top/iSnackyCracky/KeePassRDP?style=flat-square&color=blueviolet)](https://github.com/iSnackyCracky/KeePassRDP/search?l=c%23)
 
 ## Overview
 KeePassRDP is a plugin for KeePass 2.x which adds various options to connect to the URL of an entry via RDP.
 
 ## Installation
-1. Download the .zip file for the latest <sub>[![Latest version](https://img.shields.io/github/v/release/iSnackyCracky/KeePassRDP?style=flat-square)][latest]</sub>.
-2. Unzip and copy the KeePassRDP.plgx file to your KeePass plugins folder *`(e.g. C:\Program Files\KeePass Password Safe 2\Plugins)`*.
+1. <sub>[![Download KeePassRDP.zip](https://img.shields.io/badge/download-zip-blue?style=flat-square&color=yellow)][zip]</sub> or <sub>[![Download KeePassRDP.exe](https://img.shields.io/badge/download-exe-blue?style=flat-square&color=chocolate)][exe]</sub> of the latest <sub>[![Latest version](https://img.shields.io/github/v/release/iSnackyCracky/KeePassRDP?style=flat-square)](https://github.com/iSnackyCracky/KeePassRDP/releases/latest)</sub>.
+2. Run the self-extracting exe, or unzip/copy the KeePassRDP.plgx file to your KeePass plugins folder *`(e.g. %ProgramFiles%\KeePass Password Safe 2\Plugins)`*.
 3. Start KeePass and enjoy using KeePassRDP.
 
 ## Usage
-To connect to target computers via RDP select one or more entries containing the IP-address(es) or hostname(s), right-click and select `KeePassRDP > Open RDP connection` (or simply press <kbd>CTRL</kbd> + <kbd>M</kbd>).
+To connect to target computers via RDP select one or more entries containing the IP-address(es) or hostname(s), right-click and select `KeePassRDP > Open RDP connection` (or simply press <kbd>CTRL</kbd> + <kbd>M</kbd>). A [selection dialog](#selection-dialog) will be shown when multiple credentials are found.
 
 >![Context menu](doc/context_menu.jpg)
 
-To use one of the other connection options select the corresponding item from the context menu, or press the configurable keyboard shortcut.
+To use one of the other connection options select the corresponding item from the context menu, or press the [configurable keyboard shortcut](#keyboard-shortcuts).
 
 ## Features
 - Connect to host via RDP
@@ -34,6 +37,7 @@ To use one of the other connection options select the corresponding item from th
 - Configurable [credential lifetime](#credential-lifetime)
 - Customizable [credential picker](#credential-picker)
 - Customizable [per entry settings](#individual-entry-settings)
+- Support for [advanced settings](#advanced-settings) through .rdp files
 - Support for DPI-scaling
 - Made with :heart: and :pizza:
 
@@ -60,7 +64,7 @@ When a customer has many hosts and/or requires multiple accounts, we create a su
 
 >![RDP subgroup example](doc/rdp_subgroup.jpg)
 
->><small>The name of the trigger group can be configured from within the KeePassRDP options form *(since v2.0)*.</small>
+>><small>The name of the trigger group can be configured from within the [KeePassRDP options form](#credential-picker) *(since v2.0)*.</small>
 
 It may contain entries like this:
 
@@ -70,9 +74,11 @@ Credentials are taken from the customer group in that case (by default they can 
 
 >![Customer example entries](doc/customer_entries.jpg)
 
->><small>Ignoring entries can be toggled via the KeePassRDP context menu *(since v1.9.0)* or from the toolbar *(since v2.0)*.</small>
+>><small>Ignoring entries can be toggled via the [KeePassRDP context menu](#usage) *(since v1.9.0)* or from the toolbar *(since v2.0)*.</small>
 
-To connect to one of the targets in the **RDP** group (using credentials), just select the entry, press <kbd>CTRL</kbd> + <kbd>M</kbd> and KeePassRDP will show a dialog with filtered account entries (matching the titles by a configurable regular expression, *e.g. domain-admin, local user, ...*).
+<div id="selection-dialog"></div>
+
+To connect to one of the targets in the **RDP** group (using credentials), just select the entry, press <kbd>CTRL</kbd> + <kbd>M</kbd> and KeePassRDP will show a dialog with filtered account entries (matching the titles by a [configurable regular expression](#credential-picker-regex), *e.g. domain-admin, local user, ...*).
 
 >![Credential selection dialog](doc/credential_picker.jpg)
 
@@ -83,6 +89,10 @@ Finally you only need to select the credential you want to use and click "GO" (o
 ><small id="individual-entry-settings">Individual entry settings can be set from the KeePassRDP tab on the edit entry form *(since v2.0)*.</small>
 >
 >>![Entry settings](doc/entry_settings.jpg)
+
+><small id="advanced-settings">Advanced settings can be configured through .rdp files *(since v2.1)*.</small>
+>
+>>![Advanced settings](doc/rdp_file.jpg)
 
 ### Keyboard shortcuts
 
@@ -101,6 +111,11 @@ Finally you only need to select the credential you want to use and click "GO" (o
 >Customizable from within the KeePassRDP options form.
 >
 >>![Credential picker settings](doc/credential_picker_settings.jpg)
+>
+><div id="credential-picker-regex"></div>
+>
+>>![Credential picker regex](doc/credential_picker_regex.jpg)
+
 
 ## How it works
 Basically the plugin calls the default `mstsc.exe` with the `/v:<address>` (and optionally other) parameter(s) to connect.
@@ -118,7 +133,17 @@ The credentials will then be removed depending on what is configured in the KeeP
 ## Third-party software
 KeePassRDP makes use of the following third-party libraries:
 - the *awesome* [**Json.NET**](https://github.com/JamesNK/Newtonsoft.Json) by James Newton-King
+- the *awesome* [**PLGX Build Tasks**](https://github.com/walterpg/plgx-build-tasks) by Walter Goodwin
 - [**Visual Studio 2022 Image Library**](https://www.microsoft.com/en-us/download/details.aspx?id=35825) by Microsoft
+
+## Silent extraction
+The following example will extract the .plgx file and overwrite it in the target folder:
+
+```bat
+KeePassRDP_v2.1.exe /Q:A /C /T:"%ProgramFiles%\KeePass Password Safe 2\Plugins"
+```
+
+<small>Hint: *Writing into %ProgramFiles% usually requires administrator privileges.*</small>
 
 ## Building instructions
 Just clone the repository:
@@ -131,4 +156,4 @@ Open the solution file (KeePassRDP.sln) with Visual Studio and build the KeePass
 
 >![Build project](doc/build_project.jpg)
 
-You should get a ready-to-use .plgx and .zip file like the ones from the releases.
+You should get a ready-to-use .plgx, .zip and .exe file like the ones from the releases.

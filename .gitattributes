@@ -32,6 +32,8 @@
 *.psrc      text eol=crlf
 *.cdxml     text eol=crlf
 
+COPYING     text eol=crlf
+
 ###############################################################################
 # Set default behavior for command prompt diff.
 #

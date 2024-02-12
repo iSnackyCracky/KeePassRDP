@@ -1,4 +1,5 @@
 # Ignore generated content.
+/KeePassRDP/KeePassRDPexe.SED
 /KeePassRDP/KprVersion.cs
 /KeePassRDPResources/Resources.Designer.cs
 
