@@ -33,7 +33,7 @@ namespace KeePassRDP.ResourcesWriter
         {
             var path = args.Length > 0 ? args[0].Trim('"') : string.Empty;
 
-            if (string.IsNullOrEmpty(path))
+            if (string.IsNullOrWhiteSpace(path))
                 path = Environment.CurrentDirectory;
 
             using (var imageList = new ImageList
@@ -43,7 +43,7 @@ namespace KeePassRDP.ResourcesWriter
                 TransparentColor = Color.Transparent
             })
             {
-                foreach (var fi in new DirectoryInfo(path + @"\Resources").EnumerateFiles("*.png"))
+                foreach (var fi in new DirectoryInfo(Path.Combine(path, "Resources")).EnumerateFiles("*.png"))
                 {
                     if (!fi.Exists)
                         continue;
@@ -55,7 +55,7 @@ namespace KeePassRDP.ResourcesWriter
                 if (imageList.Images.Keys.Count > 0)
                     Console.WriteLine("KeePassRDPResources -> " + string.Join(", ", imageList.Images.Keys.Cast<string>()));
 
-                using (var writer = new ResXResourceWriter(path + @"\Resources.resx", type =>
+                using (var writer = new ResXResourceWriter(Path.Combine(path, "Resources.resx"), type =>
                 {
                     return type.ToString();
                 }))

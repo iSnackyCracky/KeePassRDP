@@ -80,16 +80,6 @@ namespace KeePassRDP
         {
             PreloadJit();
 
-            switch (Program.Translation.Properties.Iso6391Code)
-            {
-                case "de":
-                    Resources.Resources.Culture = CultureInfo.CreateSpecificCulture("de");
-                    break;
-                default:
-                    Resources.Resources.Culture = CultureInfo.CreateSpecificCulture("en");
-                    break;
-            }
-
             _credManager = new Lazy<KprCredentialManager<KprCredential>>(() => new KprCredentialManager<KprCredential>(_config), LazyThreadSafetyMode.ExecutionAndPublication);
             _toolbarItems = new Dictionary<KprMenu.MenuItem, ToolStripItem>();
             _toolStripMenuItem = new ToolStripMenuItem(Util.KeePassRDP);
@@ -195,7 +185,7 @@ namespace KeePassRDP
                                         {
                                             var lastPopup = NativeMethods.GetLastActivePopup(_host.MainWindow.Handle);
                                             var sb = new char[NativeMethods.GetWindowTextLength(lastPopup) + 1];
-                                            if (NativeMethods.GetWindowText(lastPopup, sb, sb.Length) != 0 && new string(sb).TrimEnd('\0').Equals(Util.KeePassRDP, StringComparison.OrdinalIgnoreCase))
+                                            if (NativeMethods.GetWindowText(lastPopup, sb, sb.Length) != 0 && new string(sb).TrimEnd(char.MinValue).Equals(Util.KeePassRDP, StringComparison.OrdinalIgnoreCase))
                                                 NativeMethods.SendMessage(lastPopup, NativeMethods.WM_CLOSE, 0, 0);
                                         }
 
@@ -306,7 +296,27 @@ namespace KeePassRDP
 
             foreach (var button in _toolbarItems)
                 if (button.Key != KprMenu.MenuItem.IgnoreCredentials)
+                {
+                    switch (button.Key)
+                    {
+                        case KprMenu.MenuItem.OpenRdpConnection:
+                            button.Value.Click -= OnOpenRDP_Click;
+                            break;
+                        case KprMenu.MenuItem.OpenRdpConnectionAdmin:
+                            button.Value.Click -= OnOpenRDPAdmin_Click;
+                            break;
+                        case KprMenu.MenuItem.OpenRdpConnectionNoCred:
+                            button.Value.Click -= OnOpenRDPNoCred_Click;
+                            break;
+                        case KprMenu.MenuItem.OpenRdpConnectionNoCredAdmin:
+                            button.Value.Click -= OnOpenRDPNoCredAdmin_Click;
+                            break;
+                        case KprMenu.MenuItem.IgnoreCredentials:
+                            button.Value.Click -= OnIgnoreCredEntry_Click;
+                            break;
+                    }
                     button.Value.Image.Dispose();
+                }
                 else
                     button.Value.Paint -= IgnoreButtonPaint;
 
@@ -320,6 +330,8 @@ namespace KeePassRDP
 
             _config = null;
             _host = null;
+
+            KprResourceManager.Instance.ClearCache();
         }
 
         private void GlobalWindowManager_WindowAdded(object sender, GwmWindowEventArgs e)
@@ -419,6 +431,7 @@ namespace KeePassRDP
                     if (!toolStrip.ImageList.Images.ContainsKey(menuString) && KprImageList.Instance.Images.ContainsKey("Checkmark"))
                         toolStrip.ImageList.Images.Add(menuString, KprImageList.Instance.Images["Checkmark"]);
                     button.Paint += IgnoreButtonPaint;
+                    button.Click += OnIgnoreCredEntry_Click;
                 }
                 else
                 {
@@ -434,6 +447,21 @@ namespace KeePassRDP
                                 toolStrip.ImageList.Images.Add(menuString, icon.ToBitmap());
                         }
                     button.ImageKey = menuString;
+                    switch (menu)
+                    {
+                        case KprMenu.MenuItem.OpenRdpConnection:
+                            button.Click += OnOpenRDP_Click;
+                            break;
+                        case KprMenu.MenuItem.OpenRdpConnectionAdmin:
+                            button.Click += OnOpenRDPAdmin_Click;
+                            break;
+                        case KprMenu.MenuItem.OpenRdpConnectionNoCred:
+                            button.Click += OnOpenRDPNoCred_Click;
+                            break;
+                        case KprMenu.MenuItem.OpenRdpConnectionNoCredAdmin:
+                            button.Click += OnOpenRDPNoCredAdmin_Click;
+                            break;
+                    }
                 }
 
                 button.Visible = _config.KeePassToolbarItems.HasFlag(menu);
@@ -487,20 +515,21 @@ namespace KeePassRDP
                 if (!tabMain.ImageList.Images.ContainsKey(Util.KeePassRDP))
                     tabMain.ImageList.Images.Add(Util.KeePassRDP, SmallIcon);
 
-                tabMain.TabPages.Add(new TabPage(Util.KeePassRDP)
+                var tabPage = new TabPage(Util.KeePassRDP)
                 {
                     Name = Util.KeePassRDP
-                });
+                };
+                tabMain.TabPages.Add(tabPage);
 
                 // Assigning the ImageKey before adding a TabPage to a TabControl fails.
-                tabMain.TabPages[Util.KeePassRDP].ImageKey = Util.KeePassRDP;
+                tabPage.ImageKey = Util.KeePassRDP;
 
                 var readOnly = pwEntryForm.EditModeEx == PwEditMode.ViewReadOnlyEntry;
 
                 KprEntrySettings peEntrySettings = null;
                 TabControlEventHandler tabMainSelected = (s, ee) =>
                 {
-                    if (ee.TabPage == tabMain.TabPages[Util.KeePassRDP])
+                    if (ee.TabPage == tabPage)
                     {
                         if (ee.TabPage.Controls.Count == 0)
                         {
@@ -549,10 +578,10 @@ namespace KeePassRDP
                     if (peEntrySettings != null)
                         peEntrySettings.Dispose();
 
-                    if (tabMain.TabPages[Util.KeePassRDP].Controls.Count > 0)
-                        tabMain.TabPages[Util.KeePassRDP].Controls[0].Dispose();
+                    if (tabPage.Controls.Count > 0)
+                        tabPage.Controls[0].Dispose();
 
-                    using (tabMain.TabPages[Util.KeePassRDP])
+                    using (tabPage)
                         tabMain.TabPages.RemoveByKey(Util.KeePassRDP);
 
                     if (tabMain.ImageList != null)
@@ -579,7 +608,6 @@ namespace KeePassRDP
 
             if (_config.KeePassContextMenuOnScreen)
             {
-
                 var bounds = menuItem.GetCurrentParent().Bounds;
                 var currentScreen = Screen.FromPoint(bounds.Location);
                 var maxWidth = menuItem.DropDownItems.OfType<ToolStripMenuItem>().Max(x => x.Width);

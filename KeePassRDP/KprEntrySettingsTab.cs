@@ -30,7 +30,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
+using Timer = System.Windows.Forms.Timer;
 
 namespace KeePassRDP
 {
@@ -67,7 +69,7 @@ namespace KeePassRDP
                 if (CursorUtil.GetIconSize(out size))
                     return size;
                 return Size.Empty;
-            }, System.Threading.LazyThreadSafetyMode.ExecutionAndPublication);
+            }, LazyThreadSafetyMode.ExecutionAndPublication);
 
             _lastTooltipMousePosition = null;
 
@@ -97,6 +99,31 @@ namespace KeePassRDP
                 })
                 {
                     ToolTipText = KprResourceManager.Instance["Force authenticating as local user when username starts with target hostname,\r\nor when hostname is empty."]
+                },
+                new ToolStripControlHost(new CheckBox
+                {
+                    Name = "cbForceUpn",
+                    Text = KprResourceManager.Instance["Force UPN"],
+                })
+                {
+                    ToolTipText = KprResourceManager.Instance["Force rewriting username to UPN format when possible."]
+                },
+                new ToolStripControlHost(new CheckBox
+                {
+                    Name = "cbRetryOnce",
+                    Text = KprResourceManager.Instance["Retry credentials once"],
+                })
+                {
+                    ToolTipText = KprResourceManager.Instance["Try to reconnect with same credentials one time on connection losses.\r\nWarning: Will need to keep the password in (encrypted) memory."]
+                },
+                new ToolStripControlHost(new CheckBox
+                {
+                    Name = "cbInherit",
+                    Text = KprResourceManager.Instance["Inheritance"],
+                    ThreeState = true
+                })
+                {
+                    ToolTipText = KprResourceManager.Instance["Define level of inheritance:\r\nUnchecked = Hide all settings from children\r\nChecked = Force all settings on children\r\nIndeterminate = Allow inheritance from parent settings (default)"]
                 }
             });
 
@@ -244,6 +271,7 @@ namespace KeePassRDP
 
         new public void Dispose()
         {
+            cmsMore.Items.Clear();
             if (txtCpGroupUUIDs.ContextMenuStrip != null)
                 using (txtCpGroupUUIDs.ContextMenuStrip)
                     txtCpGroupUUIDs.ContextMenuStrip.Items.Clear();
@@ -343,7 +371,10 @@ namespace KeePassRDP
                     {
                         var checkBox = tsch.Control as CheckBox;
                         var property = _pwEntrySettings.GetType().GetProperty(checkBox.Name.Substring(2), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
-                        checkBox.Checked = (bool)property.GetValue(_pwEntrySettings, null);
+                        if (property.PropertyType.IsEnum)
+                            checkBox.CheckState = (CheckState)property.GetValue(_pwEntrySettings, null);
+                        else
+                            checkBox.Checked = (bool)property.GetValue(_pwEntrySettings, null);
                     }
                 }
             }
@@ -429,14 +460,19 @@ namespace KeePassRDP
             _pwEntrySettings.CpRecurseGroups = cbCpRecurseGroups.Checked;
         }
 
-        private void cmdRdpFile_Click(object sender, EventArgs e)
+        private void btnRdpFile_Click(object sender, EventArgs e)
         {
             var disposeRdpFile = _pwEntrySettings.RdpFile != null;
             var rdpFileForm = new KprRdpFileForm(_pwEntrySettings.RdpFile)
             {
                 IsReadOnly = _pwEntrySettings.IsReadOnly
             };
-            if (UIUtil.ShowDialogAndDestroy(rdpFileForm) == DialogResult.OK)
+
+            GlobalWindowManager.AddWindow(rdpFileForm);
+            var dr = UIUtil.ShowDialogAndDestroy(rdpFileForm);
+            GlobalWindowManager.RemoveWindow(rdpFileForm);
+
+            if (dr == DialogResult.OK)
             {
                 _pwEntrySettings.RdpFile = new RdpFile(rdpFileForm.RdpFile, false);
                 if (disposeRdpFile)
@@ -463,7 +499,10 @@ namespace KeePassRDP
             var checkBox = sender as CheckBox;
             var property = _pwEntrySettings.GetType().GetProperty(checkBox.Name.Substring(2), System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
 
-            property.SetValue(_pwEntrySettings, checkBox.Checked, null);
+            if (property.PropertyType.IsEnum)
+                property.SetValue(_pwEntrySettings, Enum.ToObject(property.PropertyType, (int)checkBox.CheckState), null);
+            else
+                property.SetValue(_pwEntrySettings, checkBox.Checked, null);
         }
 
         private void cmdAdd_Click(object sender, EventArgs e)

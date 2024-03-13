@@ -51,7 +51,10 @@ namespace KeePassRDP
         private const string MstscWidthKey = "KPR_mstscWidth";
         private const string MstscHeightKey = "KPR_mstscHeight";
         private const string MstscReplaceTitleKey = "KPR_mstscReplaceTitle";
+        private const string MstscCleanupRegistryKey = "KPR_mstscCleanupRegistry";
         private const string MstscConfirmCertificateKey = "KPR_mstscConfirmCertificate";
+        private const string MstscSignRdpFilesKey = "KPR_mstscSignRdpFiles";
+        private const string MstscExecutableKey = "KPR_mstscExecutable";
 
         private const string CredPickerRememberSizeKey = "KPR_credPickerRememberSize";
         private const string CredPickerRememberSortOrderKey = "KPR_credPickerRememberSortOrder";

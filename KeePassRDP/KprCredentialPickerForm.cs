@@ -95,33 +95,6 @@ namespace KeePassRDP
 
             InitializeComponent();
 
-            backgroundWorker1.RunWorkerCompleted += (s, e) =>
-            {
-                if (UseWaitCursor)
-                {
-                    ResumeLayout(false);
-                    UseWaitCursor = false;
-
-                    lvEntries.SuspendLayout();
-
-                    var oldFont = lvEntries.Font;
-                    if (_currentRowHeight == RowHeight.Large)
-                        lvEntries.Font = _font;
-
-                    if (lvEntries.Items.Count > 0)
-                        lvEntries.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
-                    else
-                        lvEntries.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
-
-                    lvEntries.Columns[lvEntries.Columns.Count - 1].Width = -2;
-
-                    if (_currentRowHeight == RowHeight.Large)
-                        lvEntries.Font = oldFont;
-
-                    lvEntries.ResumeLayout(false);
-                }
-            };
-
             RdpAccountEntries = null;
             ConnPE = ReturnPE = null;
 
@@ -338,7 +311,8 @@ namespace KeePassRDP
                     null,
                     Util.KeePassRDP,
                     VtdIcon.Information,
-                    this, null, 0, null, 0);
+                    this,
+                    null, 0, null, 0);
                 return false;
             }
 
@@ -594,6 +568,33 @@ namespace KeePassRDP
                     TaskScheduler.Default);
             else
                 EndInvoke(invoke);
+        }
+
+        private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (UseWaitCursor)
+            {
+                ResumeLayout(false);
+                UseWaitCursor = false;
+
+                lvEntries.SuspendLayout();
+
+                var oldFont = lvEntries.Font;
+                if (_currentRowHeight == RowHeight.Large)
+                    lvEntries.Font = _font;
+
+                if (lvEntries.Items.Count > 0)
+                    lvEntries.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+                else
+                    lvEntries.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
+
+                lvEntries.Columns[lvEntries.Columns.Count - 1].Width = -2;
+
+                if (_currentRowHeight == RowHeight.Large)
+                    lvEntries.Font = oldFont;
+
+                lvEntries.ResumeLayout(false);
+            }
         }
     }
 

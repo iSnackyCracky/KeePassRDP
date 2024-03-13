@@ -18,28 +18,12 @@
  *
  */
 
+using KeePass.App.Configuration;
+using System.IO;
+
 namespace KeePassRDP.Commands
 {
-    interface IMstscCommand
-    {
-        string Filename { get; set; }
-        string HostPort { get; set; }
-        string Gateway { get; set; }
-        bool? Admin { get; set; }
-        bool? Fullscreen { get; set; }
-        int? Width { get; set; }
-        int? Height { get; set; }
-        bool? Public { get; set; }
-        bool? Span { get; set; }
-        bool? Multimon { get; set; }
-        bool? RestrictedAdmin { get; set; }
-        bool? RemoteGuard { get; set; }
-        string Shadow { get; set; }
-        bool? Control { get; set; }
-        bool? NoConsentPrompt { get; set; }
-    }
-
-    internal class MstscCommand : Command<MstscCommand>, IMstscCommand
+    internal class FreeRdpCommand : Command<FreeRdpCommand>, IMstscCommand
     {
         [CommandArgument(Position = 1)]
         public string Filename { get; set; }
@@ -47,13 +31,13 @@ namespace KeePassRDP.Commands
         [CommandArgument(Parameter = "v", Delimiter = ':')]
         public string HostPort { get; set; }
 
-        [CommandArgument(Parameter = "g", Delimiter = ':')]
+        [CommandArgument(Parameter = "gateway:g", Delimiter = ':')]
         public string Gateway { get; set; }
 
-        [CommandArgument(Parameter = "admin")]
+        [CommandArgument(Parameter = "admin", Prefix = '+')]
         public bool? Admin { get; set; }
 
-        [CommandArgument(Parameter = "f")]
+        [CommandArgument(Parameter = "f", Prefix = '+')]
         public bool? Fullscreen { get; set; }
 
         [CommandArgument(Parameter = "w", Delimiter = ':')]
@@ -62,35 +46,26 @@ namespace KeePassRDP.Commands
         [CommandArgument(Parameter = "h", Delimiter = ':')]
         public int? Height { get; set; }
 
-        [CommandArgument(Parameter = "public")]
-        public bool? Public { get; set; }
-
-        [CommandArgument(Parameter = "span")]
+        [CommandArgument(Parameter = "span", Prefix = '+')]
         public bool? Span { get; set; }
 
         [CommandArgument(Parameter = "multimon")]
         public bool? Multimon { get; set; }
 
-        [CommandArgument(Parameter = "restrictedAdmin")]
+        [CommandArgument(Parameter = "restricted-admin", Prefix = '+')]
         public bool? RestrictedAdmin { get; set; }
 
-        [CommandArgument(Parameter = "remoteGuard")]
+        public bool? Public { get; set; }
         public bool? RemoteGuard { get; set; }
-
-        [CommandArgument(Parameter = "shadow", Delimiter = ':')]
         public string Shadow { get; set; }
-
-        [CommandArgument(Parameter = "control")]
         public bool? Control { get; set; }
-
-        [CommandArgument(Parameter = "noConsentPrompt")]
         public bool? NoConsentPrompt { get; set; }
 
-        public MstscCommand() : this(null)
+        public FreeRdpCommand() : this(null)
         {
         }
 
-        public MstscCommand(string executable) : base(string.IsNullOrWhiteSpace(executable) ? KeePassRDPExt.MstscPath : executable)
+        public FreeRdpCommand(string executable) : base(string.IsNullOrWhiteSpace(executable) ? Path.Combine(AppConfigSerializer.AppDataDirectory, "wfreerdp.exe") : executable)
         {
         }
     }

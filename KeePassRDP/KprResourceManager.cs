@@ -18,26 +18,73 @@
  *
  */
 
+using KeePass;
+using KeePass.App.Configuration;
+using KeePassRDP.Utils;
 using System;
+using System.Collections.Concurrent;
+using System.Globalization;
+using System.IO;
+using System.Resources;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace KeePassRDP
 {
-    internal class KprResourceManager
+    internal class KprResourceManager : IDisposable
     {
-        private static readonly Lazy<KprResourceManager> _instance = new Lazy<KprResourceManager>(
-            () => new KprResourceManager(),
-            System.Threading.LazyThreadSafetyMode.ExecutionAndPublication);
+        private static readonly Lazy<KprResourceManager> _instance = new Lazy<KprResourceManager>(() =>
+        {
+            try
+            {
+                Resources.Resources.Culture = CultureInfo.CreateSpecificCulture(Program.Translation.Properties.Iso6391Code);
+            }
+            catch
+            {
+                Resources.Resources.Culture = CultureInfo.CreateSpecificCulture("en");
+            }
+
+            return new KprResourceManager();
+        }, LazyThreadSafetyMode.ExecutionAndPublication);
 
         public static KprResourceManager Instance { get { return _instance.Value; } }
 
+        private readonly ConcurrentDictionary<string, string> _cache;
+        private readonly Lazy<ResourceManager> _fileBasedResourceManager;
+
         public string this[string key]
         {
-            get { return Resources.Resources.ResourceManager.GetString(key, Resources.Resources.Culture) ?? key; }
+            get
+            {
+                return _cache.GetOrAdd(key, k =>
+                {
+                    string text = null;
+                    try
+                    {
+                        text = _fileBasedResourceManager.Value != null ? _fileBasedResourceManager.Value.GetString(k, Resources.Resources.Culture) : null;
+                    }
+                    catch
+                    {
+                    }
+                    return text ??
+                        Resources.Resources.ResourceManager.GetString(k, Resources.Resources.Culture) ??
+                        k;
+                });
+            }
         }
 
         private KprResourceManager()
         {
+            _cache = new ConcurrentDictionary<string, string>(4, 0, StringComparer.OrdinalIgnoreCase);
+            _fileBasedResourceManager = new Lazy<ResourceManager>(() =>
+                Resources.Resources.Culture != null &&
+                File.Exists(Path.Combine(AppConfigSerializer.AppDataDirectory, string.Format("{0}.{1}.resources", Util.KeePassRDP, Resources.Resources.Culture.Name))) ?
+                    ResourceManager.CreateFileBasedResourceManager(
+                    Util.KeePassRDP,
+                    AppConfigSerializer.AppDataDirectory,
+                    null) :
+                    null,
+                LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
         public void Translate(Control control)
@@ -51,6 +98,19 @@ namespace KeePassRDP
         {
             foreach (var control in controls)
                 Translate(control);
+        }
+
+        internal void ClearCache()
+        {
+            _cache.Clear();
+        }
+
+        public void Dispose()
+        {
+            ClearCache();
+            Resources.Resources.ResourceManager.ReleaseAllResources();
+            if (_fileBasedResourceManager.IsValueCreated && _fileBasedResourceManager.Value != null)
+                _fileBasedResourceManager.Value.ReleaseAllResources();
         }
     }
 }

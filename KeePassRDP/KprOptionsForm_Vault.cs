@@ -32,6 +32,42 @@ namespace KeePassRDP
 {
     public partial class KprOptionsForm
     {
+        private void Init_TabVault()
+        {
+            if (_tabVaultInitialized)
+                return;
+
+            _tabVaultInitialized = true;
+
+            tabVault.UseWaitCursor = true;
+            tabVault.SuspendLayout();
+            lvVault.SuspendLayout();
+
+            lvVault.Font = new Font(_font.FontFamily, _font.Size * 2f);
+            lvVault.Columns.AddRange(new[]
+            {
+                        new ColumnHeader { Text = "TargetName" },
+                        new ColumnHeader { Text = "TargetAlias" },
+                        new ColumnHeader { Text = "UserName" },
+                        new ColumnHeader { Text = "CredentialBlob" },
+                        new ColumnHeader { Text = "Type" },
+                        new ColumnHeader { Text = "Persist" },
+                        new ColumnHeader { Text = "Flags" },
+                        new ColumnHeader { Text = "Comment" },
+                        new ColumnHeader { Text = "LastWritten" },
+                        new ColumnHeader { Text = "Attributes" }
+                    });
+            lvVault.Invalidated += lvVault_Invalidated;
+
+            KprResourceManager.Instance.TranslateMany(
+                chkSavedCredsShowAll
+            );
+
+            tabVault.ResumeLayout(false);
+            tabVault.UseWaitCursor = false;
+            lvVault.ResumeLayout(false);
+        }
+
         private void LoadCredentials()
         {
             lvVault.UseWaitCursor = true;
@@ -53,7 +89,7 @@ namespace KeePassRDP
                         };
                         lvi.SubItems.Add(new ListViewItem.ListViewSubItem { Font = _font, Text = cred.TargetAlias });
                         lvi.SubItems.Add(new ListViewItem.ListViewSubItem { Font = _font, Text = cred.UserName });
-                        lvi.SubItems.Add(new ListViewItem.ListViewSubItem { Font = _pwFont, Text = !string.IsNullOrEmpty(cred.CredentialBlob) ? placeholder : string.Empty });
+                        lvi.SubItems.Add(new ListViewItem.ListViewSubItem { Font = _pwFont, Text = /*!string.IsNullOrEmpty(cred.CredentialBlob)*/ cred.CredentialBlob != null && cred.CredentialBlob.Length > 0 ? placeholder : string.Empty });
                         lvi.SubItems.Add(new ListViewItem.ListViewSubItem { Font = _font, Text = cred.Type.ToString() });
                         lvi.SubItems.Add(new ListViewItem.ListViewSubItem { Font = _font, Text = cred.Persist.ToString() });
                         lvi.SubItems.Add(new ListViewItem.ListViewSubItem { Font = _font, Text = cred.Flags.ToString() });
@@ -120,11 +156,12 @@ namespace KeePassRDP
             catch (Win32Exception ex)
             {
                 VistaTaskDialog.ShowMessageBoxEx(
-                    ex.Message,
+                    string.Format(KprResourceManager.Instance["Failed to load credentials from vault: {0}"], ex.Message),
                     null,
                     Util.KeePassRDP + " - " + KPRes.Warning,
                     VtdIcon.Warning,
-                    null, null, 0, null, 0);
+                    this,
+                    null, 0, null, 0);
             }
 
             LoadCredentials();

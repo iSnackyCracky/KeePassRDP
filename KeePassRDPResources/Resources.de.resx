@@ -120,6 +120,9 @@
   <data name="&amp;Cancel" xml:space="preserve">
     <value>&amp;Abbrechen</value>
   </data>
+  <data name="&amp;Export" xml:space="preserve">
+    <value>&amp;Exportieren</value>
+  </data>
   <data name="&amp;GO" xml:space="preserve">
     <value>&amp;LOS</value>
   </data>
@@ -200,6 +203,9 @@ versuche immer bestätigen</value>
     <value>Zugangsdaten immer löschen sobald mstsc.exe beendet wird (TTL ignorieren).
 TTL kann auf 0 gesetzt werden um Zugangsdaten nur beim Beenden zu löschen.</value>
   </data>
+  <data name="Authentication" xml:space="preserve">
+    <value>Authentifizierung</value>
+  </data>
   <data name="Automatically continue connecting to hosts with self-signed certificates." xml:space="preserve">
     <value>Verbindungen mit selbst signierten Zertifikaten automatisch fortsetzen.</value>
   </data>
@@ -209,8 +215,23 @@ TTL kann auf 0 gesetzt werden um Zugangsdaten nur beim Beenden zu löschen.</val
   <data name="Automatically save last credential picker window size." xml:space="preserve">
     <value>Fenstergröße des Credential Picker automatisch speichern.</value>
   </data>
-  <data name="Configure extended settings via .rdp file" xml:space="preserve">
-    <value>Erweiterte Einstellung über .rdp-Datei konfigurieren</value>
+  <data name="Cannot connect to empty hostname." xml:space="preserve">
+    <value>Verbindung ohne Hostname nicht möglich.</value>
+  </data>
+  <data name="Cleanup registry hint" xml:space="preserve">
+    <value>Registry-Hint bereinigen</value>
+  </data>
+  <data name="Click here to select a certificate from the user store." xml:space="preserve">
+    <value>Hier klicken um ein Benutzerzertifikat auszuwählen.</value>
+  </data>
+  <data name="Configure extended settings via .rdp file." xml:space="preserve">
+    <value>Erweiterte Einstellung über .rdp-Datei konfigurieren.</value>
+  </data>
+  <data name="Confirm closing of KeePass when there are active RDP connections." xml:space="preserve">
+    <value>Beenden von KeePass bestätigen, wenn aktive RDP-Verbindungen bestehen.</value>
+  </data>
+  <data name="Confirm on close" xml:space="preserve">
+    <value>Beenden bestätigen</value>
   </data>
   <data name="Confirm self-signed certificate" xml:space="preserve">
     <value>Selbst signiertes Zertifikat bestätigen</value>
@@ -230,6 +251,9 @@ TTL kann auf 0 gesetzt werden um Zugangsdaten nur beim Beenden zu löschen.</val
   <data name="Continue?" xml:space="preserve">
     <value>Fortfahren?</value>
   </data>
+  <data name="Create a self-signed certificate." xml:space="preserve">
+    <value>Selbst signiertes Zertifikat erzeugen.</value>
+  </data>
   <data name="Credential TTL:" xml:space="preserve">
     <value>Zugangsdaten TTL:</value>
   </data>
@@ -243,8 +267,17 @@ TTL kann auf 0 gesetzt werden um Zugangsdaten nur beim Beenden zu löschen.</val
     <value>Benutzerdefinierten Namen der Gruppe die den Credential Picker auslöst festlegen.
 Verwendet "RDP" als Standard.</value>
   </data>
+  <data name="Define level of inheritance:&#xD;&#xA;Unchecked = Hide all settings from children&#xD;&#xA;Checked = Force all settings on children&#xD;&#xA;Indeterminate = Allow inheritance from parent settings (default)" xml:space="preserve">
+    <value>Ebene der Vererbung festlegen:
+Inaktiv = Alle Einstellungen vor Kindern verstecken
+Aktiv = Alle Einstellungen auf Kinder erzwingen
+Unbestimmt = Vererbung von Einstellungen erlauben (standard)</value>
+  </data>
   <data name="Discard changes" xml:space="preserve">
     <value>Änderungen verwerfen</value>
+  </data>
+  <data name="Display" xml:space="preserve">
+    <value>Anzeige</value>
   </data>
   <data name="Enable or disable resolving of references for entries shown in credential picker." xml:space="preserve">
     <value>(De-)Aktivieren des Auflösens von Verweisen in Einträgen die im Credential Picker angezeigt werden.</value>
@@ -264,6 +297,21 @@ Verwendet "RDP" als Standard.</value>
   <data name="Executable" xml:space="preserve">
     <value>Programmdatei</value>
   </data>
+  <data name="Existing private keys will be overwritten, making previously generated certificates unusable for signing." xml:space="preserve">
+    <value>Vorhandene private Schlüssel werden überschrieben, wodurch zuvor erzeugte Zertifikate nicht mehr zum Signieren verwendet werden können.</value>
+  </data>
+  <data name="export" xml:space="preserve">
+    <value>exportieren</value>
+  </data>
+  <data name="Export to .rdp file" xml:space="preserve">
+    <value>Als .rdp-Datei exportieren</value>
+  </data>
+  <data name="Failed to create self-signed certificate: {0}" xml:space="preserve">
+    <value>Selbst signiertes Zertifikat konnte nicht erstellt werden: {0}</value>
+  </data>
+  <data name="Failed to load credentials from vault: {0}" xml:space="preserve">
+    <value>Fehler beim Laden der Anmeldedaten: {0}</value>
+  </data>
   <data name="File '{0}' not found." xml:space="preserve">
     <value>Datei '{0}' nicht gefunden.</value>
   </data>
@@ -281,6 +329,12 @@ oder wenn Hostname leer ist.</value>
     <value>Registrierung von Tastaturkürzeln nach allen anderen KeePass-Plugins erzwingen.
 Nur bei Notwendigkeit aktivieren. Kann unerwartetes Verhalten verursachen.</value>
   </data>
+  <data name="Force rewriting username to UPN format when possible." xml:space="preserve">
+    <value>Wenn möglich Umschreibung von Benutzernamen in UPN erzwingen.</value>
+  </data>
+  <data name="Force UPN" xml:space="preserve">
+    <value>UPN erzwingen</value>
+  </data>
   <data name="General" xml:space="preserve">
     <value>Allgemein</value>
   </data>
@@ -295,6 +349,9 @@ Nur bei Notwendigkeit aktivieren. Kann unerwartetes Verhalten verursachen.</valu
   </data>
   <data name="Ignore entry credentials" xml:space="preserve">
     <value>Zugangsdaten von Eintrag ignorieren</value>
+  </data>
+  <data name="import" xml:space="preserve">
+    <value>importieren</value>
   </data>
   <data name="Import from .rdp file" xml:space="preserve">
     <value>Aus .rdp-Datei importieren</value>
@@ -317,6 +374,9 @@ Nur bei Notwendigkeit aktivieren. Kann unerwartetes Verhalten verursachen.</valu
   <data name="Increase TTL of credential until mstsc.exe is connected and remove instantly." xml:space="preserve">
     <value>TTL von Zugangsdaten erhöhen bis mstsc.exe verbunden ist und sofort löschen.</value>
   </data>
+  <data name="Inheritance" xml:space="preserve">
+    <value>Vererbung</value>
+  </data>
   <data name="Inlcude selected" xml:space="preserve">
     <value>Ausgewählte einbeziehen</value>
   </data>
@@ -329,6 +389,9 @@ Monitor behalten</value>
   </data>
   <data name="KeePassRDP Website" xml:space="preserve">
     <value>KeePassRDP Webseite</value>
+  </data>
+  <data name="KeePassRDP | RDP-File" xml:space="preserve">
+    <value>KeePassRDP | RDP-Datei</value>
   </data>
   <data name="Keyboard settings" xml:space="preserve">
     <value>Tastatureinstellungen</value>
@@ -350,6 +413,9 @@ Monitor behalten</value>
   </data>
   <data name="mstsc.exe parameters" xml:space="preserve">
     <value>mstsc.exe Parameter</value>
+  </data>
+  <data name="Network" xml:space="preserve">
+    <value>Netzwerk</value>
   </data>
   <data name="Never open credential picker for entry if unchecked." xml:space="preserve">
     <value>Credential Picker niemals für Eintrag öffnen wenn deaktiviert.</value>
@@ -397,8 +463,14 @@ Monitor behalten</value>
     <value>Rechte Maustaste drücken um Gruppenauswahl zu öffnen,
 oder Hexstring der Gruppen-UUID eingeben.</value>
   </data>
+  <data name="Really continue?" xml:space="preserve">
+    <value>Wirklich fortfahren?</value>
+  </data>
   <data name="Recursive group search" xml:space="preserve">
     <value>Rekursive Gruppen-Suche</value>
+  </data>
+  <data name="Redirect" xml:space="preserve">
+    <value>Umleitung</value>
   </data>
   <data name="Refresh credentials list" xml:space="preserve">
     <value>Liste der Zugangsdaten aktualisieren</value>
@@ -445,6 +517,9 @@ oder Hexstring der Gruppen-UUID eingeben.</value>
   <data name="Remove selected toolbar item(s)" xml:space="preserve">
     <value>Ausgewählte Werkzeugleistenelemente entfernen</value>
   </data>
+  <data name="Remove username hint from registry before and after connecting." xml:space="preserve">
+    <value>Vor und nach Verbindungen Vorschläge für Benutzernamen aus Registry bereinigen.</value>
+  </data>
   <data name="Replace window title" xml:space="preserve">
     <value>Fenstertitel ersetzen</value>
   </data>
@@ -478,6 +553,9 @@ oder Hexstring der Gruppen-UUID eingeben.</value>
   <data name="Resolve references" xml:space="preserve">
     <value>Verweise auflösen</value>
   </data>
+  <data name="Retry credentials once" xml:space="preserve">
+    <value>Anmeldung einmalig wiederverwenden</value>
+  </data>
   <data name="Save changes" xml:space="preserve">
     <value>Änderungen speichern</value>
   </data>
@@ -485,6 +563,15 @@ oder Hexstring der Gruppen-UUID eingeben.</value>
     <value>Im Windows-Tresor als "Domain"- anstelle von "Generischen"-Zugangsdaten speichern. Kann auf Domänen-
 Mitgliedern mit NTLM-Auth fehlschlagen, da dies vermutlich für externe Geräte nicht erlaubt ist.
 Sollte aus Sicherheitsgründen aktiviert bleiben, wenn keine Einschränkungen auftreten.</value>
+  </data>
+  <data name="Saving '{0}' failed: {1}" xml:space="preserve">
+    <value>Speichern von '{0}' fehlgeschlagen: {1}</value>
+  </data>
+  <data name="Select a certificate from the list for signing .rdp files:" xml:space="preserve">
+    <value>Zertifikat zum signieren von .rdp-Datein auswählen:</value>
+  </data>
+  <data name="Self-signed certificate created successfully." xml:space="preserve">
+    <value>Selbst signiertes Zertifikat erfolgreich erstellt.</value>
   </data>
   <data name="Set mstsc.exe window title to title of entry." xml:space="preserve">
     <value>Fenstertitel von mstsc.exe auf Titel des Eintrags setzen.</value>
@@ -504,6 +591,9 @@ Sollte aus Sicherheitsgründen aktiviert bleiben, wenn keine Einschränkungen au
   <data name="Show selectable credential entries in groups if checked." xml:space="preserve">
     <value>Auswählbare Zugangsdaten im Credential Picker gruppieren.</value>
   </data>
+  <data name="Sign .rdp files" xml:space="preserve">
+    <value>Signieren von .rdp-Datein</value>
+  </data>
   <data name="skipped" xml:space="preserve">
     <value>übersprungen</value>
   </data>
@@ -514,8 +604,14 @@ Sollte aus Sicherheitsgründen aktiviert bleiben, wenn keine Einschränkungen au
   <data name="Store as Windows credentials" xml:space="preserve">
     <value>Als Windows-Zugangsdaten speichern</value>
   </data>
+  <data name="String1" xml:space="preserve">
+    <value />
+  </data>
   <data name="The URL/target '{0}' of the selected entry could not be parsed." xml:space="preserve">
     <value>URL/Ziel '{0}' des ausgewählten Eintrags konnte nicht vearbeitet werden.</value>
+  </data>
+  <data name="This will create a self-signed certificate that can be used for signing .rdp files and save it into the current users &quot;my&quot; and &quot;root&quot; certificate store." xml:space="preserve">
+    <value>Hiermit wird ein selbstsigniertes Zertifikat erzeugt, welches zum Signieren von .rdp-Datein verwendet werden kann und im "Mein"- und "Root"-Zertifikatspeicher des aktuellen Benutzers gespeichert.</value>
   </data>
   <data name="Title" xml:space="preserve">
     <value>Titel</value>
@@ -537,8 +633,36 @@ oder nur wenn die selben Zugangsdaten verwendet werden.</value>
   <data name="Trigger" xml:space="preserve">
     <value>Auslöser</value>
   </data>
+  <data name="Try to reconnect with same credentials one time on connection losses.&#xD;&#xA;Warning: Will need to keep the password in (encrypted) memory." xml:space="preserve">
+    <value>Verbindungsversuch mit selben Zugangsdaten ein einziges Mal nach Abbruch wiederholen.
+Warnung: Passwort muss in (verschlüsseltem) Speicher gehalten werden.</value>
+  </data>
   <data name="Unable to persist credentials in Windows vault." xml:space="preserve">
     <value>Speichern von Zugangsdaten in Windows-Tresor nicht möglich.</value>
+  </data>
+  <data name="Use &amp;admin - /admin" xml:space="preserve">
+    <value>Verwende &amp;admin - /admin</value>
+  </data>
+  <data name="Use &amp;fullscreen - /f" xml:space="preserve">
+    <value>Verwende &amp;fullscreen - /f</value>
+  </data>
+  <data name="Use &amp;multimon - /multimon" xml:space="preserve">
+    <value>Verwende &amp;multimon - /multimon</value>
+  </data>
+  <data name="Use &amp;public - /public" xml:space="preserve">
+    <value>Verwende &amp;public - /public</value>
+  </data>
+  <data name="Use &amp;remoteGuard - /remoteGuard" xml:space="preserve">
+    <value>Verwende &amp;remoteGuard - /remoteGuard</value>
+  </data>
+  <data name="Use &amp;restrictedAdmin - /restrictedAdmin" xml:space="preserve">
+    <value>Verwende &amp;restrictedAdmin - /restrictedAdmin</value>
+  </data>
+  <data name="Use &amp;spanning - /span" xml:space="preserve">
+    <value>Verwende &amp;spanning - /span</value>
+  </data>
+  <data name="Use certificate from store to sign .rdp files." xml:space="preserve">
+    <value>Zertifikat verwenden um .rdp-Datein zu signieren.</value>
   </data>
   <data name="Use credential picker" xml:space="preserve">
     <value>Credential Picker aktiv</value>

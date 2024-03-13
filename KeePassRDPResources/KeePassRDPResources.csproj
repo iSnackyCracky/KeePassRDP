@@ -92,6 +92,8 @@
     <None Include="Resources\Expander.png" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Resources\Certificate.png" />
+    <Content Include="Resources\FileDestination.png" />
     <Content Include="Resources\OpenFile.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

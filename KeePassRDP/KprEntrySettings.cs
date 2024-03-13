@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 
 namespace KeePassRDP
 {
@@ -36,8 +37,18 @@ namespace KeePassRDP
     {
         public static readonly KprEntrySettings Empty = new KprEntrySettings(true);
 
+        public enum Inheritance
+        {
+            // Hide all settings from children
+            Hide = CheckState.Unchecked,
+            // Force all settings on children
+            Force = CheckState.Checked,
+            // Allow inheritance from parent settings
+            Default = CheckState.Indeterminate
+        }
+
         [JsonIgnore]
-        public bool IsReadOnly { get { return _isReadOnly; } set { if (_isReadOnly) throw new InvalidOperationException(); _isReadOnly = value; } }
+        public bool IsReadOnly { get { return _isReadOnly; } }
 
         [DefaultValue(false)]
         public bool Ignore { get { return _ignore; } set { if (_isReadOnly) throw new InvalidOperationException(); _ignore = value; } }
@@ -61,22 +72,48 @@ namespace KeePassRDP
         [DefaultValue(false)]
         public bool ForceLocalUser { get { return _forceLocalUser; } set { if (_isReadOnly) throw new InvalidOperationException(); _forceLocalUser = value; } }
 
-        public ICollection<string> CpGroupUUIDs { get { return IsReadOnly && !_cpGroupUUIDs.IsReadOnly ? _cpGroupUUIDs.AsReadOnly() : _cpGroupUUIDs; } }
+        [DefaultValue(false)]
+        public bool ForceUpn { get { return _forceUpn; } set { if (_isReadOnly) throw new InvalidOperationException(); _forceUpn = value; } }
+
+        [DefaultValue(false)]
+        public bool RetryOnce { get { return _retryOnce; } set { if (_isReadOnly) throw new InvalidOperationException(); _retryOnce = value; } }
+
+        [DefaultValue(Inheritance.Default)]
+        public Inheritance Inherit { get { return _inherit; } set { if (_isReadOnly) throw new InvalidOperationException(); _inherit = value; } }
+
+        public ICollection<string> CpGroupUUIDs
+        {
+            get { return _isReadOnly && !_cpGroupUUIDs.IsReadOnly ? _cpGroupUUIDs.AsReadOnly() : _cpGroupUUIDs; }
+            set { if (_isReadOnly) throw new InvalidOperationException(); _cpGroupUUIDs = new HashSet<string>(value, StringComparer.OrdinalIgnoreCase); }
+        }
+
+        public ICollection<string> CpExcludedGroupUUIDs
+        {
+            get { return _isReadOnly && !_cpExcludedGroupUUIDs.IsReadOnly ? _cpExcludedGroupUUIDs.AsReadOnly() : _cpExcludedGroupUUIDs; }
+            set { if (_isReadOnly) throw new InvalidOperationException(); _cpGroupUUIDs = new HashSet<string>(value, StringComparer.OrdinalIgnoreCase); }
+        }
+
+        public ICollection<string> CpRegExPatterns
+        {
+            get { return _isReadOnly && !_cpRegExPatterns.IsReadOnly ? _cpRegExPatterns.AsReadOnly() : _cpRegExPatterns; }
+            set { if (_isReadOnly) throw new InvalidOperationException(); _cpRegExPatterns = new List<string>(value); }
+        }
+
+        public ICollection<string> MstscParameters
+        {
+            get { return _isReadOnly && !_mstscParameters.IsReadOnly ? _mstscParameters.AsReadOnly() : _mstscParameters; }
+            set { if (_isReadOnly) throw new InvalidOperationException(); _mstscParameters = new List<string>(value); }
+        }
+
         public bool ShouldSerializeCpGroupUUIDs() { return _cpGroupUUIDs != null && _cpGroupUUIDs.Count > 0; }
-
-        public ICollection<string> CpExcludedGroupUUIDs { get { return IsReadOnly && !_cpExcludedGroupUUIDs.IsReadOnly ? _cpExcludedGroupUUIDs.AsReadOnly() : _cpExcludedGroupUUIDs; } }
         public bool ShouldSerializeCpExcludedGroupUUIDs() { return _cpExcludedGroupUUIDs != null && _cpExcludedGroupUUIDs.Count > 0; }
-
-        public ICollection<string> CpRegExPatterns { get { return IsReadOnly && !_cpRegExPatterns.IsReadOnly ? _cpRegExPatterns.AsReadOnly() : _cpRegExPatterns; } }
         public bool ShouldSerializeCpRegExPatterns() { return _cpRegExPatterns != null && _cpRegExPatterns.Count > 0; }
-
-        public ICollection<string> MstscParameters { get { return IsReadOnly && !_mstscParameters.IsReadOnly ? _mstscParameters.AsReadOnly() : _mstscParameters; } }
         public bool ShouldSerializeMstscParameters() { return _mstscParameters != null && _mstscParameters.Count > 0; }
 
-        private readonly ISet<string> _cpGroupUUIDs;
-        private readonly ISet<string> _cpExcludedGroupUUIDs;
-        private readonly IList<string> _cpRegExPatterns;
-        private readonly IList<string> _mstscParameters;
+        private ISet<string> _cpGroupUUIDs;
+        private ISet<string> _cpExcludedGroupUUIDs;
+        private IList<string> _cpRegExPatterns;
+        private IList<string> _mstscParameters;
 
         private bool _isReadOnly;
         private bool _ignore;
@@ -86,14 +123,17 @@ namespace KeePassRDP
         private bool _cpIncludeDefaultRegex;
         private bool _includeDefaultParameters;
         private bool _forceLocalUser;
+        private bool _forceUpn;
+        private bool _retryOnce;
+        private Inheritance _inherit;
 
         public KprEntrySettings()
         {
+            _isReadOnly = false;
             _cpGroupUUIDs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             _cpExcludedGroupUUIDs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             _cpRegExPatterns = new List<string>();
             _mstscParameters = new List<string>();
-            _isReadOnly = false;
             _ignore = false;
             _useCredpicker = true;
             _rdpFile = null;
@@ -101,18 +141,54 @@ namespace KeePassRDP
             _cpIncludeDefaultRegex = true;
             _includeDefaultParameters = true;
             _forceLocalUser = false;
+            _forceUpn = false;
+            _retryOnce = false;
+            _inherit = Inheritance.Default;
         }
 
         private KprEntrySettings(bool readOnly) : this()
         {
             if (readOnly)
             {
+                _isReadOnly = true;
                 _cpGroupUUIDs = _cpGroupUUIDs.AsReadOnly();
                 _cpExcludedGroupUUIDs = _cpExcludedGroupUUIDs.AsReadOnly();
                 _cpRegExPatterns = _cpRegExPatterns.AsReadOnly();
                 _mstscParameters = _mstscParameters.AsReadOnly();
-                _isReadOnly = true;
             }
+        }
+
+        internal KprEntrySettings(KprEntrySettings kprEntrySettings, bool readOnly = false)
+        {
+            _isReadOnly = readOnly;
+            _cpGroupUUIDs = new HashSet<string>(kprEntrySettings._cpGroupUUIDs, StringComparer.OrdinalIgnoreCase);
+            _cpExcludedGroupUUIDs = new HashSet<string>(kprEntrySettings._cpExcludedGroupUUIDs, StringComparer.OrdinalIgnoreCase);
+            _cpRegExPatterns = new List<string>(kprEntrySettings._cpRegExPatterns);
+            _mstscParameters = new List<string>(kprEntrySettings._mstscParameters);
+            if (readOnly)
+            {
+                _cpGroupUUIDs = _cpGroupUUIDs.AsReadOnly();
+                _cpExcludedGroupUUIDs = _cpExcludedGroupUUIDs.AsReadOnly();
+                _cpRegExPatterns = _cpRegExPatterns.AsReadOnly();
+                _mstscParameters = _mstscParameters.AsReadOnly();
+            }
+            _ignore = kprEntrySettings._ignore;
+            _useCredpicker = kprEntrySettings._useCredpicker;
+            _rdpFile = kprEntrySettings._rdpFile;
+            _cpRecurseGroups = kprEntrySettings._cpRecurseGroups;
+            _cpIncludeDefaultRegex = kprEntrySettings._cpIncludeDefaultRegex;
+            _includeDefaultParameters = kprEntrySettings._includeDefaultParameters;
+            _forceLocalUser = kprEntrySettings._forceLocalUser;
+            _forceUpn = kprEntrySettings._forceUpn;
+            _retryOnce = kprEntrySettings._retryOnce;
+            _inherit = kprEntrySettings._inherit;
+        }
+
+        public KprEntrySettings AsReadOnly()
+        {
+            if (_isReadOnly)
+                return this;
+            return new KprEntrySettings(this, true);
         }
 
         public void Clear()

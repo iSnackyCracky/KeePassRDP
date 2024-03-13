@@ -26,12 +26,121 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace KeePassRDP
 {
     public partial class KprOptionsForm
     {
+        private void Init_TabIntegration()
+        {
+            if (!_tabIntegrationInitialized)
+            {
+                _tabIntegrationInitialized = true;
+
+                tabIntegration.UseWaitCursor = true;
+                tabIntegration.SuspendLayout();
+
+                KprOptionsForm_ResizeBegin(null, EventArgs.Empty);
+
+                var invoke = BeginInvoke(new Action(() =>
+                {
+                    KprResourceManager.Instance.TranslateMany(
+                        grpCredentialOptions,
+                        grpEntryOptions,
+                        grpHotkeyOptions,
+                        lblCredVaultTtl,
+                        lblKeyboardSettings,
+                        lblShortcut,
+                        lblOpenRdpShortcut,
+                        lblOpenRdpAdminShortcut,
+                        lblOpenRdpNoCredShortcut,
+                        lblOpenRdpNoCredAdminShortcut,
+                        lblVisibilitySettings,
+                        lblKeePassContextMenuItems,
+                        lblKeePassToolbarItems,
+                        chkCredVaultUseWindows,
+                        chkCredVaultOverwriteExisting,
+                        chkCredVaultRemoveOnExit,
+                        chkCredVaultAdaptiveTtl,
+                        chkKeePassConnectToAll,
+                        chkKeePassAlwaysConfirm,
+                        chkKeePassContextMenuOnScreen,
+                        chkKeePassHotkeysRegisterLast,
+                        chkKeePassConfirmOnClose
+                    );
+
+                    if (Util.CheckCredentialGuard())
+                        chkCredVaultUseWindows.ForeColor = Color.Gray;
+
+                    // Set form elements to match previously saved options.
+                    chkCredVaultUseWindows.Checked = _config.CredVaultUseWindows;
+                    chkCredVaultOverwriteExisting.Checked = _config.CredVaultOverwriteExisting;
+                    chkCredVaultRemoveOnExit.Checked = _config.CredVaultRemoveOnExit;
+                    chkCredVaultAdaptiveTtl.Checked = _config.CredVaultAdaptiveTtl;
+
+                    numCredVaultTtl.Value = Math.Max(Math.Min(_config.CredVaultTtl, numCredVaultTtl.Maximum), numCredVaultTtl.Minimum);
+                    _config.CredVaultTtl = (int)numCredVaultTtl.Value;
+
+                    chkKeePassConnectToAll.Checked = _config.KeePassConnectToAll;
+                    chkKeePassAlwaysConfirm.Checked = _config.KeePassAlwaysConfirm;
+                    chkKeePassContextMenuOnScreen.Checked = _config.KeePassContextMenuOnScreen;
+                    chkKeePassHotkeysRegisterLast.Checked = _config.KeePassHotkeysRegisterLast;
+                    chkKeePassConfirmOnClose.Checked = _config.KeePassConfirmOnClose;
+
+                    txtOpenRdpKey.Hotkey = _config.ShortcutOpenRdpConnection;
+                    txtOpenRdpAdminKey.Hotkey = _config.ShortcutOpenRdpConnectionAdmin;
+                    txtOpenRdpNoCredKey.Hotkey = _config.ShortcutOpenRdpConnectionNoCred;
+                    txtOpenRdpNoCredAdminKey.Hotkey = _config.ShortcutOpenRdpConnectionNoCredAdmin;
+
+                    var keePassContextMenuItems = new BindingList<KeyValuePair<KprMenu.MenuItem, string>>();
+                    var keePassToolbarItems = new BindingList<KeyValuePair<KprMenu.MenuItem, string>>();
+                    var keePassContextMenuItemsAvailable = new BindingList<KeyValuePair<KprMenu.MenuItem, string>>();
+                    var keePassToolbarItemsAvailable = new BindingList<KeyValuePair<KprMenu.MenuItem, string>>();
+
+                    foreach (var menu in KprMenu.MenuItemValues)
+                    {
+                        var text = KprMenu.GetText(menu);
+
+                        if (_config.KeePassContextMenuItems.HasFlag(menu))
+                            keePassContextMenuItems.Add(new KeyValuePair<KprMenu.MenuItem, string>(menu, text));
+                        else
+                            keePassContextMenuItemsAvailable.Add(new KeyValuePair<KprMenu.MenuItem, string>(menu, text));
+
+                        if (_config.KeePassToolbarItems.HasFlag(menu))
+                            keePassToolbarItems.Add(new KeyValuePair<KprMenu.MenuItem, string>(menu, text));
+                        else
+                            keePassToolbarItemsAvailable.Add(new KeyValuePair<KprMenu.MenuItem, string>(menu, text));
+                    }
+
+                    lstKeePassContextMenuItems.DataSource = keePassContextMenuItems;
+                    lstKeePassContextMenuItemsAvailable.DataSource = keePassContextMenuItemsAvailable;
+                    lstKeePassToolbarItems.DataSource = keePassToolbarItems;
+                    lstKeePassToolbarItemsAvailable.DataSource = keePassToolbarItemsAvailable;
+
+                    tabIntegration.ResumeLayout(false);
+                    tabIntegration.UseWaitCursor = false;
+
+                    KprOptionsForm_ResizeEnd(null, EventArgs.Empty);
+                }));
+
+                if (!invoke.IsCompleted)
+                    Task.Factory.FromAsync(
+                        invoke,
+                        endinvoke => EndInvoke(endinvoke),
+                        TaskCreationOptions.AttachedToParent,
+                        TaskScheduler.Default);
+                else
+                    EndInvoke(invoke);
+            }
+            else
+            {
+                if (tabIntegration.VerticalScroll.Visible)
+                    tabIntegration.AutoScrollPosition = new Point(0, 0);
+            }
+        }
+
         private void numCredVaultTtl_ValueChanged(object sender, EventArgs e)
         {
             chkCredVaultAdaptiveTtl.Enabled = numCredVaultTtl.Value > 0;

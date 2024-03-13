@@ -23,26 +23,13 @@ using System;
 namespace KeePassRDP.Generator
 {
     [AttributeUsage(AttributeTargets.Property)]
-    public class RdpSettingAttribute : Attribute
+    public class RdpSignscopeAttribute : Attribute
     {
-        public string Template { get; private set; }
-        public SettingCategory Category { get; set; }
+        public string Scope {  get; private set; }
 
-        public RdpSettingAttribute(string template)
+        public RdpSignscopeAttribute(string scope)
         {
-            Template = template;
-            Category = SettingCategory.General;
-        }
-
-        public enum SettingCategory
-        {
-            General = 0,
-            Authentication,
-            Network,
-            Display,
-            Redirect,
-            AudioVideo,
-            RemoteApp
+            Scope = scope;
         }
     }
 }

@@ -18,6 +18,7 @@
  *
  */
 
+using KeePass.UI;
 using KeePassRDP.Utils;
 using System;
 using System.ComponentModel;
@@ -28,6 +29,69 @@ namespace KeePassRDP
 {
     public partial class KprOptionsForm
     {
+        private void Init_TabPicker()
+        {
+            if (_tabPickerInitialized)
+                return;
+
+            _tabPickerInitialized = true;
+
+            tabPicker.UseWaitCursor = true;
+            tabPicker.SuspendLayout();
+
+            KprResourceManager.Instance.TranslateMany(
+                grpCredPickerGeneralOptions,
+                grpCredPickerEntryOptions,
+                grpCredPickerTriggerOptions,
+                lblCredPickWidth,
+                lblCredPickHeight,
+                lblCredPickerCustomGroup,
+                lblRegexPrefixes,
+                lblRegexPostfixes,
+                chkCredPickRememberSize,
+                chkCredPickRememberSortOrder,
+                chkKeepassShowResolvedReferences,
+                chkCredPickShowInGroups,
+                chkCredPickIncludeSelected,
+                chkCredPickLargeRows
+            );
+
+            UIUtil.SetCueBanner(txtCredPickerCustomGroup, Util.DefaultTriggerGroup);
+
+            // Set form elements to match previously saved options.
+            chkKeepassShowResolvedReferences.Checked = _config.KeePassShowResolvedReferences;
+
+            chkCredPickRememberSize.Checked = _config.CredPickerRememberSize;
+            chkCredPickRememberSortOrder.Checked = _config.CredPickerRememberSortOrder;
+            txtCredPickerCustomGroup.Text = string.IsNullOrWhiteSpace(_config.CredPickerCustomGroup) || _config.CredPickerCustomGroup == Util.DefaultTriggerGroup ?
+                string.Empty :
+                _config.CredPickerCustomGroup;
+            chkCredPickShowInGroups.Checked = _config.CredPickerShowInGroups;
+            chkCredPickIncludeSelected.Checked = _config.CredPickerIncludeSelected;
+            chkCredPickLargeRows.Checked = _config.CredPickerLargeRows;
+
+            // Set width and height fields maximum to (primary) screen resolution.
+            numCredPickWidth.Maximum = Screen.PrimaryScreen.Bounds.Width;
+            numCredPickWidth.Value = Math.Max(Math.Min(_config.CredPickerWidth, numCredPickWidth.Maximum), numCredPickWidth.Minimum);
+            _config.CredPickerWidth = (int)numCredPickWidth.Value;
+
+            numCredPickHeight.Maximum = Screen.PrimaryScreen.Bounds.Height;
+            numCredPickHeight.Value = Math.Max(Math.Min(_config.CredPickerHeight, numCredPickHeight.Maximum), numCredPickHeight.Minimum);
+            _config.CredPickerHeight = (int)numCredPickHeight.Value;
+
+            if (!string.IsNullOrWhiteSpace(_config.CredPickerRegExPre))
+                lstRegExPre.DataSource = new BindingList<string>(_config.CredPickerRegExPre.Split('|').ToList());
+            else
+                lstRegExPre.DataSource = new BindingList<string>();
+            if (!string.IsNullOrWhiteSpace(_config.CredPickerRegExPost))
+                lstRegExPost.DataSource = new BindingList<string>(_config.CredPickerRegExPost.Split('|').ToList());
+            else
+                lstRegExPost.DataSource = new BindingList<string>();
+
+            tabPicker.ResumeLayout(false);
+            tabPicker.UseWaitCursor = false;
+        }
+
         private void txtCredPickerCustomGroup_KeyDown(object sender, KeyEventArgs e)
         {
             txtCredPickerCustomGroup_Enter(sender, EventArgs.Empty);
@@ -48,7 +112,7 @@ namespace KeePassRDP
                 return;
 
             var point = control.PointToClient(Cursor.Position);
-            var size = _txtCredPickerCustomGroupCursorSize.Value;
+            var size = _cursorSize.Value;
 
             if (!size.IsEmpty)
                 point.Y += size.Height / 2;
@@ -65,18 +129,18 @@ namespace KeePassRDP
 
         private void txtCredPickerCustomGroup_MouseEnter(object sender, EventArgs e)
         {
-            _txtCredPickerCustomGroupTooltipTimer.Tag = sender;
-            _txtCredPickerCustomGroupTooltipTimer.Tick += txtCredPickerCustomGroup_ShowToolTip;
-            if (_txtCredPickerCustomGroupTooltipTimer.Enabled)
-                _txtCredPickerCustomGroupTooltipTimer.Enabled = false;
-            _txtCredPickerCustomGroupTooltipTimer.Enabled = !_lastTooltipMousePosition.HasValue;
+            _tooltipTimer.Tag = sender;
+            _tooltipTimer.Tick += txtCredPickerCustomGroup_ShowToolTip;
+            if (_tooltipTimer.Enabled)
+                _tooltipTimer.Enabled = false;
+            _tooltipTimer.Enabled = !_lastTooltipMousePosition.HasValue;
         }
 
         private void txtCredPickerCustomGroup_MouseLeave(object sender, EventArgs e)
         {
-            _txtCredPickerCustomGroupTooltipTimer.Tick -= txtCredPickerCustomGroup_ShowToolTip;
-            if (_txtCredPickerCustomGroupTooltipTimer.Enabled)
-                _txtCredPickerCustomGroupTooltipTimer.Enabled = false;
+            _tooltipTimer.Tick -= txtCredPickerCustomGroup_ShowToolTip;
+            if (_tooltipTimer.Enabled)
+                _tooltipTimer.Enabled = false;
             ttTrigger.Hide(sender as Control);
             _lastTooltipMousePosition = null;
         }
@@ -86,22 +150,22 @@ namespace KeePassRDP
             if (_lastTooltipMousePosition.HasValue && _lastTooltipMousePosition.Value == e.Location)
                 return;
             _lastTooltipMousePosition = e.Location;
-            if (_txtCredPickerCustomGroupTooltipTimer.Enabled)
-                _txtCredPickerCustomGroupTooltipTimer.Enabled = false;
-            _txtCredPickerCustomGroupTooltipTimer.Enabled = true;
+            if (_tooltipTimer.Enabled)
+                _tooltipTimer.Enabled = false;
+            _tooltipTimer.Enabled = true;
         }
 
         private void txtCredPickerCustomGroup_Enter(object sender, EventArgs e)
         {
-            if (_txtCredPickerCustomGroupTooltipTimer.Enabled)
-                _txtCredPickerCustomGroupTooltipTimer.Enabled = false;
+            if (_tooltipTimer.Enabled)
+                _tooltipTimer.Enabled = false;
             ttTrigger.Hide(sender as Control);
         }
 
         private void txtCredPickerCustomGroup_Leave(object sender, EventArgs e)
         {
-            if (_txtCredPickerCustomGroupTooltipTimer.Enabled)
-                _txtCredPickerCustomGroupTooltipTimer.Enabled = false;
+            if (_tooltipTimer.Enabled)
+                _tooltipTimer.Enabled = false;
             ttTrigger.Hide(sender as Control);
             _lastTooltipMousePosition = null;
         }

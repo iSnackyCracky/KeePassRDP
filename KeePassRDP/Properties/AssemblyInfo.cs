@@ -19,6 +19,7 @@
  */
 
 using System.Reflection;
+using System.Resources;
 using System.Runtime.InteropServices;
 
 // General Information
@@ -34,7 +35,9 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 [assembly: Guid("404935cb-8f30-4801-a3e6-6a88ad963544")]
 
+[assembly: SatelliteContractVersion("1.0.0.0")]
+
 // Version information
-[assembly: AssemblyVersion("2.1")]
-[assembly: AssemblyFileVersion("2.1")]
-[assembly: AssemblyInformationalVersion("2.1")]
+[assembly: AssemblyVersion("2.2")]
+[assembly: AssemblyFileVersion("2.2")]
+[assembly: AssemblyInformationalVersion("2.2")]

@@ -55,6 +55,7 @@
             this.chkKeePassAlwaysConfirm = new System.Windows.Forms.CheckBox();
             this.chkKeePassConnectToAll = new System.Windows.Forms.CheckBox();
             this.grpHotkeyOptions = new System.Windows.Forms.GroupBox();
+            this.chkKeePassConfirmOnClose = new System.Windows.Forms.CheckBox();
             this.chkKeePassContextMenuOnScreen = new System.Windows.Forms.CheckBox();
             this.chkKeePassHotkeysRegisterLast = new System.Windows.Forms.CheckBox();
             this.chkSavedCredsShowAll = new System.Windows.Forms.CheckBox();
@@ -119,6 +120,7 @@
             this.cmdOpenRdpNoCredKeyReset = new System.Windows.Forms.Button();
             this.cmdOpenRdpNoCredAdminKeyReset = new System.Windows.Forms.Button();
             this.cmdOpenRdpKeyReset = new System.Windows.Forms.Button();
+            this.cmdSelfSignedCertificate = new System.Windows.Forms.Button();
             this.lblKeePassContextMenuItems = new System.Windows.Forms.Label();
             this.lblKeePassToolbarItems = new System.Windows.Forms.Label();
             this.lblVisibilitySettings = new System.Windows.Forms.Label();
@@ -154,7 +156,14 @@
             this.tabPicker = new System.Windows.Forms.TabPage();
             this.tblPicker = new System.Windows.Forms.TableLayoutPanel();
             this.tabExecutable = new System.Windows.Forms.TabPage();
+            this.tblExecutable = new System.Windows.Forms.TableLayoutPanel();
             this.grpMstscAutomation = new System.Windows.Forms.GroupBox();
+            this.chkMstscCleanupRegistry = new System.Windows.Forms.CheckBox();
+            this.txtMstscSignRdpFiles = new System.Windows.Forms.TextBox();
+            this.chkMstscSignRdpFiles = new System.Windows.Forms.CheckBox();
+            this.flpMstscExecutable = new System.Windows.Forms.FlowLayoutPanel();
+            this.lblMstscExecutable = new System.Windows.Forms.Label();
+            this.cbMstscExecutable = new System.Windows.Forms.ComboBox();
             this.tabVault = new System.Windows.Forms.TabPage();
             this.tblVault = new System.Windows.Forms.TableLayoutPanel();
             this.lvVault = new System.Windows.Forms.ListView();
@@ -213,7 +222,9 @@
             this.tabPicker.SuspendLayout();
             this.tblPicker.SuspendLayout();
             this.tabExecutable.SuspendLayout();
+            this.tblExecutable.SuspendLayout();
             this.grpMstscAutomation.SuspendLayout();
+            this.flpMstscExecutable.SuspendLayout();
             this.tabVault.SuspendLayout();
             this.tblVault.SuspendLayout();
             this.tabAbout.SuspendLayout();
@@ -275,16 +286,17 @@
             flpCredVaultTtl.Controls.Add(this.lblCredVaultTtl);
             flpCredVaultTtl.Controls.Add(this.numCredVaultTtl);
             flpCredVaultTtl.Location = new System.Drawing.Point(4, 83);
-            flpCredVaultTtl.Margin = new System.Windows.Forms.Padding(0, 0, 3, 0);
+            flpCredVaultTtl.Margin = new System.Windows.Forms.Padding(0, 0, 4, 0);
             flpCredVaultTtl.Name = "flpCredVaultTtl";
             flpCredVaultTtl.Size = new System.Drawing.Size(171, 22);
             flpCredVaultTtl.TabIndex = 6;
             // 
             // lblCredVaultTtl
             // 
+            this.lblCredVaultTtl.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
             this.lblCredVaultTtl.AutoSize = true;
             this.lblCredVaultTtl.BackColor = System.Drawing.Color.Transparent;
-            this.lblCredVaultTtl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblCredVaultTtl.Location = new System.Drawing.Point(0, 0);
             this.lblCredVaultTtl.Margin = new System.Windows.Forms.Padding(0, 0, 0, 3);
             this.lblCredVaultTtl.Name = "lblCredVaultTtl";
@@ -405,6 +417,7 @@
             // 
             this.grpHotkeyOptions.AutoSize = true;
             this.grpHotkeyOptions.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.grpHotkeyOptions.Controls.Add(this.chkKeePassConfirmOnClose);
             this.grpHotkeyOptions.Controls.Add(this.chkKeePassContextMenuOnScreen);
             this.grpHotkeyOptions.Controls.Add(this.chkKeePassHotkeysRegisterLast);
             this.grpHotkeyOptions.Location = new System.Drawing.Point(350, 0);
@@ -412,10 +425,23 @@
             this.grpHotkeyOptions.MinimumSize = new System.Drawing.Size(100, 0);
             this.grpHotkeyOptions.Name = "grpHotkeyOptions";
             this.grpHotkeyOptions.Padding = new System.Windows.Forms.Padding(0);
-            this.grpHotkeyOptions.Size = new System.Drawing.Size(130, 79);
+            this.grpHotkeyOptions.Size = new System.Drawing.Size(130, 101);
             this.grpHotkeyOptions.TabIndex = 2;
             this.grpHotkeyOptions.TabStop = false;
             this.grpHotkeyOptions.Text = "UI";
+            // 
+            // chkKeePassConfirmOnClose
+            // 
+            this.chkKeePassConfirmOnClose.AutoSize = true;
+            this.chkKeePassConfirmOnClose.BackColor = System.Drawing.Color.Transparent;
+            this.chkKeePassConfirmOnClose.Location = new System.Drawing.Point(6, 69);
+            this.chkKeePassConfirmOnClose.Margin = new System.Windows.Forms.Padding(0);
+            this.chkKeePassConfirmOnClose.Name = "chkKeePassConfirmOnClose";
+            this.chkKeePassConfirmOnClose.Size = new System.Drawing.Size(113, 17);
+            this.chkKeePassConfirmOnClose.TabIndex = 2;
+            this.chkKeePassConfirmOnClose.Text = "Confirm on close";
+            this.ttUI.SetToolTip(this.chkKeePassConfirmOnClose, "Confirm closing of KeePass when there are active RDP connections.");
+            this.chkKeePassConfirmOnClose.UseVisualStyleBackColor = false;
             // 
             // chkKeePassContextMenuOnScreen
             // 
@@ -434,7 +460,7 @@
             // 
             this.chkKeePassHotkeysRegisterLast.AutoSize = true;
             this.chkKeePassHotkeysRegisterLast.BackColor = System.Drawing.Color.Transparent;
-            this.chkKeePassHotkeysRegisterLast.Location = new System.Drawing.Point(6, 47);
+            this.chkKeePassHotkeysRegisterLast.Location = new System.Drawing.Point(6, 46);
             this.chkKeePassHotkeysRegisterLast.Margin = new System.Windows.Forms.Padding(0);
             this.chkKeePassHotkeysRegisterLast.Name = "chkKeePassHotkeysRegisterLast";
             this.chkKeePassHotkeysRegisterLast.Size = new System.Drawing.Size(119, 17);
@@ -782,7 +808,7 @@
             this.grpCredPickerGeneralOptions.Margin = new System.Windows.Forms.Padding(0);
             this.grpCredPickerGeneralOptions.Name = "grpCredPickerGeneralOptions";
             this.grpCredPickerGeneralOptions.Padding = new System.Windows.Forms.Padding(0);
-            this.grpCredPickerGeneralOptions.Size = new System.Drawing.Size(183, 124);
+            this.grpCredPickerGeneralOptions.Size = new System.Drawing.Size(184, 124);
             this.grpCredPickerGeneralOptions.TabIndex = 0;
             this.grpCredPickerGeneralOptions.TabStop = false;
             this.grpCredPickerGeneralOptions.Text = "General";
@@ -817,7 +843,7 @@
             // 
             this.lblCredPickWidth.AutoSize = true;
             this.lblCredPickWidth.BackColor = System.Drawing.Color.Transparent;
-            this.lblCredPickWidth.Location = new System.Drawing.Point(3, 44);
+            this.lblCredPickWidth.Location = new System.Drawing.Point(3, 45);
             this.lblCredPickWidth.Margin = new System.Windows.Forms.Padding(0);
             this.lblCredPickWidth.Name = "lblCredPickWidth";
             this.lblCredPickWidth.Size = new System.Drawing.Size(87, 13);
@@ -827,7 +853,7 @@
             // numCredPickWidth
             // 
             this.numCredPickWidth.Location = new System.Drawing.Point(95, 42);
-            this.numCredPickWidth.Margin = new System.Windows.Forms.Padding(0, 0, 3, 0);
+            this.numCredPickWidth.Margin = new System.Windows.Forms.Padding(0, 0, 4, 0);
             this.numCredPickWidth.Name = "numCredPickWidth";
             this.numCredPickWidth.Size = new System.Drawing.Size(85, 22);
             this.numCredPickWidth.TabIndex = 2;
@@ -839,7 +865,7 @@
             // numCredPickHeight
             // 
             this.numCredPickHeight.Location = new System.Drawing.Point(95, 66);
-            this.numCredPickHeight.Margin = new System.Windows.Forms.Padding(0, 0, 3, 0);
+            this.numCredPickHeight.Margin = new System.Windows.Forms.Padding(0, 0, 4, 0);
             this.numCredPickHeight.Name = "numCredPickHeight";
             this.numCredPickHeight.Size = new System.Drawing.Size(85, 22);
             this.numCredPickHeight.TabIndex = 4;
@@ -852,7 +878,7 @@
             // 
             this.lblCredPickHeight.AutoSize = true;
             this.lblCredPickHeight.BackColor = System.Drawing.Color.Transparent;
-            this.lblCredPickHeight.Location = new System.Drawing.Point(3, 68);
+            this.lblCredPickHeight.Location = new System.Drawing.Point(3, 69);
             this.lblCredPickHeight.Margin = new System.Windows.Forms.Padding(0);
             this.lblCredPickHeight.Name = "lblCredPickHeight";
             this.lblCredPickHeight.Size = new System.Drawing.Size(91, 13);
@@ -868,7 +894,7 @@
             this.grpCredPickerEntryOptions.Controls.Add(this.chkCredPickShowInGroups);
             this.grpCredPickerEntryOptions.Controls.Add(this.chkKeepassShowResolvedReferences);
             this.grpCredPickerEntryOptions.Controls.Add(this.chkCredPickLargeRows);
-            this.grpCredPickerEntryOptions.Location = new System.Drawing.Point(186, 0);
+            this.grpCredPickerEntryOptions.Location = new System.Drawing.Point(187, 0);
             this.grpCredPickerEntryOptions.Margin = new System.Windows.Forms.Padding(3, 0, 0, 0);
             this.grpCredPickerEntryOptions.Name = "grpCredPickerEntryOptions";
             this.grpCredPickerEntryOptions.Padding = new System.Windows.Forms.Padding(0);
@@ -937,7 +963,7 @@
             this.grpCredPickerTriggerOptions.BackColor = System.Drawing.Color.Transparent;
             this.grpCredPickerTriggerOptions.Controls.Add(this.lblCredPickerCustomGroup);
             this.grpCredPickerTriggerOptions.Controls.Add(this.txtCredPickerCustomGroup);
-            this.grpCredPickerTriggerOptions.Location = new System.Drawing.Point(316, 0);
+            this.grpCredPickerTriggerOptions.Location = new System.Drawing.Point(317, 0);
             this.grpCredPickerTriggerOptions.Margin = new System.Windows.Forms.Padding(3, 0, 0, 0);
             this.grpCredPickerTriggerOptions.Name = "grpCredPickerTriggerOptions";
             this.grpCredPickerTriggerOptions.Padding = new System.Windows.Forms.Padding(0, 0, 6, 0);
@@ -1216,9 +1242,9 @@
             this.chkMstscUseMultimon.Location = new System.Drawing.Point(6, 147);
             this.chkMstscUseMultimon.Margin = new System.Windows.Forms.Padding(0);
             this.chkMstscUseMultimon.Name = "chkMstscUseMultimon";
-            this.chkMstscUseMultimon.Size = new System.Drawing.Size(172, 17);
+            this.chkMstscUseMultimon.Size = new System.Drawing.Size(160, 17);
             this.chkMstscUseMultimon.TabIndex = 3;
-            this.chkMstscUseMultimon.Text = "Use all &monitors - /multimon";
+            this.chkMstscUseMultimon.Text = "Use &multimon - /multimon";
             this.ttMstscParameters.SetToolTip(this.chkMstscUseMultimon, "/multimon\r\nConfigures the remote desktop services session monitor layout to be id" +
         "entical to the\r\ncurrent client-side configuration.");
             this.chkMstscUseMultimon.UseVisualStyleBackColor = false;
@@ -1309,7 +1335,7 @@
             // 
             this.chkMstscConfirmCertificate.AutoSize = true;
             this.chkMstscConfirmCertificate.BackColor = System.Drawing.Color.Transparent;
-            this.chkMstscConfirmCertificate.Location = new System.Drawing.Point(6, 42);
+            this.chkMstscConfirmCertificate.Location = new System.Drawing.Point(6, 63);
             this.chkMstscConfirmCertificate.Margin = new System.Windows.Forms.Padding(0);
             this.chkMstscConfirmCertificate.Name = "chkMstscConfirmCertificate";
             this.chkMstscConfirmCertificate.Size = new System.Drawing.Size(180, 17);
@@ -1432,6 +1458,24 @@
             this.ttGeneric.SetToolTip(this.cmdOpenRdpKeyReset, "Reset shortcut to default");
             this.cmdOpenRdpKeyReset.UseVisualStyleBackColor = true;
             this.cmdOpenRdpKeyReset.Click += new System.EventHandler(this.cmdOpenRdpKeyReset_Click);
+            // 
+            // cmdSelfSignedCertificate
+            // 
+            this.cmdSelfSignedCertificate.AutoSize = true;
+            this.cmdSelfSignedCertificate.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.cmdSelfSignedCertificate.Enabled = false;
+            this.cmdSelfSignedCertificate.ImageKey = "Certificate";
+            this.cmdSelfSignedCertificate.ImageList = this.imageList1;
+            this.cmdSelfSignedCertificate.Location = new System.Drawing.Point(6, 142);
+            this.cmdSelfSignedCertificate.Margin = new System.Windows.Forms.Padding(0);
+            this.cmdSelfSignedCertificate.Name = "cmdSelfSignedCertificate";
+            this.cmdSelfSignedCertificate.Padding = new System.Windows.Forms.Padding(1);
+            this.cmdSelfSignedCertificate.Size = new System.Drawing.Size(24, 24);
+            this.cmdSelfSignedCertificate.TabIndex = 11;
+            this.ttMstscAutomation.SetToolTip(this.cmdSelfSignedCertificate, "Create a self-signed certificate.");
+            this.cmdSelfSignedCertificate.UseVisualStyleBackColor = true;
+            this.cmdSelfSignedCertificate.Visible = false;
+            this.cmdSelfSignedCertificate.Click += new System.EventHandler(this.cmdSelfSignedCertificate_Click);
             // 
             // lblKeePassContextMenuItems
             // 
@@ -1640,9 +1684,10 @@
             this.grpMstscParameters.Controls.Add(this.chkMstscUseAdmin);
             this.grpMstscParameters.Controls.Add(this.lblWidth);
             this.grpMstscParameters.Location = new System.Drawing.Point(3, 3);
-            this.grpMstscParameters.Margin = new System.Windows.Forms.Padding(1, 3, 0, 0);
+            this.grpMstscParameters.Margin = new System.Windows.Forms.Padding(3, 3, 0, 0);
             this.grpMstscParameters.Name = "grpMstscParameters";
             this.grpMstscParameters.Padding = new System.Windows.Forms.Padding(0);
+            this.tblExecutable.SetRowSpan(this.grpMstscParameters, 2);
             this.grpMstscParameters.Size = new System.Drawing.Size(230, 228);
             this.grpMstscParameters.TabIndex = 0;
             this.grpMstscParameters.TabStop = false;
@@ -1999,8 +2044,7 @@
             // tabExecutable
             // 
             this.tabExecutable.BackColor = System.Drawing.Color.White;
-            this.tabExecutable.Controls.Add(this.grpMstscAutomation);
-            this.tabExecutable.Controls.Add(this.grpMstscParameters);
+            this.tabExecutable.Controls.Add(this.tblExecutable);
             this.tabExecutable.ImageKey = "RemoteDesktop";
             this.tabExecutable.Location = new System.Drawing.Point(4, 23);
             this.tabExecutable.Name = "tabExecutable";
@@ -2008,20 +2052,131 @@
             this.tabExecutable.TabIndex = 1;
             this.tabExecutable.Text = "Executable";
             // 
+            // tblExecutable
+            // 
+            this.tblExecutable.AutoSize = true;
+            this.tblExecutable.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.tblExecutable.ColumnCount = 3;
+            this.tblExecutable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.tblExecutable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.tblExecutable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 148F));
+            this.tblExecutable.Controls.Add(this.grpMstscParameters, 0, 0);
+            this.tblExecutable.Controls.Add(this.grpMstscAutomation, 1, 0);
+            this.tblExecutable.Controls.Add(this.flpMstscExecutable, 1, 1);
+            this.tblExecutable.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tblExecutable.Location = new System.Drawing.Point(0, 0);
+            this.tblExecutable.Name = "tblExecutable";
+            this.tblExecutable.RowCount = 3;
+            this.tblExecutable.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tblExecutable.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tblExecutable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 1F));
+            this.tblExecutable.Size = new System.Drawing.Size(570, 440);
+            this.tblExecutable.TabIndex = 4;
+            // 
             // grpMstscAutomation
             // 
             this.grpMstscAutomation.AutoSize = true;
             this.grpMstscAutomation.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.grpMstscAutomation.Controls.Add(this.chkMstscCleanupRegistry);
+            this.grpMstscAutomation.Controls.Add(this.cmdSelfSignedCertificate);
+            this.grpMstscAutomation.Controls.Add(this.txtMstscSignRdpFiles);
+            this.grpMstscAutomation.Controls.Add(this.chkMstscSignRdpFiles);
             this.grpMstscAutomation.Controls.Add(this.chkMstscConfirmCertificate);
             this.grpMstscAutomation.Controls.Add(this.chkMstscReplaceTitle);
             this.grpMstscAutomation.Location = new System.Drawing.Point(236, 3);
             this.grpMstscAutomation.Margin = new System.Windows.Forms.Padding(3, 3, 0, 0);
             this.grpMstscAutomation.Name = "grpMstscAutomation";
             this.grpMstscAutomation.Padding = new System.Windows.Forms.Padding(0);
-            this.grpMstscAutomation.Size = new System.Drawing.Size(186, 74);
+            this.grpMstscAutomation.Size = new System.Drawing.Size(186, 181);
             this.grpMstscAutomation.TabIndex = 1;
             this.grpMstscAutomation.TabStop = false;
             this.grpMstscAutomation.Text = "mstsc.exe automation";
+            this.grpMstscAutomation.SizeChanged += new System.EventHandler(this.grpMstscAutomation_SizeChanged);
+            // 
+            // chkMstscCleanupRegistry
+            // 
+            this.chkMstscCleanupRegistry.AutoSize = true;
+            this.chkMstscCleanupRegistry.BackColor = System.Drawing.Color.Transparent;
+            this.chkMstscCleanupRegistry.Location = new System.Drawing.Point(6, 42);
+            this.chkMstscCleanupRegistry.Margin = new System.Windows.Forms.Padding(0);
+            this.chkMstscCleanupRegistry.Name = "chkMstscCleanupRegistry";
+            this.chkMstscCleanupRegistry.Size = new System.Drawing.Size(134, 17);
+            this.chkMstscCleanupRegistry.TabIndex = 12;
+            this.chkMstscCleanupRegistry.Text = "Cleanup registry hint";
+            this.ttMstscAutomation.SetToolTip(this.chkMstscCleanupRegistry, "Remove username hint from registry before and after connecting.");
+            this.chkMstscCleanupRegistry.UseVisualStyleBackColor = false;
+            // 
+            // txtMstscSignRdpFiles
+            // 
+            this.txtMstscSignRdpFiles.Cursor = System.Windows.Forms.Cursors.Default;
+            this.txtMstscSignRdpFiles.Enabled = false;
+            this.txtMstscSignRdpFiles.Location = new System.Drawing.Point(6, 104);
+            this.txtMstscSignRdpFiles.Margin = new System.Windows.Forms.Padding(0);
+            this.txtMstscSignRdpFiles.Multiline = true;
+            this.txtMstscSignRdpFiles.Name = "txtMstscSignRdpFiles";
+            this.txtMstscSignRdpFiles.ReadOnly = true;
+            this.txtMstscSignRdpFiles.ShortcutsEnabled = false;
+            this.txtMstscSignRdpFiles.Size = new System.Drawing.Size(174, 36);
+            this.txtMstscSignRdpFiles.TabIndex = 10;
+            this.txtMstscSignRdpFiles.Text = "Click here to select a certificate from the user store.";
+            this.txtMstscSignRdpFiles.Visible = false;
+            this.txtMstscSignRdpFiles.Click += new System.EventHandler(this.txtMstscSignRdpFiles_Click);
+            this.txtMstscSignRdpFiles.TextChanged += new System.EventHandler(this.txtMstscSignRdpFiles_TextChanged);
+            this.txtMstscSignRdpFiles.Enter += new System.EventHandler(this.txtMstscSignRdpFiles_Enter);
+            this.txtMstscSignRdpFiles.Leave += new System.EventHandler(this.txtMstscSignRdpFiles_Leave);
+            this.txtMstscSignRdpFiles.MouseEnter += new System.EventHandler(this.txtMstscSignRdpFiles_MouseEnter);
+            this.txtMstscSignRdpFiles.MouseLeave += new System.EventHandler(this.txtMstscSignRdpFiles_MouseLeave);
+            this.txtMstscSignRdpFiles.MouseMove += new System.Windows.Forms.MouseEventHandler(this.txtMstscSignRdpFiles_MouseMove);
+            // 
+            // chkMstscSignRdpFiles
+            // 
+            this.chkMstscSignRdpFiles.AutoSize = true;
+            this.chkMstscSignRdpFiles.BackColor = System.Drawing.Color.Transparent;
+            this.chkMstscSignRdpFiles.Location = new System.Drawing.Point(6, 83);
+            this.chkMstscSignRdpFiles.Margin = new System.Windows.Forms.Padding(0);
+            this.chkMstscSignRdpFiles.Name = "chkMstscSignRdpFiles";
+            this.chkMstscSignRdpFiles.Size = new System.Drawing.Size(97, 17);
+            this.chkMstscSignRdpFiles.TabIndex = 9;
+            this.chkMstscSignRdpFiles.Text = "Sign .rdp files";
+            this.ttMstscAutomation.SetToolTip(this.chkMstscSignRdpFiles, "Use certificate from store to sign .rdp files.");
+            this.chkMstscSignRdpFiles.UseVisualStyleBackColor = false;
+            this.chkMstscSignRdpFiles.CheckedChanged += new System.EventHandler(this.chkMstscSignRdpFiles_CheckedChanged);
+            // 
+            // flpMstscExecutable
+            // 
+            this.flpMstscExecutable.AutoSize = true;
+            this.flpMstscExecutable.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.flpMstscExecutable.Controls.Add(this.lblMstscExecutable);
+            this.flpMstscExecutable.Controls.Add(this.cbMstscExecutable);
+            this.flpMstscExecutable.Dock = System.Windows.Forms.DockStyle.Top;
+            this.flpMstscExecutable.Location = new System.Drawing.Point(233, 186);
+            this.flpMstscExecutable.Margin = new System.Windows.Forms.Padding(0, 2, 0, 0);
+            this.flpMstscExecutable.Name = "flpMstscExecutable";
+            this.flpMstscExecutable.Padding = new System.Windows.Forms.Padding(0, 0, 0, 6);
+            this.flpMstscExecutable.Size = new System.Drawing.Size(189, 23);
+            this.flpMstscExecutable.TabIndex = 2;
+            // 
+            // lblMstscExecutable
+            // 
+            this.lblMstscExecutable.AutoSize = true;
+            this.lblMstscExecutable.Location = new System.Drawing.Point(0, 4);
+            this.lblMstscExecutable.Margin = new System.Windows.Forms.Padding(0, 4, 0, 0);
+            this.lblMstscExecutable.Name = "lblMstscExecutable";
+            this.lblMstscExecutable.Size = new System.Drawing.Size(62, 13);
+            this.lblMstscExecutable.TabIndex = 0;
+            this.lblMstscExecutable.Text = "Executable";
+            this.lblMstscExecutable.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // cbMstscExecutable
+            // 
+            this.cbMstscExecutable.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cbMstscExecutable.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbMstscExecutable.FormattingEnabled = true;
+            this.cbMstscExecutable.Location = new System.Drawing.Point(62, 0);
+            this.cbMstscExecutable.Margin = new System.Windows.Forms.Padding(0);
+            this.cbMstscExecutable.Name = "cbMstscExecutable";
+            this.cbMstscExecutable.Size = new System.Drawing.Size(127, 21);
+            this.cbMstscExecutable.TabIndex = 1;
             // 
             // tabVault
             // 
@@ -2204,7 +2359,7 @@
             this.MaximizeBox = false;
             this.MaximumSize = new System.Drawing.Size(1500, 900);
             this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(500, 445);
+            this.MinimumSize = new System.Drawing.Size(520, 445);
             this.Name = "KprOptionsForm";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
@@ -2272,8 +2427,12 @@
             this.tblPicker.PerformLayout();
             this.tabExecutable.ResumeLayout(false);
             this.tabExecutable.PerformLayout();
+            this.tblExecutable.ResumeLayout(false);
+            this.tblExecutable.PerformLayout();
             this.grpMstscAutomation.ResumeLayout(false);
             this.grpMstscAutomation.PerformLayout();
+            this.flpMstscExecutable.ResumeLayout(false);
+            this.flpMstscExecutable.PerformLayout();
             this.tabVault.ResumeLayout(false);
             this.tblVault.ResumeLayout(false);
             this.tblVault.PerformLayout();
@@ -2412,5 +2571,14 @@
         private KprToolTip ttMstscAutomation;
         private System.Windows.Forms.CheckBox chkKeePassAlwaysConfirm;
         private System.Windows.Forms.CheckBox chkKeePassContextMenuOnScreen;
+        private System.Windows.Forms.TextBox txtMstscSignRdpFiles;
+        private System.Windows.Forms.CheckBox chkMstscSignRdpFiles;
+        private System.Windows.Forms.Button cmdSelfSignedCertificate;
+        private System.Windows.Forms.ComboBox cbMstscExecutable;
+        private System.Windows.Forms.Label lblMstscExecutable;
+        private System.Windows.Forms.TableLayoutPanel tblExecutable;
+        private System.Windows.Forms.FlowLayoutPanel flpMstscExecutable;
+        private System.Windows.Forms.CheckBox chkKeePassConfirmOnClose;
+        private System.Windows.Forms.CheckBox chkMstscCleanupRegistry;
     }
 }

@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace KeePassRDP
 {
@@ -52,7 +53,7 @@ namespace KeePassRDP
             _config = config;
             _credentialPickerForm = new Lazy<KprCredentialPickerForm>(
                 () => new KprCredentialPickerForm(_config, _host),
-                System.Threading.LazyThreadSafetyMode.ExecutionAndPublication);
+                LazyThreadSafetyMode.ExecutionAndPublication);
             _groupUUIDs = new HashSet<PwUuid>();
             _excludedGroupUUIDs = new HashSet<PwUuid>();
             _regexBuilder = new StringBuilder();

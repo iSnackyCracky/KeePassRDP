@@ -123,7 +123,7 @@ namespace KeePassRDP
                         ncred.ZeroMemory();
                 }
             }
-            catch (Win32Exception)
+            catch (Win32Exception) // Do not fail when vault is empty.
             {
             }
 

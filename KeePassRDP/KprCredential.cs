@@ -25,6 +25,7 @@ using KeePassRDP.Utils;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Security;
 
 namespace KeePassRDP
 {
@@ -41,10 +42,10 @@ namespace KeePassRDP
 
         private TimeSpan _increase;
 
-        internal KprCredential(ProtectedString username, ProtectedString password, string hostname, NativeCredentials.CRED_TYPE type, int ttl) : base()
+        internal KprCredential(ProtectedString username, SecureString password, string targetName, NativeCredentials.CRED_TYPE type, int ttl) : base()
         {
-            if (string.IsNullOrEmpty(hostname))
-                throw new ArgumentNullException("hostname");
+            if (string.IsNullOrEmpty(targetName))
+                throw new ArgumentNullException("targetName");
 
             _increase = TimeSpan.Zero;
 
@@ -52,9 +53,10 @@ namespace KeePassRDP
             ValidUntil = ttl > 0 ? DateTimeOffset.UtcNow + TimeSpan.FromSeconds(ttl) : DateTimeOffset.MaxValue;
 
             Type = type;
-            TargetName = "TERMSRV/" + hostname;
+            TargetName = targetName;
             UserName = username.IsEmpty ? string.Empty : new string(username.ReadChars());
-            CredentialBlob = password.IsEmpty ? string.Empty : new string(password.ReadChars());
+            //CredentialBlob = password.IsEmpty ? string.Empty : new string(password.ReadChars());
+            CredentialBlob = password.Copy();
             Persist = NativeCredentials.CRED_PERSIST.SESSION;
             Attributes = new Dictionary<string, object>
             {
@@ -131,7 +133,7 @@ namespace KeePassRDP
             catch (Win32Exception ex)
             {
                 VistaTaskDialog.ShowMessageBoxEx(
-                    ex.Message,
+                    string.Format(KprResourceManager.Instance["Failed to store credentials in vault: {0}"], ex.Message),
                     null,
                     Util.KeePassRDP + " - " + KPRes.Warning,
                     VtdIcon.Warning,
@@ -165,6 +167,9 @@ namespace KeePassRDP
             ValidUntil = DateTimeOffset.MinValue;
             ResetTTL();
             ZeroMemory();
+
+            if (CredentialBlob != null)
+                CredentialBlob.Dispose();
         }
     }
 

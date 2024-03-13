@@ -162,6 +162,20 @@ namespace KeePassRDP
             }
         }
 
+        private bool _cachedMstscCleanupRegistry = false;
+        private bool _cachedMstscCleanupRegistryValue = false;
+        public bool MstscCleanupRegistry
+        {
+            get
+            {
+                return BoolGetter(MstscCleanupRegistryKey, ref _cachedMstscCleanupRegistry, ref _cachedMstscCleanupRegistryValue);
+            }
+            set
+            {
+                BoolSetter(MstscCleanupRegistryKey, value, ref _cachedMstscCleanupRegistry, ref _cachedMstscCleanupRegistryValue);
+            }
+        }
+
         private bool _cachedMstscConfirmCertificate = false;
         private bool _cachedMstscConfirmCertificateValue = false;
         public bool MstscConfirmCertificate
@@ -173,6 +187,34 @@ namespace KeePassRDP
             set
             {
                 BoolSetter(MstscConfirmCertificateKey, value, ref _cachedMstscConfirmCertificate, ref _cachedMstscConfirmCertificateValue);
+            }
+        }
+
+        private bool _cachedMstscSignRdpFiles = false;
+        private string _cachedMstscSignRdpFilesValue = string.Empty;
+        public string MstscSignRdpFiles
+        {
+            get
+            {
+                return StringGetter(MstscSignRdpFilesKey, ref _cachedMstscSignRdpFiles, ref _cachedMstscSignRdpFilesValue, string.Empty);
+            }
+            set
+            {
+                StringSetter(MstscSignRdpFilesKey, value, ref _cachedMstscSignRdpFiles, ref _cachedMstscSignRdpFilesValue, string.Empty);
+            }
+        }
+
+        private bool _cachedMstscExecutable = false;
+        private string _cachedMstscExecutableValue = string.Empty;
+        public string MstscExecutable
+        {
+            get
+            {
+                return StringGetter(MstscExecutableKey, ref _cachedMstscExecutable, ref _cachedMstscExecutableValue, string.Empty);
+            }
+            set
+            {
+                StringSetter(MstscExecutableKey, value, ref _cachedMstscExecutable, ref _cachedMstscExecutableValue, string.Empty);
             }
         }
     }

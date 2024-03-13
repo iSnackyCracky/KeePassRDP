@@ -20,17 +20,19 @@
 
 using KeePass;
 using KeePass.UI;
+using KeePassRDP.Commands;
 using KeePassRDP.Resources;
 using KeePassRDP.Utils;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows.Forms;
+using Timer = System.Windows.Forms.Timer;
 
 namespace KeePassRDP
 {
@@ -41,8 +43,8 @@ namespace KeePassRDP
         private readonly Font _pwFont;
         private readonly Lazy<Image> _largeIcon;
         private readonly Lazy<Image> _largestIcon;
-        private readonly Timer _txtCredPickerCustomGroupTooltipTimer;
-        private readonly Lazy<Size> _txtCredPickerCustomGroupCursorSize;
+        private readonly Timer _tooltipTimer;
+        private readonly Lazy<Size> _cursorSize;
 
         private decimal? _oldNumValue;
         private Point? _lastTooltipMousePosition;
@@ -62,27 +64,27 @@ namespace KeePassRDP
             {
                 using (var icon = IconUtil.ExtractIcon(KeePassRDPExt.MstscPath, 0, DpiUtil.ScaleIntY(48)))
                     return icon.ToBitmap();
-            }, System.Threading.LazyThreadSafetyMode.ExecutionAndPublication);
+            }, LazyThreadSafetyMode.ExecutionAndPublication);
 
             _largestIcon = new Lazy<Image>(() =>
             {
                 using (var icon = IconUtil.ExtractIcon(KeePassRDPExt.MstscPath, 0, 256))
                     return icon.ToBitmap();
-            }, System.Threading.LazyThreadSafetyMode.ExecutionAndPublication);
+            }, LazyThreadSafetyMode.ExecutionAndPublication);
 
-            _txtCredPickerCustomGroupTooltipTimer = new Timer
+            _tooltipTimer = new Timer
             {
                 Interval = 500,
                 Enabled = false,
             };
 
-            _txtCredPickerCustomGroupCursorSize = new Lazy<Size>(() =>
+            _cursorSize = new Lazy<Size>(() =>
             {
                 Size size;// = Util.GetIconSize(Cursor, Cursor.Handle);
                 if (CursorUtil.GetIconSize(out size))
                     return size;
                 return Size.Empty;
-            }, System.Threading.LazyThreadSafetyMode.ExecutionAndPublication);
+            }, LazyThreadSafetyMode.ExecutionAndPublication);
 
             _oldNumValue = null;
             _lastTooltipMousePosition = null;
@@ -101,7 +103,7 @@ namespace KeePassRDP
             switch (Resources.Resources.Culture.TwoLetterISOLanguageName)
             {
                 case "de":
-                    MinimumSize = new Size(MinimumSize.Width + 50, MinimumSize.Height);
+                    MinimumSize = new Size(Math.Min(MinimumSize.Width + 74, Width), MinimumSize.Height);
                     break;
             }
 
@@ -118,6 +120,7 @@ namespace KeePassRDP
             Util.SetDoubleBuffered(tblKeePassToolbarItems);
             Util.SetDoubleBuffered(tblVisibilitySettings);
             Util.SetDoubleBuffered(tblPicker);
+            Util.SetDoubleBuffered(tblExecutable);
             Util.SetDoubleBuffered(tblVault);
             Util.SetDoubleBuffered(tblAbout);
             Util.SetDoubleBuffered(lstKeePassContextMenuItems);
@@ -137,18 +140,32 @@ namespace KeePassRDP
 
             if (Program.Config.UI.StandardFont != null)
             {
-                // Never dispose cached KeePass font.
-                var sf = Program.Config.UI.StandardFont.ToFont();
-                _font = new Font(sf.FontFamily, lvVault.Font.Size);
+                try
+                {
+                    // Never dispose cached KeePass font.
+                    var sf = Program.Config.UI.StandardFont.ToFont();
+                    _font = new Font(sf.FontFamily, lvVault.Font.Size, sf.Style, sf.Unit);
+                }
+                catch (ArgumentException) // Do not fail for broken/unsupported fonts.
+                {
+                    _font = lvVault.Font;
+                }
             }
             else
                 _font = lvVault.Font;
 
             if (Program.Config.UI.PasswordFont != null)
             {
-                // Never dispose cached KeePass font.
-                var sf = Program.Config.UI.PasswordFont.ToFont();
-                _pwFont = new Font(sf.FontFamily, lvVault.Font.Size);
+                try
+                {
+                    // Never dispose cached KeePass font.
+                    var sf = Program.Config.UI.PasswordFont.ToFont();
+                    _pwFont = new Font(sf.FontFamily, lvVault.Font.Size, sf.Style, sf.Unit);
+                }
+                catch (ArgumentException) // Do not fail for broken/unsupported fonts.
+                {
+                    _pwFont = _font;
+                }
             }
             else
                 _pwFont = _font;
@@ -247,6 +264,12 @@ namespace KeePassRDP
                     oldFont.Dispose();
             }
 
+            if (_tabExecutableInitialized)
+            {
+                if (_x509Chain.IsValueCreated)
+                    _x509Chain.Value.Reset();
+            }
+
             CleanCredentials();
 
             MessageFilter.ListBoxMouseWheelHandler.Enable(false);
@@ -279,8 +302,11 @@ namespace KeePassRDP
                 {
                     if (!page.Controls.Contains(tblIntegration))
                         page.Controls.Add(tblIntegration);
-                    tblKeyboardSettings.ResumeLayout(page == tcKprOptionsForm.SelectedTab);
-                    tblVisibilitySettings.ResumeLayout(page == tcKprOptionsForm.SelectedTab);
+                    if (page == tcKprOptionsForm.SelectedTab)
+                    {
+                        tblKeyboardSettings.ResumeLayout(true);
+                        tblVisibilitySettings.ResumeLayout(true);
+                    }
                 }
                 else if (page == tabPicker)
                 {
@@ -289,10 +315,8 @@ namespace KeePassRDP
                 }
                 else if (page == tabExecutable)
                 {
-                    if (!page.Controls.Contains(grpMstscParameters))
-                        page.Controls.Add(grpMstscParameters);
-                    if (!page.Controls.Contains(grpMstscAutomation))
-                        page.Controls.Add(grpMstscAutomation);
+                    if (!page.Controls.Contains(tblExecutable))
+                        page.Controls.Add(tblExecutable);
                 }
                 else if (page == tabVault)
                 {
@@ -304,7 +328,8 @@ namespace KeePassRDP
                     if (!page.Controls.Contains(tblAbout))
                         page.Controls.Add(tblAbout);
                 }
-                page.ResumeLayout(false);
+                if (page != tcKprOptionsForm.SelectedTab)
+                    page.ResumeLayout(false);
             }
         }
 
@@ -336,251 +361,15 @@ namespace KeePassRDP
             if (_tabVaultInitialized)
                 CleanCredentials();
 
-            // Set width and height fields maximum to (primary) screen resolution.
-
             if (e.TabPage == tabIntegration)
-            {
-                if (!_tabIntegrationInitialized)
-                {
-                    _tabIntegrationInitialized = true;
-
-                    tabIntegration.UseWaitCursor = true;
-                    tabIntegration.SuspendLayout();
-
-                    KprOptionsForm_ResizeBegin(null, EventArgs.Empty);
-
-                    var invoke = BeginInvoke(new Action(() =>
-                    {
-                        KprResourceManager.Instance.TranslateMany(
-                            grpCredentialOptions,
-                            grpEntryOptions,
-                            grpHotkeyOptions,
-                            lblCredVaultTtl,
-                            lblKeyboardSettings,
-                            lblShortcut,
-                            lblOpenRdpShortcut,
-                            lblOpenRdpAdminShortcut,
-                            lblOpenRdpNoCredShortcut,
-                            lblOpenRdpNoCredAdminShortcut,
-                            lblVisibilitySettings,
-                            lblKeePassContextMenuItems,
-                            lblKeePassToolbarItems,
-                            chkCredVaultUseWindows,
-                            chkCredVaultOverwriteExisting,
-                            chkCredVaultRemoveOnExit,
-                            chkCredVaultAdaptiveTtl,
-                            chkKeePassConnectToAll,
-                            chkKeePassAlwaysConfirm,
-                            chkKeePassContextMenuOnScreen,
-                            chkKeePassHotkeysRegisterLast
-                        );
-
-                        // Set form elements to match previously saved options.
-                        chkCredVaultUseWindows.Checked = _config.CredVaultUseWindows;
-                        chkCredVaultOverwriteExisting.Checked = _config.CredVaultOverwriteExisting;
-                        chkCredVaultRemoveOnExit.Checked = _config.CredVaultRemoveOnExit;
-                        chkCredVaultAdaptiveTtl.Checked = _config.CredVaultAdaptiveTtl;
-
-                        numCredVaultTtl.Value = Math.Max(Math.Min(_config.CredVaultTtl, numCredVaultTtl.Maximum), numCredVaultTtl.Minimum);
-                        _config.CredVaultTtl = (int)numCredVaultTtl.Value;
-
-                        chkKeePassConnectToAll.Checked = _config.KeePassConnectToAll;
-                        chkKeePassAlwaysConfirm.Checked = _config.KeePassAlwaysConfirm;
-                        chkKeePassContextMenuOnScreen.Checked = _config.KeePassContextMenuOnScreen;
-                        chkKeePassHotkeysRegisterLast.Checked = _config.KeePassHotkeysRegisterLast;
-
-                        txtOpenRdpKey.Hotkey = _config.ShortcutOpenRdpConnection;
-                        txtOpenRdpAdminKey.Hotkey = _config.ShortcutOpenRdpConnectionAdmin;
-                        txtOpenRdpNoCredKey.Hotkey = _config.ShortcutOpenRdpConnectionNoCred;
-                        txtOpenRdpNoCredAdminKey.Hotkey = _config.ShortcutOpenRdpConnectionNoCredAdmin;
-
-                        var keePassContextMenuItems = new BindingList<KeyValuePair<KprMenu.MenuItem, string>>();
-                        var keePassToolbarItems = new BindingList<KeyValuePair<KprMenu.MenuItem, string>>();
-                        var keePassContextMenuItemsAvailable = new BindingList<KeyValuePair<KprMenu.MenuItem, string>>();
-                        var keePassToolbarItemsAvailable = new BindingList<KeyValuePair<KprMenu.MenuItem, string>>();
-
-                        foreach (var menu in KprMenu.MenuItemValues)
-                        {
-                            var text = KprMenu.GetText(menu);
-
-                            if (_config.KeePassContextMenuItems.HasFlag(menu))
-                                keePassContextMenuItems.Add(new KeyValuePair<KprMenu.MenuItem, string>(menu, text));
-                            else
-                                keePassContextMenuItemsAvailable.Add(new KeyValuePair<KprMenu.MenuItem, string>(menu, text));
-
-                            if (_config.KeePassToolbarItems.HasFlag(menu))
-                                keePassToolbarItems.Add(new KeyValuePair<KprMenu.MenuItem, string>(menu, text));
-                            else
-                                keePassToolbarItemsAvailable.Add(new KeyValuePair<KprMenu.MenuItem, string>(menu, text));
-                        }
-
-                        lstKeePassContextMenuItems.DataSource = keePassContextMenuItems;
-                        lstKeePassContextMenuItemsAvailable.DataSource = keePassContextMenuItemsAvailable;
-                        lstKeePassToolbarItems.DataSource = keePassToolbarItems;
-                        lstKeePassToolbarItemsAvailable.DataSource = keePassToolbarItemsAvailable;
-
-                        tabIntegration.ResumeLayout(false);
-                        tabIntegration.UseWaitCursor = false;
-
-                        KprOptionsForm_ResizeEnd(null, EventArgs.Empty);
-                    }));
-
-                    if (!invoke.IsCompleted)
-                        Task.Factory.FromAsync(
-                            invoke,
-                            endinvoke => EndInvoke(endinvoke),
-                            TaskCreationOptions.AttachedToParent,
-                            TaskScheduler.Default);
-                    else
-                        EndInvoke(invoke);
-                }
-                else
-                {
-                    if (tabIntegration.VerticalScroll.Visible)
-                        tabIntegration.AutoScrollPosition = new Point(0, 0);
-                }
-            }
+                Init_TabIntegration();
             else if (e.TabPage == tabPicker)
-            {
-                if (!_tabPickerInitialized)
-                {
-                    _tabPickerInitialized = true;
-
-                    tabPicker.UseWaitCursor = true;
-                    tabPicker.SuspendLayout();
-
-                    KprResourceManager.Instance.TranslateMany(
-                        grpCredPickerGeneralOptions,
-                        grpCredPickerEntryOptions,
-                        grpCredPickerTriggerOptions,
-                        lblCredPickWidth,
-                        lblCredPickHeight,
-                        lblCredPickerCustomGroup,
-                        lblRegexPrefixes,
-                        lblRegexPostfixes,
-                        chkCredPickRememberSize,
-                        chkCredPickRememberSortOrder,
-                        chkKeepassShowResolvedReferences,
-                        chkCredPickShowInGroups,
-                        chkCredPickIncludeSelected,
-                        chkCredPickLargeRows
-                    );
-
-                    UIUtil.SetCueBanner(txtCredPickerCustomGroup, Util.DefaultTriggerGroup);
-
-                    // Set form elements to match previously saved options.
-                    chkKeepassShowResolvedReferences.Checked = _config.KeePassShowResolvedReferences;
-
-                    chkCredPickRememberSize.Checked = _config.CredPickerRememberSize;
-                    chkCredPickRememberSortOrder.Checked = _config.CredPickerRememberSortOrder;
-                    txtCredPickerCustomGroup.Text = string.IsNullOrWhiteSpace(_config.CredPickerCustomGroup) || _config.CredPickerCustomGroup == Util.DefaultTriggerGroup ?
-                        string.Empty :
-                        _config.CredPickerCustomGroup;
-                    chkCredPickShowInGroups.Checked = _config.CredPickerShowInGroups;
-                    chkCredPickIncludeSelected.Checked = _config.CredPickerIncludeSelected;
-                    chkCredPickLargeRows.Checked = _config.CredPickerLargeRows;
-
-                    numCredPickWidth.Maximum = Screen.PrimaryScreen.Bounds.Width;
-                    numCredPickWidth.Value = Math.Max(Math.Min(_config.CredPickerWidth, numCredPickWidth.Maximum), numCredPickWidth.Minimum);
-                    _config.CredPickerWidth = (int)numCredPickWidth.Value;
-
-                    numCredPickHeight.Maximum = Screen.PrimaryScreen.Bounds.Height;
-                    numCredPickHeight.Value = Math.Max(Math.Min(_config.CredPickerHeight, numCredPickHeight.Maximum), numCredPickHeight.Minimum);
-                    _config.CredPickerHeight = (int)numCredPickHeight.Value;
-
-                    if (!string.IsNullOrWhiteSpace(_config.CredPickerRegExPre))
-                        lstRegExPre.DataSource = new BindingList<string>(_config.CredPickerRegExPre.Split('|').ToList());
-                    else
-                        lstRegExPre.DataSource = new BindingList<string>();
-                    if (!string.IsNullOrWhiteSpace(_config.CredPickerRegExPost))
-                        lstRegExPost.DataSource = new BindingList<string>(_config.CredPickerRegExPost.Split('|').ToList());
-                    else
-                        lstRegExPost.DataSource = new BindingList<string>();
-
-                    tabPicker.ResumeLayout(false);
-                    tabPicker.UseWaitCursor = false;
-                }
-            }
+                Init_TabPicker();
             else if (e.TabPage == tabExecutable)
-            {
-                if (!_tabExecutableInitialized)
-                {
-                    _tabExecutableInitialized = true;
-
-                    tabExecutable.UseWaitCursor = true;
-                    tabExecutable.SuspendLayout();
-
-                    KprResourceManager.Instance.TranslateMany(
-                        grpMstscParameters,
-                        grpMstscAutomation,
-                        lblWidth,
-                        lblHeight,
-                        chkMstscReplaceTitle,
-                        chkMstscConfirmCertificate
-                    );
-
-                    // Set form elements to match previously saved options.
-                    chkMstscUseFullscreen.Checked = _config.MstscUseFullscreen;
-                    chkMstscUsePublic.Checked = _config.MstscUsePublic;
-                    chkMstscUseAdmin.Checked = _config.MstscUseAdmin;
-                    chkMstscUseRestrictedAdmin.Checked = _config.MstscUseRestrictedAdmin;
-                    chkMstscUseRemoteGuard.Checked = _config.MstscUseRemoteGuard;
-                    chkMstscUseSpan.Checked = _config.MstscUseSpan;
-                    chkMstscUseMultimon.Checked = _config.MstscUseMultimon;
-                    chkMstscReplaceTitle.Checked = _config.MstscReplaceTitle;
-                    chkMstscConfirmCertificate.Checked = _config.MstscConfirmCertificate;
-
-                    numMstscWidth.Maximum = Screen.PrimaryScreen.Bounds.Width;
-                    numMstscWidth.Value = Math.Max(Math.Min(_config.MstscWidth, numMstscWidth.Maximum), numMstscWidth.Minimum);
-                    _config.MstscWidth = (int)numMstscWidth.Value;
-
-                    numMstscHeight.Maximum = Screen.PrimaryScreen.Bounds.Height;
-                    numMstscHeight.Value = Math.Max(Math.Min(_config.MstscHeight, numMstscHeight.Maximum), numMstscHeight.Minimum);
-                    _config.MstscHeight = (int)numMstscHeight.Value;
-
-                    chkMstsc_CheckedChanged(null, EventArgs.Empty);
-
-                    grpMstscParameters.Enabled = File.Exists(KeePassRDPExt.MstscPath);
-
-                    tabExecutable.ResumeLayout(false);
-                    tabExecutable.UseWaitCursor = false;
-                }
-            }
+                Init_TabExecutable();
             else if (e.TabPage == tabVault)
             {
-                if (!_tabVaultInitialized)
-                {
-                    _tabVaultInitialized = true;
-
-                    tabVault.UseWaitCursor = true;
-                    tabVault.SuspendLayout();
-                    lvVault.SuspendLayout();
-
-                    lvVault.Font = new Font(_font.FontFamily, _font.Size * 2f);
-                    lvVault.Columns.AddRange(new[]
-                    {
-                        new ColumnHeader { Text = "TargetName" },
-                        new ColumnHeader { Text = "TargetAlias" },
-                        new ColumnHeader { Text = "UserName" },
-                        new ColumnHeader { Text = "CredentialBlob" },
-                        new ColumnHeader { Text = "Type" },
-                        new ColumnHeader { Text = "Persist" },
-                        new ColumnHeader { Text = "Flags" },
-                        new ColumnHeader { Text = "Comment" },
-                        new ColumnHeader { Text = "LastWritten" },
-                        new ColumnHeader { Text = "Attributes" }
-                    });
-                    lvVault.Invalidated += lvVault_Invalidated;
-
-                    KprResourceManager.Instance.TranslateMany(
-                        chkSavedCredsShowAll
-                    );
-
-                    tabVault.ResumeLayout(false);
-                    tabVault.UseWaitCursor = false;
-                    lvVault.ResumeLayout(false);
-                }
-
+                Init_TabVault();
                 cmdRefreshCredentials_Click(null, EventArgs.Empty);
             }
             else if (e.TabPage == tabAbout)
@@ -597,6 +386,9 @@ namespace KeePassRDP
                         llWebsite,
                         llLicense
                     );
+
+                    ttGeneric.SetToolTip(llWebsite, Util.WebsiteUrl);
+                    ttGeneric.SetToolTip(llLicense, Util.LicenseUrl);
 
                     lblVersionText.Text = KprVersion.Version + " (" + Resources.Resources.Culture.TwoLetterISOLanguageName + ")";
                     lblRevisionText.Text = KprVersion.Revision;
@@ -630,6 +422,7 @@ namespace KeePassRDP
                 _config.KeePassAlwaysConfirm = chkKeePassAlwaysConfirm.Checked;
                 _config.KeePassContextMenuOnScreen = chkKeePassContextMenuOnScreen.Checked;
                 _config.KeePassHotkeysRegisterLast = chkKeePassHotkeysRegisterLast.Checked;
+                _config.KeePassConfirmOnClose = chkKeePassConfirmOnClose.Checked;
 
                 _config.ShortcutOpenRdpConnection = txtOpenRdpKey.Hotkey;
                 _config.ShortcutOpenRdpConnectionAdmin = txtOpenRdpAdminKey.Hotkey;
@@ -674,7 +467,62 @@ namespace KeePassRDP
                 _config.MstscWidth = (int)numMstscWidth.Value;
                 _config.MstscHeight = (int)numMstscHeight.Value;
                 _config.MstscReplaceTitle = chkMstscReplaceTitle.Checked;
+                _config.MstscCleanupRegistry = chkMstscCleanupRegistry.Checked;
                 _config.MstscConfirmCertificate = chkMstscConfirmCertificate.Checked;
+
+                if (!chkMstscSignRdpFiles.Checked || txtMstscSignRdpFiles.Text == KprResourceManager.Instance["Click here to select a certificate from the user store."])
+                {
+                    txtMstscSignRdpFiles.TextChanged -= txtMstscSignRdpFiles_TextChanged;
+                    txtMstscSignRdpFiles.Text = string.Empty;
+                }
+
+                if (!string.IsNullOrWhiteSpace(_config.MstscSignRdpFiles) &&
+                    (!chkMstscSignRdpFiles.Checked || string.IsNullOrWhiteSpace(txtMstscSignRdpFiles.Text) ||
+                    !string.Equals(_config.MstscSignRdpFiles, txtMstscSignRdpFiles.Text, StringComparison.OrdinalIgnoreCase)))
+                {
+                    var thumbprint = string.Format("{0}00", _config.MstscSignRdpFiles);
+                    try
+                    {
+                        using (var tsc = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Terminal Server Client", true))
+                        using (var pbl = tsc.CreateSubKey("PublisherBypassList"))
+                            if (pbl.GetValue(thumbprint, 0) as int? == 0xff)
+                                pbl.DeleteValue(thumbprint);
+                    }
+                    catch
+                    {
+                    }
+                }
+                if (chkMstscSignRdpFiles.Checked && !string.IsNullOrWhiteSpace(txtMstscSignRdpFiles.Text))
+                {
+                    /*if (string.IsNullOrWhiteSpace(_config.MstscSignRdpFiles) ||
+                        !string.Equals(_config.MstscSignRdpFiles, txtMstscSignRdpFiles.Text, StringComparison.OrdinalIgnoreCase))*/
+                    {
+                        var thumbprint = string.Format("{0}00", txtMstscSignRdpFiles.Text);
+                        try
+                        {
+                            using (var tsc = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Terminal Server Client", true))
+                            using (var pbl = tsc.CreateSubKey("PublisherBypassList"))
+                                if (pbl.GetValue(thumbprint, 0) as int? != 0xff)
+                                    pbl.SetValue(thumbprint, 0xff, RegistryValueKind.DWord);
+                        }
+                        catch
+                        {
+                        }
+
+                        _config.MstscSignRdpFiles = txtMstscSignRdpFiles.Text;
+                    }
+                }
+                else
+                    _config.MstscSignRdpFiles = string.Empty;
+
+                // HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy Objects\{B143DA1D-E406-4B17-A27F-BC9BDF1DBE3A}User\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
+                // TrustedCertThumbprints
+
+                var item = cbMstscExecutable.SelectedItem as string;
+                if (!string.IsNullOrWhiteSpace(item) && item != typeof(MstscCommand).Name)
+                    _config.MstscExecutable = item;
+                else
+                    _config.MstscExecutable = string.Empty;
             }
         }
 
@@ -697,16 +545,16 @@ namespace KeePassRDP
 
         private void num_KeyUp(object sender, KeyEventArgs e)
         {
-            if (ActiveControl == sender && e.KeyCode == Keys.Enter && e.Modifiers == Keys.None)
-                ActiveControl = null;
-            if (ActiveControl == sender && e.KeyCode == Keys.Escape && e.Modifiers == Keys.None)
+            if (e.KeyCode == Keys.Enter && e.Modifiers == Keys.None)
+                ResetActiveControl(sender as Control);
+            else if (e.KeyCode == Keys.Escape && e.Modifiers == Keys.None)
             {
                 var numericUpDown = sender as NumericUpDown;
                 numericUpDown.ValueChanged -= num_ValueChanged;
                 numericUpDown.Value = numericUpDown.Minimum;
                 numericUpDown.ValueChanged += num_ValueChanged;
                 numericUpDown.Value = _oldNumValue.Value;
-                ActiveControl = null;
+                ResetActiveControl(sender as Control);
             }
         }
 
@@ -807,12 +655,20 @@ namespace KeePassRDP
 
         private void llWebsite_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            KeePass.Util.WinUtil.OpenUrl(Util.WebsiteUrl, null);
+            if (e.Button == MouseButtons.Left)
+            {
+                KeePass.Util.WinUtil.OpenUrl(Util.WebsiteUrl, null);
+                e.Link.Visited = true;
+            }
         }
 
         private void llLicense_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            KeePass.Util.WinUtil.OpenUrl(Util.LicenseUrl, null);
+            if (e.Button == MouseButtons.Left)
+            {
+                KeePass.Util.WinUtil.OpenUrl(Util.LicenseUrl, null);
+                e.Link.Visited = true;
+            }
         }
 
         private void ResetActiveControl(Control control)

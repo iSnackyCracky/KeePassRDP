@@ -18,6 +18,11 @@
  *
  */
 
+using KeePassRDP.Extensions;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -26,27 +31,45 @@ namespace KeePassRDP.Commands
 {
     internal interface ICommand
     {
-        string ExecutablePath { get; }
+        string Executable { get; }
+        string ToString();
     }
 
     internal abstract class Command : ICommand
     {
-        public abstract string ExecutablePath
+        private static readonly ConcurrentDictionary<string, bool> _fileExistsCache = new ConcurrentDictionary<string, bool>(2, 0);
+        private static readonly ConcurrentDictionary<Type, ReadOnlyCollection<Tuple<PropertyInfo, CommandArgumentAttribute>>> _propertyCache = new ConcurrentDictionary<Type, ReadOnlyCollection<Tuple<PropertyInfo, CommandArgumentAttribute>>>(2, 0);
+
+        private readonly string _executable;
+        public string Executable { get { return _executable; } }
+
+        public Command(string executable)
         {
-            get;
+            if (!_fileExistsCache.AddOrUpdate(executable, x => File.Exists(x), (x, y) => y ? y : File.Exists(x)))
+                throw new FileNotFoundException(executable);
+
+            _executable = executable;
         }
 
         public override string ToString()
         {
             var argumentsBuilder = new StringBuilder();
 
-            foreach (var prop in GetType()
+            foreach (var prop in _propertyCache.GetOrAdd(GetType(), t => t
                 .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                .Select(x => new { Property = x, Attribute = x.GetCustomAttributes(false).OfType<CommandArgumentAttribute>().FirstOrDefault() })
-                .Where(x => x.Attribute != null)
-                .Select(x => new { Value = x.Property.GetValue(this, null), x.Attribute })
-                .Where(x => x.Value != null)
-                .OrderBy(x => x.Attribute.Position))
+                .Select(x =>
+                {
+                    var commandArgumentAttribute = x.GetCustomAttributes(false).OfType<CommandArgumentAttribute>().FirstOrDefault();
+                    if (commandArgumentAttribute == null)
+                        return null;
+                    return new Tuple<PropertyInfo, CommandArgumentAttribute>(x, commandArgumentAttribute);
+                })
+                .Where(x => x != null && x.Item2 != null)
+                .OrderBy(x => x.Item2.Position)
+                .ToArray()
+                .AsReadOnly())
+            .Select(x => new { Value = x.Item1.GetValue(this, null), Attribute = x.Item2 })
+            .Where(x => x.Value != null))
             {
                 var value = prop.Value;
                 var attribute = prop.Attribute;
@@ -88,12 +111,11 @@ namespace KeePassRDP.Commands
 
     internal abstract class Command<T> : Command where T : new()
     {
-        public override abstract string ExecutablePath
+        public Command(string executable) : base(executable)
         {
-            get;
         }
 
-        public T Extend(T input)
+        /*public T Extend(T input)
         {
             var extended = new T();
             foreach (var prop in typeof(T)
@@ -104,6 +126,6 @@ namespace KeePassRDP.Commands
                     prop.SetValue(extended, value, null);
             }
             return extended;
-        }
+        }*/
     }
 }

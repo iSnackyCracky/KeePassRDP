@@ -33,6 +33,7 @@
             System.Windows.Forms.Panel pnlCpRegExPatterns;
             System.Windows.Forms.Panel pnlCpGroupUUIDs;
             System.Windows.Forms.Panel pnlCpExcludedGroupUUIDs;
+            KeePassRDP.KprToolTip ttGeneral;
             this.lblMstscParameters = new System.Windows.Forms.Label();
             this.cmdMstscParametersReset = new System.Windows.Forms.Button();
             this.kprImageList = new KeePassRDP.KprImageList(this.components);
@@ -59,20 +60,20 @@
             this.txtCpExcludedGroupUUIDs = new System.Windows.Forms.TextBox();
             this.cmdCpExcludedGroupUUIDsRemove = new System.Windows.Forms.Button();
             this.cmdCpExcludedGroupUUIDsAdd = new System.Windows.Forms.Button();
-            this.ttGeneral = new KeePassRDP.KprToolTip(this.components);
             this.cbIgnore = new System.Windows.Forms.CheckBox();
             this.cbUseCredpicker = new System.Windows.Forms.CheckBox();
             this.cbCpRecurseGroups = new System.Windows.Forms.CheckBox();
             this.btnMore = new System.Windows.Forms.Button();
+            this.btnRdpFile = new System.Windows.Forms.Button();
             this.tblKprEntrySettingsTab = new System.Windows.Forms.TableLayoutPanel();
             this.flpCheckboxes = new System.Windows.Forms.FlowLayoutPanel();
             this.ttGroupPicker = new KeePassRDP.KprToolTip(this.components);
             this.cmsMore = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.btnRdpFile = new System.Windows.Forms.Button();
             pnlMstscParameters = new System.Windows.Forms.Panel();
             pnlCpRegExPatterns = new System.Windows.Forms.Panel();
             pnlCpGroupUUIDs = new System.Windows.Forms.Panel();
             pnlCpExcludedGroupUUIDs = new System.Windows.Forms.Panel();
+            ttGeneral = new KeePassRDP.KprToolTip(this.components);
             pnlMstscParameters.SuspendLayout();
             pnlCpRegExPatterns.SuspendLayout();
             pnlCpGroupUUIDs.SuspendLayout();
@@ -120,7 +121,7 @@
             this.cmdMstscParametersReset.Padding = new System.Windows.Forms.Padding(1);
             this.cmdMstscParametersReset.Size = new System.Drawing.Size(24, 24);
             this.cmdMstscParametersReset.TabIndex = 5;
-            this.ttGeneral.SetToolTip(this.cmdMstscParametersReset, "Reset mstsc.exe parameters to default");
+            ttGeneral.SetToolTip(this.cmdMstscParametersReset, "Reset mstsc.exe parameters to default");
             this.cmdMstscParametersReset.UseVisualStyleBackColor = true;
             this.cmdMstscParametersReset.Click += new System.EventHandler(this.cmdReset_Click);
             // 
@@ -161,7 +162,7 @@
             this.cmdMstscParametersRemove.Padding = new System.Windows.Forms.Padding(1);
             this.cmdMstscParametersRemove.Size = new System.Drawing.Size(24, 24);
             this.cmdMstscParametersRemove.TabIndex = 4;
-            this.ttGeneral.SetToolTip(this.cmdMstscParametersRemove, "Remove selected mstsc.exe parameter(s)");
+            ttGeneral.SetToolTip(this.cmdMstscParametersRemove, "Remove selected mstsc.exe parameter(s)");
             this.cmdMstscParametersRemove.UseVisualStyleBackColor = true;
             this.cmdMstscParametersRemove.Click += new System.EventHandler(this.cmdRemove_Click);
             // 
@@ -178,7 +179,7 @@
             this.cmdMstscParametersAdd.Padding = new System.Windows.Forms.Padding(1);
             this.cmdMstscParametersAdd.Size = new System.Drawing.Size(24, 24);
             this.cmdMstscParametersAdd.TabIndex = 2;
-            this.ttGeneral.SetToolTip(this.cmdMstscParametersAdd, "Add mstsc.exe parameter");
+            ttGeneral.SetToolTip(this.cmdMstscParametersAdd, "Add mstsc.exe parameter");
             this.cmdMstscParametersAdd.UseVisualStyleBackColor = true;
             this.cmdMstscParametersAdd.Click += new System.EventHandler(this.cmdAdd_Click);
             // 
@@ -221,7 +222,7 @@
             this.cmdCpRegExPatternsReset.Padding = new System.Windows.Forms.Padding(1);
             this.cmdCpRegExPatternsReset.Size = new System.Drawing.Size(24, 24);
             this.cmdCpRegExPatternsReset.TabIndex = 5;
-            this.ttGeneral.SetToolTip(this.cmdCpRegExPatternsReset, "Reset RegEx patterns to default");
+            ttGeneral.SetToolTip(this.cmdCpRegExPatternsReset, "Reset RegEx patterns to default");
             this.cmdCpRegExPatternsReset.UseVisualStyleBackColor = true;
             this.cmdCpRegExPatternsReset.Click += new System.EventHandler(this.cmdReset_Click);
             // 
@@ -262,7 +263,7 @@
             this.cmdCpRegExPatternsRemove.Padding = new System.Windows.Forms.Padding(1);
             this.cmdCpRegExPatternsRemove.Size = new System.Drawing.Size(24, 24);
             this.cmdCpRegExPatternsRemove.TabIndex = 4;
-            this.ttGeneral.SetToolTip(this.cmdCpRegExPatternsRemove, "Remove selected RegEx pattern(s)");
+            ttGeneral.SetToolTip(this.cmdCpRegExPatternsRemove, "Remove selected RegEx pattern(s)");
             this.cmdCpRegExPatternsRemove.UseVisualStyleBackColor = true;
             this.cmdCpRegExPatternsRemove.Click += new System.EventHandler(this.cmdRemove_Click);
             // 
@@ -279,7 +280,7 @@
             this.cmdCpRegExPatternsAdd.Padding = new System.Windows.Forms.Padding(1);
             this.cmdCpRegExPatternsAdd.Size = new System.Drawing.Size(24, 24);
             this.cmdCpRegExPatternsAdd.TabIndex = 2;
-            this.ttGeneral.SetToolTip(this.cmdCpRegExPatternsAdd, "Add RegEx pattern");
+            ttGeneral.SetToolTip(this.cmdCpRegExPatternsAdd, "Add RegEx pattern");
             this.cmdCpRegExPatternsAdd.UseVisualStyleBackColor = true;
             this.cmdCpRegExPatternsAdd.Click += new System.EventHandler(this.cmdAdd_Click);
             // 
@@ -352,7 +353,7 @@
             this.cmdCpGroupUUIDsAdd.Padding = new System.Windows.Forms.Padding(1);
             this.cmdCpGroupUUIDsAdd.Size = new System.Drawing.Size(24, 24);
             this.cmdCpGroupUUIDsAdd.TabIndex = 2;
-            this.ttGeneral.SetToolTip(this.cmdCpGroupUUIDsAdd, "Add included group");
+            ttGeneral.SetToolTip(this.cmdCpGroupUUIDsAdd, "Add included group");
             this.cmdCpGroupUUIDsAdd.UseVisualStyleBackColor = true;
             this.cmdCpGroupUUIDsAdd.Click += new System.EventHandler(this.cmdAdd_Click);
             // 
@@ -369,7 +370,7 @@
             this.cmdCpGroupUUIDsRemove.Padding = new System.Windows.Forms.Padding(1);
             this.cmdCpGroupUUIDsRemove.Size = new System.Drawing.Size(24, 24);
             this.cmdCpGroupUUIDsRemove.TabIndex = 4;
-            this.ttGeneral.SetToolTip(this.cmdCpGroupUUIDsRemove, "Remove selected included group(s)");
+            ttGeneral.SetToolTip(this.cmdCpGroupUUIDsRemove, "Remove selected included group(s)");
             this.cmdCpGroupUUIDsRemove.UseVisualStyleBackColor = true;
             this.cmdCpGroupUUIDsRemove.Click += new System.EventHandler(this.cmdRemove_Click);
             // 
@@ -386,7 +387,7 @@
             this.cmdCpGroupUUIDsReset.Padding = new System.Windows.Forms.Padding(1);
             this.cmdCpGroupUUIDsReset.Size = new System.Drawing.Size(24, 24);
             this.cmdCpGroupUUIDsReset.TabIndex = 5;
-            this.ttGeneral.SetToolTip(this.cmdCpGroupUUIDsReset, "Reset included groups to default");
+            ttGeneral.SetToolTip(this.cmdCpGroupUUIDsReset, "Reset included groups to default");
             this.cmdCpGroupUUIDsReset.UseVisualStyleBackColor = true;
             this.cmdCpGroupUUIDsReset.Click += new System.EventHandler(this.cmdReset_Click);
             // 
@@ -429,7 +430,7 @@
             this.cmdCpExcludedGroupUUIDsReset.Padding = new System.Windows.Forms.Padding(1);
             this.cmdCpExcludedGroupUUIDsReset.Size = new System.Drawing.Size(24, 24);
             this.cmdCpExcludedGroupUUIDsReset.TabIndex = 5;
-            this.ttGeneral.SetToolTip(this.cmdCpExcludedGroupUUIDsReset, "Reset excluded groups to default");
+            ttGeneral.SetToolTip(this.cmdCpExcludedGroupUUIDsReset, "Reset excluded groups to default");
             this.cmdCpExcludedGroupUUIDsReset.UseVisualStyleBackColor = true;
             this.cmdCpExcludedGroupUUIDsReset.Click += new System.EventHandler(this.cmdReset_Click);
             // 
@@ -475,7 +476,7 @@
             this.cmdCpExcludedGroupUUIDsRemove.Padding = new System.Windows.Forms.Padding(1);
             this.cmdCpExcludedGroupUUIDsRemove.Size = new System.Drawing.Size(24, 24);
             this.cmdCpExcludedGroupUUIDsRemove.TabIndex = 4;
-            this.ttGeneral.SetToolTip(this.cmdCpExcludedGroupUUIDsRemove, "Remove selected excluded group(s)");
+            ttGeneral.SetToolTip(this.cmdCpExcludedGroupUUIDsRemove, "Remove selected excluded group(s)");
             this.cmdCpExcludedGroupUUIDsRemove.UseVisualStyleBackColor = true;
             this.cmdCpExcludedGroupUUIDsRemove.Click += new System.EventHandler(this.cmdRemove_Click);
             // 
@@ -492,15 +493,15 @@
             this.cmdCpExcludedGroupUUIDsAdd.Padding = new System.Windows.Forms.Padding(1);
             this.cmdCpExcludedGroupUUIDsAdd.Size = new System.Drawing.Size(24, 24);
             this.cmdCpExcludedGroupUUIDsAdd.TabIndex = 2;
-            this.ttGeneral.SetToolTip(this.cmdCpExcludedGroupUUIDsAdd, "Add excluded group");
+            ttGeneral.SetToolTip(this.cmdCpExcludedGroupUUIDsAdd, "Add excluded group");
             this.cmdCpExcludedGroupUUIDsAdd.UseVisualStyleBackColor = true;
             this.cmdCpExcludedGroupUUIDsAdd.Click += new System.EventHandler(this.cmdAdd_Click);
             // 
             // ttGeneral
             // 
-            this.ttGeneral.AutoPopDelay = 10000;
-            this.ttGeneral.InitialDelay = 500;
-            this.ttGeneral.ReshowDelay = 100;
+            ttGeneral.AutoPopDelay = 10000;
+            ttGeneral.InitialDelay = 500;
+            ttGeneral.ReshowDelay = 100;
             // 
             // cbIgnore
             // 
@@ -512,7 +513,7 @@
             this.cbIgnore.Size = new System.Drawing.Size(60, 17);
             this.cbIgnore.TabIndex = 0;
             this.cbIgnore.Text = "Ignore";
-            this.ttGeneral.SetToolTip(this.cbIgnore, "Always hide entry from credential picker if checked.");
+            ttGeneral.SetToolTip(this.cbIgnore, "Always hide entry from credential picker if checked.");
             this.cbIgnore.UseVisualStyleBackColor = true;
             this.cbIgnore.CheckedChanged += new System.EventHandler(this.cbIgnore_CheckedChanged);
             // 
@@ -526,7 +527,7 @@
             this.cbUseCredpicker.Size = new System.Drawing.Size(133, 17);
             this.cbUseCredpicker.TabIndex = 1;
             this.cbUseCredpicker.Text = "Use credential picker";
-            this.ttGeneral.SetToolTip(this.cbUseCredpicker, "Never open credential picker for entry if unchecked.");
+            ttGeneral.SetToolTip(this.cbUseCredpicker, "Never open credential picker for entry if unchecked.");
             this.cbUseCredpicker.UseVisualStyleBackColor = true;
             this.cbUseCredpicker.CheckedChanged += new System.EventHandler(this.cbUseCredpicker_CheckedChanged);
             // 
@@ -540,7 +541,7 @@
             this.cbCpRecurseGroups.Size = new System.Drawing.Size(145, 17);
             this.cbCpRecurseGroups.TabIndex = 3;
             this.cbCpRecurseGroups.Text = "Recursive group search";
-            this.ttGeneral.SetToolTip(this.cbCpRecurseGroups, "Enable recursive searching through all childs of entrys parent group.");
+            ttGeneral.SetToolTip(this.cbCpRecurseGroups, "Enable recursive searching through all childs of entrys parent group.");
             this.cbCpRecurseGroups.UseVisualStyleBackColor = true;
             this.cbCpRecurseGroups.CheckedChanged += new System.EventHandler(this.cbCpRecurseGroups_CheckedChanged);
             // 
@@ -556,9 +557,30 @@
             this.btnMore.Padding = new System.Windows.Forms.Padding(0, 1, 1, 2);
             this.btnMore.Size = new System.Drawing.Size(22, 18);
             this.btnMore.TabIndex = 5;
-            this.ttGeneral.SetToolTip(this.btnMore, "Show more settings");
+            ttGeneral.SetToolTip(this.btnMore, "Show more settings");
             this.btnMore.UseVisualStyleBackColor = true;
             this.btnMore.Click += new System.EventHandler(this.btnMore_Click);
+            // 
+            // btnRdpFile
+            // 
+            this.btnRdpFile.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.btnRdpFile.AutoSize = true;
+            this.btnRdpFile.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btnRdpFile.BackColor = System.Drawing.Color.Gainsboro;
+            this.btnRdpFile.FlatAppearance.BorderSize = 0;
+            this.btnRdpFile.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnRdpFile.Font = new System.Drawing.Font("Segoe UI", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnRdpFile.ImageKey = "RemoteDesktop";
+            this.btnRdpFile.ImageList = this.imageList1;
+            this.btnRdpFile.Location = new System.Drawing.Point(340, 0);
+            this.btnRdpFile.Margin = new System.Windows.Forms.Padding(0, 0, 1, 0);
+            this.btnRdpFile.Name = "btnRdpFile";
+            this.btnRdpFile.Padding = new System.Windows.Forms.Padding(0, 0, 0, 1);
+            this.btnRdpFile.Size = new System.Drawing.Size(22, 23);
+            this.btnRdpFile.TabIndex = 4;
+            ttGeneral.SetToolTip(this.btnRdpFile, "Configure extended settings via .rdp file.");
+            this.btnRdpFile.UseVisualStyleBackColor = false;
+            this.btnRdpFile.Click += new System.EventHandler(this.btnRdpFile_Click);
             // 
             // tblKprEntrySettingsTab
             // 
@@ -611,27 +633,6 @@
             this.cmsMore.Name = "cmsMore";
             this.cmsMore.ShowImageMargin = false;
             this.cmsMore.Size = new System.Drawing.Size(36, 4);
-            // 
-            // btnRdpFile
-            // 
-            this.btnRdpFile.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.btnRdpFile.AutoSize = true;
-            this.btnRdpFile.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.btnRdpFile.BackColor = System.Drawing.Color.Gainsboro;
-            this.btnRdpFile.FlatAppearance.BorderSize = 0;
-            this.btnRdpFile.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnRdpFile.Font = new System.Drawing.Font("Segoe UI", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnRdpFile.ImageKey = "RemoteDesktop";
-            this.btnRdpFile.ImageList = this.imageList1;
-            this.btnRdpFile.Location = new System.Drawing.Point(340, 0);
-            this.btnRdpFile.Margin = new System.Windows.Forms.Padding(0, 0, 1, 0);
-            this.btnRdpFile.Name = "btnRdpFile";
-            this.btnRdpFile.Padding = new System.Windows.Forms.Padding(0, 0, 0, 1);
-            this.btnRdpFile.Size = new System.Drawing.Size(22, 23);
-            this.btnRdpFile.TabIndex = 4;
-            this.ttGeneral.SetToolTip(this.btnRdpFile, "Configure extended settings via .rdp file");
-            this.btnRdpFile.UseVisualStyleBackColor = false;
-            this.btnRdpFile.Click += new System.EventHandler(this.cmdRdpFile_Click);
             // 
             // KprEntrySettingsTab
             // 
@@ -687,9 +688,6 @@
         private System.Windows.Forms.Button cmdMstscParametersRemove;
         private System.Windows.Forms.Button cmdMstscParametersAdd;
         private KprToolTip ttGroupPicker;
-        private System.Windows.Forms.ImageList imageList1;
-        private KprImageList kprImageList;
-        private KprToolTip ttGeneral;
         private System.Windows.Forms.Label lblMstscParameters;
         private System.Windows.Forms.Label lblCpRegExPatterns;
         private System.Windows.Forms.Label lblCpGroupUUIDs;
@@ -697,5 +695,7 @@
         private System.Windows.Forms.ContextMenuStrip cmsMore;
         private System.Windows.Forms.Button btnMore;
         private System.Windows.Forms.Button btnRdpFile;
+        private System.Windows.Forms.ImageList imageList1;
+        private KprImageList kprImageList;
     }
 }

@@ -32,7 +32,7 @@ namespace KeePassRDP.Generator
         public bool ShouldSerializeAudioqualitymode() { return Audioqualitymode != AudioQualityModes.Dynamic; }
         public bool ShouldSerializeAuthenticationLevel() { return AuthenticationLevel != AuthenticationLevels.ShowWarning; }
         public bool ShouldSerializeAutoreconnectionEnabled() { return AutoreconnectionEnabled != true; }
-        public bool ShouldSerializeAutoreconnectMaxRetries() { return AutoreconnectMaxRetries != 20; }
+        public bool ShouldSerializeAutoreconnectMaxRetries() { return AutoreconnectMaxRetries != 5; }
         public bool ShouldSerializeBandwidthautodetect() { return Bandwidthautodetect != true; }
         public bool ShouldSerializeBitmapcachepersistenable() { return Bitmapcachepersistenable != true; }
         public bool ShouldSerializeBitmapcachesize() { return Bitmapcachesize != 1500; }
@@ -43,7 +43,7 @@ namespace KeePassRDP.Generator
         public bool ShouldSerializeDesktopheight() { return Desktopheight != 600; }
         public bool ShouldSerializeDesktopSizeId() { return DesktopSizeId != DesktopSizes.Size_640_480; }
         public bool ShouldSerializeDesktopwidth() { return Desktopwidth != 800; }
-        public bool ShouldSerializeDevicestoredirect() { return !string.IsNullOrWhiteSpace(Devicestoredirect); }
+        public bool ShouldSerializeDevicestoredirect() { return !string.IsNullOrWhiteSpace(Devicestoredirect) && Devicestoredirect != "*"; }
         public bool ShouldSerializeDisableconnectionsharing() { return Disableconnectionsharing != false; }
         public bool ShouldSerializeDisableCtrlAltDel() { return DisableCtrlAltDel != true; }
         public bool ShouldSerializeDisableFullWindowDrag() { return DisableFullWindowDrag != true; }
@@ -53,15 +53,15 @@ namespace KeePassRDP.Generator
         public bool ShouldSerializeDisableWallpaper() { return DisableWallpaper != true; }
         public bool ShouldSerializeDisplayconnectionbar() { return Displayconnectionbar != true; }
         public bool ShouldSerializeDomain() { return !string.IsNullOrWhiteSpace(Domain); }
-        public bool ShouldSerializeDrivestoredirect() { return !string.IsNullOrWhiteSpace(Drivestoredirect); }
+        public bool ShouldSerializeDrivestoredirect() { return !string.IsNullOrWhiteSpace(Drivestoredirect) && Drivestoredirect != "*"; }
         public bool ShouldSerializeEnablecredsspsupport() { return Enablecredsspsupport != true; }
         public bool ShouldSerializeEnablesuperpan() { return Enablesuperpan != false; }
         public bool ShouldSerializeEncodeRedirectedVideoCapture() { return EncodeRedirectedVideoCapture != true; }
         public bool ShouldSerializeFullAddress() { return !string.IsNullOrWhiteSpace(FullAddress); }
-        public bool ShouldSerializeGatewaycredentialssource() { return Gatewaycredentialssource != GatewayCredentialSources.SelectLater; }
+        public bool ShouldSerializeGatewaycredentialssource() { return Gatewaycredentialssource != GatewayCredentialSources.AskForPassword; }
         public bool ShouldSerializeGatewayhostname() { return !string.IsNullOrWhiteSpace(Gatewayhostname); }
         public bool ShouldSerializeGatewayprofileusagemethod() { return Gatewayprofileusagemethod != GatewayProfileUsageMethods.Default; }
-        public bool ShouldSerializeGatewayusagemethod() { return Gatewayusagemethod != GatewayUsageMethods.DoNotUseGatewayNoLocal; }
+        public bool ShouldSerializeGatewayusagemethod() { return Gatewayusagemethod != GatewayUsageMethods.DoNotUseGateway; }
         public bool ShouldSerializeKeyboardhook() { return Keyboardhook != KeyboardHooks.FullScreen; }
         public bool ShouldSerializeNegotiateSecurityLayer() { return NegotiateSecurityLayer != true; }
         public bool ShouldSerializeNetworkautodetect() { return Networkautodetect != true; }
@@ -72,7 +72,7 @@ namespace KeePassRDP.Generator
         public bool ShouldSerializePromptForCredentialsOnClient() { return PromptForCredentialsOnClient != false; }
         public bool ShouldSerializePublicMode() { return PublicMode != false; }
         public bool ShouldSerializeRedirectclipboard() { return Redirectclipboard != true; }
-        public bool ShouldSerializeRedirectcomports() { return Redirectcomports != false; }
+        public bool ShouldSerializeRedirectcomports() { return Redirectcomports != true; }
         public bool ShouldSerializeRedirectdirectx() { return Redirectdirectx != true; }
         public bool ShouldSerializeRedirectdrives() { return Redirectdrives != false; }
         public bool ShouldSerializeRedirectedVideoCaptureEncodingQuality() { return RedirectedVideoCaptureEncodingQuality != VideoCaptureEncodingQualities.High; }
@@ -85,6 +85,8 @@ namespace KeePassRDP.Generator
         public bool ShouldSerializeRemoteapplicationexpandcmdline() { return Remoteapplicationexpandcmdline != true; }
         public bool ShouldSerializeRemoteapplicationexpandworkingdir() { return Remoteapplicationexpandworkingdir != true; }
         public bool ShouldSerializeRemoteapplicationfile() { return !string.IsNullOrWhiteSpace(Remoteapplicationfile); }
+        public bool ShouldSerializeRemoteapplicationfileextensions() { return !string.IsNullOrWhiteSpace(Remoteapplicationfileextensions); }
+        public bool ShouldSerializeRemoteapplicationguid() { return !string.IsNullOrWhiteSpace(Remoteapplicationguid); }
         public bool ShouldSerializeRemoteapplicationicon() { return !string.IsNullOrWhiteSpace(Remoteapplicationicon); }
         public bool ShouldSerializeRemoteapplicationmode() { return Remoteapplicationmode != RemoteApplicationModes.Normal; }
         public bool ShouldSerializeRemoteapplicationname() { return !string.IsNullOrWhiteSpace(Remoteapplicationname); }
@@ -99,11 +101,27 @@ namespace KeePassRDP.Generator
         public bool ShouldSerializeSmartSizing() { return SmartSizing != false; }
         public bool ShouldSerializeSpanMonitors() { return SpanMonitors != false; }
         public bool ShouldSerializeSuperpanaccelerationfactor() { return Superpanaccelerationfactor != 1; }
-        public bool ShouldSerializeUsbdevicestoredirect() { return !string.IsNullOrWhiteSpace(Usbdevicestoredirect); }
+        public bool ShouldSerializeUsbdevicestoredirect() { return !string.IsNullOrWhiteSpace(Usbdevicestoredirect) && Usbdevicestoredirect != "*"; }
         public bool ShouldSerializeUseMultimon() { return UseMultimon != false; }
         public bool ShouldSerializeUsername() { return !string.IsNullOrWhiteSpace(Username); }
         public bool ShouldSerializeVideoplaybackmode() { return Videoplaybackmode != VideoPlaybackModes.Efficient; }
         public bool ShouldSerializeWinposstr() { return !string.IsNullOrWhiteSpace(Winposstr) && Winposstr != "0,3,0,0,800,600"; }
         public bool ShouldSerializeWorkspaceid() { return !string.IsNullOrWhiteSpace(Workspaceid); }
+        public bool ShouldSerializeMaximizetocurrentdisplays() { return Maximizetocurrentdisplays != false; }
+        public bool ShouldSerializeSinglemoninwindowedmode() { return Singlemoninwindowedmode != false; }
+        public bool ShouldSerializeDynamicResolution() { return DynamicResolution != false; }
+        public bool ShouldSerializeDesktopscalefactor() { return Desktopscalefactor != DesktopScaleFactors.Default; }
+        public bool ShouldSerializeDisableCursorSetting() { return DisableCursorSetting != false; }
+        public bool ShouldSerializeEnableworkspacereconnect() { return Enableworkspacereconnect != false; }
+        public bool ShouldSerializeGatewaybrokeringtype() { return Gatewaybrokeringtype != 0; }
+        public bool ShouldSerializeUseRedirectionServerName() { return UseRedirectionServerName != false; }
+        public bool ShouldSerializeLoadbalanceinfo() { return !string.IsNullOrWhiteSpace(Loadbalanceinfo); }
+        public bool ShouldSerializeRdgiskdcproxy() { return Rdgiskdcproxy != false; }
+        public bool ShouldSerializeKdcproxyname() { return !string.IsNullOrWhiteSpace(Kdcproxyname); }
+        public bool ShouldSerializePcb() { return !string.IsNullOrWhiteSpace(Pcb); }
+        public bool ShouldSerializeSupportUrl() { return !string.IsNullOrWhiteSpace(SupportUrl); }
+        public bool ShouldSerializeRequirePreAuthentication() { return RequirePreAuthentication != false; }
+        public bool ShouldSerializePreAuthenticationServerAddress() { return !string.IsNullOrWhiteSpace(PreAuthenticationServerAddress); }
+        public bool ShouldSerializeEventloguploadaddress() { return !string.IsNullOrWhiteSpace(Eventloguploadaddress); }
     }
 }

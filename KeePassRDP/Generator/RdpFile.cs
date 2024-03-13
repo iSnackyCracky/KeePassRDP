@@ -23,9 +23,13 @@ using KeePassRDP.Utils;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Security.Cryptography.Pkcs;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -49,17 +53,52 @@ namespace KeePassRDP.Generator
             }
         }
 
-        private static readonly Lazy<Tuple<PropertyInfo, RdpSettingAttribute>[]> _attributeCache = new Lazy<Tuple<PropertyInfo, RdpSettingAttribute>[]>(
+        private static readonly Lazy<ReadOnlyCollection<PropertyInfo>> _propertyCache = new Lazy<ReadOnlyCollection<PropertyInfo>>(
             () => typeof(RdpFile)
                 .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                .Select(x => new Tuple<PropertyInfo, RdpSettingAttribute>(x, x.GetCustomAttributes(false).OfType<RdpSettingAttribute>().FirstOrDefault()))
-                .Where(x => x.Item2 != null)
-                .OrderBy(x => x.Item2.Template.Substring(0, Math.Max(0, x.Item2.Template.IndexOf(':'))), StringComparer.OrdinalIgnoreCase)
-                .ToArray(),
+                .ToArray()
+                .AsReadOnly(),
+            LazyThreadSafetyMode.ExecutionAndPublication);
+
+        private static readonly Lazy<ReadOnlyCollection<Tuple<PropertyInfo, RdpSignscopeAttribute, RdpSettingAttribute>>> _signscopeCache = new Lazy<ReadOnlyCollection<Tuple<PropertyInfo, RdpSignscopeAttribute, RdpSettingAttribute>>>(
+            () => _propertyCache.Value
+                .Select(x =>
+                {
+                    var customAttributes = x.GetCustomAttributes(false);
+                    var signscopeAttribute = customAttributes.OfType<RdpSignscopeAttribute>().FirstOrDefault();
+                    if (signscopeAttribute == null)
+                        return null;
+                    return new Tuple<PropertyInfo, RdpSignscopeAttribute, RdpSettingAttribute>(x, signscopeAttribute, customAttributes.OfType<RdpSettingAttribute>().FirstOrDefault());
+                })
+                .Where(x => x != null && x.Item2 != null && x.Item3 != null)
+                .OrderBy(x => x.Item3.Template.Substring(0, Math.Max(0, x.Item3.Template.IndexOf(':'))), StringComparer.OrdinalIgnoreCase)
+                .ToArray()
+                .AsReadOnly(),
+            LazyThreadSafetyMode.ExecutionAndPublication);
+
+        private static readonly Lazy<SortedDictionary<RdpSettingAttribute.SettingCategory, ReadOnlyCollection<Tuple<PropertyInfo, RdpSettingAttribute>>>> _settingsCache = new Lazy<SortedDictionary<RdpSettingAttribute.SettingCategory, ReadOnlyCollection<Tuple<PropertyInfo, RdpSettingAttribute>>>>(
+            () => new SortedDictionary<RdpSettingAttribute.SettingCategory, ReadOnlyCollection<Tuple<PropertyInfo, RdpSettingAttribute>>>(
+                _propertyCache.Value
+                .Select(x =>
+                {
+                    var settingAttribute = x.GetCustomAttributes(false).OfType<RdpSettingAttribute>().FirstOrDefault();
+                    if (settingAttribute == null)
+                        return null;
+                    return new Tuple<PropertyInfo, RdpSettingAttribute>(x, settingAttribute);
+                })
+                .Where(x => x != null && x.Item2 != null)
+                .GroupBy(x => x.Item2.Category)
+                .ToDictionary(x => x.Key, x => x.OrderBy(y => y.Item2.Template.Substring(0, Math.Max(0, y.Item2.Template.IndexOf(':'))), StringComparer.OrdinalIgnoreCase).ToArray().AsReadOnly()),
+                Comparer<RdpSettingAttribute.SettingCategory>.Default),
             LazyThreadSafetyMode.ExecutionAndPublication);
 
         [JsonIgnore]
-        public static IEnumerable<Tuple<PropertyInfo, RdpSettingAttribute>> AttributeCache { get { return _attributeCache.Value.AsReadOnly(); } }
+        public static IDictionary<string, ReadOnlyCollection<Tuple<PropertyInfo, RdpSettingAttribute>>> SettingsCache { get { return _settingsCache.Value.ToDictionary(x => x.Key.ToString(), x => x.Value); } }
+
+        public const string RdpSignatureAlgorithmName = "sha256RSA";
+        public const string RdpSignatureDigestAlgorithmName = "sha256";
+
+        private static readonly byte[] _signatureHeader = { 0x1, 0x0, 0x1, 0x0, 0x1, 0x0, 0x0, 0x0 };
 
         public RdpFile() : this(false)
         {
@@ -130,6 +169,8 @@ namespace KeePassRDP.Generator
             Remoteapplicationexpandcmdline = rdpFile.Remoteapplicationexpandcmdline;
             Remoteapplicationexpandworkingdir = rdpFile.Remoteapplicationexpandworkingdir;
             Remoteapplicationfile = rdpFile.Remoteapplicationfile;
+            Remoteapplicationfileextensions = rdpFile.Remoteapplicationfileextensions;
+            Remoteapplicationguid = rdpFile.Remoteapplicationguid;
             Remoteapplicationicon = rdpFile.Remoteapplicationicon;
             Remoteapplicationmode = rdpFile.Remoteapplicationmode;
             Remoteapplicationname = rdpFile.Remoteapplicationname;
@@ -150,6 +191,22 @@ namespace KeePassRDP.Generator
             Videoplaybackmode = rdpFile.Videoplaybackmode;
             Winposstr = rdpFile.Winposstr;
             Workspaceid = rdpFile.Workspaceid;
+            Maximizetocurrentdisplays = rdpFile.Maximizetocurrentdisplays;
+            Singlemoninwindowedmode = rdpFile.Singlemoninwindowedmode;
+            DynamicResolution = rdpFile.DynamicResolution;
+            Desktopscalefactor = rdpFile.Desktopscalefactor;
+            DisableCursorSetting = rdpFile.DisableCursorSetting;
+            Enableworkspacereconnect = rdpFile.Enableworkspacereconnect;
+            Gatewaybrokeringtype = rdpFile.Gatewaybrokeringtype;
+            UseRedirectionServerName = rdpFile.UseRedirectionServerName;
+            Loadbalanceinfo = rdpFile.Loadbalanceinfo;
+            Rdgiskdcproxy = rdpFile.Rdgiskdcproxy;
+            Kdcproxyname = rdpFile.Kdcproxyname;
+            Pcb = rdpFile.Pcb;
+            SupportUrl = rdpFile.SupportUrl;
+            RequirePreAuthentication = rdpFile.RequirePreAuthentication;
+            PreAuthenticationServerAddress = rdpFile.PreAuthenticationServerAddress;
+            Eventloguploadaddress = rdpFile.Eventloguploadaddress;
 
             if (createFile)
                 new FileInfo(_path = Path.GetTempFileName()).Attributes = FileAttributes.Temporary;
@@ -159,35 +216,63 @@ namespace KeePassRDP.Generator
 
         public RdpFile(bool createFile)
         {
-            foreach (var prop in AttributeCache)
-            {
-                var template = prop.Item2.Template.Split(new[] { ':' }, 3);
-                var type = template[1];
-
-                var propValue = prop.Item1.GetValue(this, null);
-                object defaultValue = null;
-                switch (type)
-                {
-                    case "s":
-                        defaultValue = prop.Item1.PropertyType.IsEnum ?
-                            Enum.Parse(prop.Item1.PropertyType, template.Length > 2 ? template[2] : string.Empty) :
-                            template.Length > 2 ? template[2] : string.Empty;
-                        break;
-                    case "i":
-                        defaultValue = prop.Item1.PropertyType.IsEnum ?
-                            Enum.ToObject(prop.Item1.PropertyType, template.Length > 2 ? int.Parse(template[2]) : 0) :
-                            template.Length > 2 ? int.Parse(template[2]) : 0;
-                        break;
-                }
-
-                if (defaultValue != null)
-                    prop.Item1.SetValue(this, Convert.ChangeType(defaultValue, prop.Item1.PropertyType), null);
-            }
+            foreach (var prop in _settingsCache.Value.Values.SelectMany(x => x))
+                SetProperty(prop);
 
             if (createFile)
                 new FileInfo(_path = Path.GetTempFileName()).Attributes = FileAttributes.Temporary;
             else
                 _path = string.Empty;
+        }
+
+        public void Sign(X509Certificate2 certificate)
+        {
+            if (!certificate.HasPrivateKey)
+                throw new ArgumentOutOfRangeException("certificate");
+
+            if (certificate.SignatureAlgorithm.Value != CryptoConfig.MapNameToOID(RdpSignatureAlgorithmName))
+                throw new CryptographicException("certificate");
+
+            if (!string.IsNullOrWhiteSpace(FullAddress) && string.IsNullOrWhiteSpace(AlternateFullAddress))
+                AlternateFullAddress = FullAddress;
+
+            var signscope = string.Join(",", _signscopeCache.Value.Select(x => x.Item2.Scope));
+
+            var cms = new SignedCms(
+                new ContentInfo(
+                    Encoding.Unicode.GetBytes(
+                        string.Format(
+                            "{0}{1}signscope:s:{2}{3}{4}",
+                            string.Join(
+                                Environment.NewLine,
+                                _signscopeCache.Value.Select(x => TransformProperty(new Tuple<PropertyInfo, RdpSettingAttribute>(x.Item1, x.Item3)))),
+                            Environment.NewLine,
+                            signscope,
+                            Environment.NewLine,
+                            char.MinValue))), true);
+
+            cms.ComputeSignature(new CmsSigner(SubjectIdentifierType.IssuerAndSerialNumber, certificate)
+            {
+                IncludeOption = X509IncludeOption.WholeChain,
+                DigestAlgorithm = new Oid(CryptoConfig.MapNameToOID(RdpSignatureDigestAlgorithmName), RdpSignatureDigestAlgorithmName)
+            }, true);
+
+            var pkcs7 = cms.Encode();
+            var signatureBase64 = Convert.ToBase64String(_signatureHeader.Concat(BitConverter.GetBytes(Convert.ToUInt32(pkcs7.Length))).Concat(pkcs7).ToArray());
+
+            var signatureBuilder = new StringBuilder();
+            for (var i = 0; i < signatureBase64.Length; i += 64)
+            {
+                if (i + 64 > signatureBase64.Length)
+                    signatureBuilder.Append(signatureBase64.Substring(i));
+                else
+                    signatureBuilder.Append(signatureBase64.Substring(i, 64));
+
+                signatureBuilder.Append("  ");
+            }
+
+            Signature = signatureBuilder.ToString();
+            Signscope = signscope;
         }
 
         public void Dispose()
@@ -196,35 +281,111 @@ namespace KeePassRDP.Generator
                 File.Delete(_path);
         }
 
+        internal void SetProperty(Tuple<PropertyInfo, RdpSettingAttribute> tuple, string[] template = null)
+        {
+            var property = tuple.Item1;
+            var attribute = tuple.Item2;
+
+            if (template != null && template.Length < 3)
+            {
+                var attrTemplate = attribute.Template.Split(new[] { ':' }, 3);
+                if (attrTemplate.Length > 2)
+                    template = template.Concat(new[] { attrTemplate[2] }).ToArray();
+            }
+            template = template ?? attribute.Template.Split(new[] { ':' }, 3);
+            var type = template[1];
+
+            object defaultValue = null;
+            switch (type)
+            {
+                case "s":
+                    defaultValue = property.PropertyType.IsEnum ?
+                        template.Length > 2 ?
+                            !string.IsNullOrEmpty(template[2]) ?
+                                Enum.Parse(property.PropertyType, template[2]) :
+                                Enum.ToObject(property.PropertyType, 0) :
+                            string.Empty :
+                        template.Length > 2 && !string.IsNullOrEmpty(template[2]) ? template[2] : string.Empty;
+                    break;
+                case "i":
+                    defaultValue = property.PropertyType.IsEnum ?
+                        template.Length > 2 ?
+                            Enum.ToObject(property.PropertyType, !string.IsNullOrEmpty(template[2]) ? int.Parse(template[2]) : 0) :
+                            Enum.ToObject(property.PropertyType, 0) :
+                        template.Length > 2 && !string.IsNullOrEmpty(template[2]) ? int.Parse(template[2]) : 0;
+                    break;
+            }
+
+            if (defaultValue != null)
+                property.SetValue(this, Convert.ChangeType(defaultValue, property.PropertyType), null);
+            else
+                property.SetValue(this, null, null);
+        }
+
+        internal string TransformProperty(Tuple<PropertyInfo, RdpSettingAttribute> tuple)
+        {
+            var property = tuple.Item1;
+            var attribute = tuple.Item2;
+
+            var template = attribute.Template.Split(new[] { ':' }, 3);
+            var key = template[0];
+            var type = template[1];
+
+            object defaultValue = null;
+            var targetType = typeof(string);
+            switch (type)
+            {
+                case "s":
+                    defaultValue = property.PropertyType.IsEnum ?
+                        template.Length > 2 ?
+                            !string.IsNullOrEmpty(template[2]) ?
+                                Enum.Parse(property.PropertyType, template[2]) :
+                                Enum.ToObject(property.PropertyType, 0) :
+                            string.Empty :
+                        template.Length > 2 && !string.IsNullOrEmpty(template[2]) ? template[2] : string.Empty;
+                    break;
+                case "i":
+                    defaultValue = property.PropertyType.IsEnum ?
+                        template.Length > 2 ?
+                            Enum.ToObject(property.PropertyType, !string.IsNullOrEmpty(template[2]) ? int.Parse(template[2]) : 0) :
+                            Enum.ToObject(property.PropertyType, 0) :
+                        template.Length > 2 && !string.IsNullOrEmpty(template[2]) ? int.Parse(template[2]) : 0;
+                    targetType = typeof(int);
+                    break;
+            }
+
+            var value = property.GetValue(this, null) ?? defaultValue;
+            return value == null ? string.Empty : string.Format("{0}:{1}:{2}", key, type, Convert.ChangeType(value, targetType));
+        }
+
         public override string ToString()
         {
             if (!string.IsNullOrEmpty(_path) && File.Exists(_path))
             {
                 using (var fs = new FileStream(_path, FileMode.Truncate, FileAccess.Write, FileShare.Read, 4096))
-                    using (var sw = new StreamWriter(fs, Encoding.UTF8, 4096))
-                    foreach (var prop in AttributeCache)
+                using (var sw = new StreamWriter(fs, Encoding.Unicode, 4096))
+                {
+                    var signscope = string.Empty;
+                    var signature = string.Empty;
+                    foreach (var line in _settingsCache.Value.Values.SelectMany(x => x).Select(TransformProperty).Where(x => !string.IsNullOrEmpty(x)))
                     {
-                        var template = prop.Item2.Template.Split(new[] { ':' }, 3);
-                        var key = template[0];
-                        var type = template[1];
-
-                        object defaultValue = null;
-                        var targetType = typeof(string);
-                        switch (type)
+                        if (line.StartsWith("signscope:s:", StringComparison.OrdinalIgnoreCase))
                         {
-                            case "s":
-                                defaultValue = template.Length > 2 ? template[2] : string.Empty;
-                                break;
-                            case "i":
-                                defaultValue = template.Length > 2 ? int.Parse(template[2]) : 0;
-                                targetType = typeof(int);
-                                break;
+                            signscope = line.Substring(12);
+                            continue;
                         }
-
-                        var value = prop.Item1.GetValue(this, null) ?? defaultValue;
-                        if (value != null)
-                            sw.WriteLine(string.Format("{0}:{1}:{2}", key, type, Convert.ChangeType(value, targetType)));
+                        if (line.StartsWith("signature:s:", StringComparison.OrdinalIgnoreCase))
+                        {
+                            signature = line.Substring(12);
+                            continue;
+                        }
+                        sw.WriteLine(line);
                     }
+                    if (!string.IsNullOrWhiteSpace(signscope))
+                        sw.WriteLine(string.Format("signscope:s:{0}", signscope));
+                    if (!string.IsNullOrWhiteSpace(signature))
+                        sw.WriteLine(string.Format("signature:s:{0}", signature));
+                }
             }
 
             return _path;

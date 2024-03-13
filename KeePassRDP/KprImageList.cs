@@ -31,6 +31,7 @@ using System.Drawing.Design;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace KeePassRDP
@@ -88,7 +89,7 @@ namespace KeePassRDP
             }
 
             return imageList1;
-        }, System.Threading.LazyThreadSafetyMode.ExecutionAndPublication);
+        }, LazyThreadSafetyMode.ExecutionAndPublication);
 
         private static readonly FieldInfo _imageInfoCollection = typeof(ImageList.ImageCollection).GetField("imageInfoCollection", BindingFlags.NonPublic | BindingFlags.Instance);
 

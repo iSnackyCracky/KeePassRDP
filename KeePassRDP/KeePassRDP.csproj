@@ -59,7 +59,9 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -82,17 +84,24 @@
     </None>
     <Compile Include="Commands\CommandArgumentAttribute.cs" />
     <Compile Include="Commands\Command.cs" />
+    <Compile Include="Commands\FreeRdpCommand.cs" />
     <Compile Include="Commands\MstscCommand.cs" />
+    <Compile Include="Generator\RdpFile_JsonSerializer.cs">
+      <DependentUpon>Generator\RdpFile.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Generator\RdpFile_Settings.cs">
+      <DependentUpon>Generator\RdpFile.cs</DependentUpon>
+    </Compile>
     <Compile Include="Generator\RdpFile.cs" />
     <Compile Include="Generator\KprRdpFileForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Generator\KprRdpFileForm.Designer.cs">
-      <DependentUpon>KprRdpFileForm.cs</DependentUpon>
+      <DependentUpon>Generator\KprRdpFileForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Generator\RdpFileJsonSerializer.cs" />
-    <Compile Include="Generator\RdpFileSettings.cs" />
     <Compile Include="Generator\RdpSettingAttribute.cs" />
+    <Compile Include="Generator\RdpSignscopeAttribute.cs" />
+    <Compile Include="Generator\SelfSignedCertificate.cs" />
     <Compile Include="KprConnectionManager.cs" />
     <Compile Include="KprPictureBox.cs">
       <SubType>Component</SubType>
@@ -290,7 +299,7 @@ copy /y "$(SolutionDir)KeePassRDPUnmanaged\bin\x64\$(ConfigurationName)\KeePassR
     <PreBuildEvent>
     </PreBuildEvent>
   </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>

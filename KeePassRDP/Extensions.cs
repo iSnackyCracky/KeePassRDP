@@ -29,6 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -52,7 +53,9 @@ namespace KeePassRDP.Extensions
             if (entrySettings != null && entrySettings.Length > 0)
                 try
                 {
-                    entrySettingsString = Encoding.UTF8.GetString(entrySettings.ReadData());
+                    var data = entrySettings.ReadData();
+                    if (data != null)
+                        entrySettingsString = Encoding.UTF8.GetString(data);
                 }
                 catch (DecoderFallbackException)
                 {
@@ -83,7 +86,8 @@ namespace KeePassRDP.Extensions
                     return null;
             }
             var kprEntrySettings = JsonConvert.DeserializeObject<KprEntrySettings>(entrySettingsString, Util.JsonSerializerSettings);
-            kprEntrySettings.IsReadOnly = readOnly;
+            if (readOnly && kprEntrySettings != null)
+                return kprEntrySettings.AsReadOnly();
             return kprEntrySettings;
         }
 
@@ -124,54 +128,62 @@ namespace KeePassRDP.Extensions
                 Uuid = pe.Uuid
             };
 
-            var chars = pe.Strings.GetSafe(PwDefs.UserNameField).ReadChars();
-            var entryUsername = new string(chars);
-            var username = SprEngine.Compile(entryUsername, ctx);
-
-            if (username.StartsWith(@".\", StringComparison.OrdinalIgnoreCase))
-                username = Environment.GetEnvironmentVariable("COMPUTERNAME") + username.Substring(1);
-
-            if (username != entryUsername)
+            var safeUsername = pe.Strings.GetSafe(PwDefs.UserNameField);
+            if (!safeUsername.IsEmpty)
             {
-                MemoryUtil.SecureZeroMemory(entryUsername);
-                MemoryUtil.SecureZeroMemory(chars);
-                var bytes = Encoding.UTF8.GetBytes(username);
-                retPwEntry.Strings.Set(PwDefs.UserNameField, new ProtectedString(true, bytes));
-                MemoryUtil.SecureZeroMemory(bytes);
-            }
-            else
-            {
-                var bytes = Encoding.UTF8.GetBytes(username);
-                MemoryUtil.SecureZeroMemory(entryUsername);
-                MemoryUtil.SecureZeroMemory(chars);
-                retPwEntry.Strings.Set(PwDefs.UserNameField, new ProtectedString(true, bytes));
-                MemoryUtil.SecureZeroMemory(bytes);
-            }
+                var chars = safeUsername.ReadChars();
+                var entryUsername = new string(chars);
+                var username = SprEngine.Compile(entryUsername, ctx);
 
-            chars = pe.Strings.GetSafe(PwDefs.PasswordField).ReadChars();
-            var entryPassword = new string(chars);
-            var password = SprEngine.Compile(entryPassword, ctx);
+                if (username.StartsWith(@".\", StringComparison.OrdinalIgnoreCase))
+                    username = Environment.MachineName + username.Substring(1);
 
-            if (password != entryPassword)
-            {
-                MemoryUtil.SecureZeroMemory(entryPassword);
-                MemoryUtil.SecureZeroMemory(chars);
-                var bytes = Encoding.UTF8.GetBytes(password);
-                retPwEntry.Strings.Set(PwDefs.PasswordField, new ProtectedString(true, bytes));
-                MemoryUtil.SecureZeroMemory(bytes);
-            }
-            else
-            {
-                var bytes = Encoding.UTF8.GetBytes(password);
-                MemoryUtil.SecureZeroMemory(entryPassword);
-                MemoryUtil.SecureZeroMemory(chars);
-                retPwEntry.Strings.Set(PwDefs.PasswordField, new ProtectedString(true, bytes));
-                MemoryUtil.SecureZeroMemory(bytes);
+                if (username != entryUsername)
+                {
+                    MemoryUtil.SecureZeroMemory(entryUsername);
+                    MemoryUtil.SecureZeroMemory(chars);
+                    var bytes = Encoding.UTF8.GetBytes(username);
+                    retPwEntry.Strings.Set(PwDefs.UserNameField, new ProtectedString(true, bytes));
+                    MemoryUtil.SecureZeroMemory(bytes);
+                }
+                else
+                {
+                    var bytes = Encoding.UTF8.GetBytes(username);
+                    MemoryUtil.SecureZeroMemory(entryUsername);
+                    MemoryUtil.SecureZeroMemory(chars);
+                    retPwEntry.Strings.Set(PwDefs.UserNameField, new ProtectedString(true, bytes));
+                    MemoryUtil.SecureZeroMemory(bytes);
+                }
             }
 
-            using (var entrySettings = pe.GetKprSettings(true) ?? KprEntrySettings.Empty)
+            var safePassword = pe.Strings.GetSafe(PwDefs.PasswordField);
+            if (!safePassword.IsEmpty)
+            {
+                var chars = safePassword.ReadChars();
+                var entryPassword = new string(chars);
+                var password = SprEngine.Compile(entryPassword, ctx);
+
+                if (password != entryPassword)
+                {
+                    MemoryUtil.SecureZeroMemory(entryPassword);
+                    MemoryUtil.SecureZeroMemory(chars);
+                    var bytes = Encoding.UTF8.GetBytes(password);
+                    retPwEntry.Strings.Set(PwDefs.PasswordField, new ProtectedString(true, bytes));
+                    MemoryUtil.SecureZeroMemory(bytes);
+                }
+                else
+                {
+                    var bytes = Encoding.UTF8.GetBytes(password);
+                    MemoryUtil.SecureZeroMemory(entryPassword);
+                    MemoryUtil.SecureZeroMemory(chars);
+                    retPwEntry.Strings.Set(PwDefs.PasswordField, new ProtectedString(true, bytes));
+                    MemoryUtil.SecureZeroMemory(bytes);
+                }
+            }
+
+            /*using (var entrySettings = pe.GetKprSettings(true) ?? KprEntrySettings.Empty)
                 if (entrySettings.ForceLocalUser)
-                    retPwEntry.Strings.Set(PwDefs.UserNameField, retPwEntry.Strings.GetSafe(PwDefs.UserNameField).ForceLocalUser());
+                    retPwEntry.Strings.Set(PwDefs.UserNameField, retPwEntry.Strings.GetSafe(PwDefs.UserNameField).ForceLocalUser());*/
 
             return retPwEntry;
         }
@@ -209,10 +221,83 @@ namespace KeePassRDP.Extensions
     }
 
     /// <summary>
+    /// Extension methods for the <see cref="ProtectedString"/> class.
+    /// </summary>
+    internal static class ProtectedStringExtensions
+    {
+        /// <summary>
+        /// Convert <see cref="ProtectedString"/> to <see cref="SecureString"/>.
+        /// </summary>
+        /// <param name="ps"><see cref="ProtectedString"/> to convert.</param>
+        /// <param name="readOnly">Make <see cref="SecureString"/> read only.</param>
+        /// <returns><see cref="SecureString"/></returns>
+        internal static SecureString AsSecureString(this ProtectedString ps, bool readOnly = true)
+        {
+            var chars = ps.ReadChars();
+
+            var secureString = new SecureString();
+
+            foreach (var c in chars)
+                secureString.AppendChar(c);
+
+            MemoryUtil.SecureZeroMemory(chars);
+
+            if (readOnly)
+                secureString.MakeReadOnly();
+
+            return secureString;
+        }
+    }
+
+    /// <summary>
     /// Extension methods for the <see cref="KprEntrySettings"/> class.
     /// </summary>
     internal static class KprEntrySettingsExtensions
     {
+        public static KprEntrySettings Inherit(this KprEntrySettings kprEntrySettings, KprEntrySettings inheritKprEntrySettings)
+        {
+            if (kprEntrySettings.Inherit != KprEntrySettings.Inheritance.Default &&
+                inheritKprEntrySettings.Inherit != KprEntrySettings.Inheritance.Force)
+                return kprEntrySettings;
+            if (inheritKprEntrySettings.Inherit == KprEntrySettings.Inheritance.Hide)
+                return kprEntrySettings;
+            if (inheritKprEntrySettings.Inherit == KprEntrySettings.Inheritance.Force)
+                return inheritKprEntrySettings;
+
+            var newKprEntrySettings = new KprEntrySettings(inheritKprEntrySettings)
+            {
+                IncludeDefaultParameters = kprEntrySettings.IncludeDefaultParameters && !inheritKprEntrySettings.IncludeDefaultParameters ?
+                    inheritKprEntrySettings.IncludeDefaultParameters : kprEntrySettings.IncludeDefaultParameters,
+                ForceLocalUser = !kprEntrySettings.ForceLocalUser && inheritKprEntrySettings.ForceLocalUser ?
+                    inheritKprEntrySettings.ForceLocalUser : kprEntrySettings.ForceLocalUser,
+                ForceUpn = !kprEntrySettings.ForceUpn && inheritKprEntrySettings.ForceUpn ?
+                    inheritKprEntrySettings.ForceUpn : kprEntrySettings.ForceUpn,
+                RetryOnce = !kprEntrySettings.RetryOnce && inheritKprEntrySettings.RetryOnce ?
+                    inheritKprEntrySettings.RetryOnce : kprEntrySettings.RetryOnce,
+                RdpFile = kprEntrySettings.RdpFile ?? inheritKprEntrySettings.RdpFile,
+                Inherit = kprEntrySettings.Inherit,
+                Ignore = kprEntrySettings.Ignore,
+                UseCredpicker = kprEntrySettings.UseCredpicker,
+                CpRecurseGroups = kprEntrySettings.CpRecurseGroups,
+                CpIncludeDefaultRegex = kprEntrySettings.CpIncludeDefaultRegex
+            };
+            foreach (var item in kprEntrySettings.CpExcludedGroupUUIDs)
+                if (!newKprEntrySettings.CpExcludedGroupUUIDs.Contains(item))
+                    newKprEntrySettings.CpExcludedGroupUUIDs.Add(item);
+            foreach (var item in kprEntrySettings.CpGroupUUIDs)
+                if (!newKprEntrySettings.CpGroupUUIDs.Contains(item))
+                    newKprEntrySettings.CpGroupUUIDs.Add(item);
+            foreach (var item in kprEntrySettings.CpRegExPatterns)
+                if (!newKprEntrySettings.CpRegExPatterns.Contains(item))
+                    newKprEntrySettings.CpRegExPatterns.Add(item);
+            foreach (var item in kprEntrySettings.MstscParameters)
+                if (!newKprEntrySettings.MstscParameters.Contains(item))
+                    newKprEntrySettings.MstscParameters.Add(item);
+            if (kprEntrySettings.IsReadOnly)
+                return newKprEntrySettings.AsReadOnly();
+            return newKprEntrySettings;
+        }
+
         /// <summary>
         /// Save <see cref="KprEntrySettings"/> to <see cref="PwEntry"/>.
         /// </summary>

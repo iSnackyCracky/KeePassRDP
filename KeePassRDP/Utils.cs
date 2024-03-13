@@ -23,14 +23,14 @@ using KeePass.UI;
 using KeePassLib;
 using KeePassLib.Security;
 using KeePassRDP.Extensions;
-using Microsoft.Win32.SafeHandles;
+using Microsoft.Win32;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.IO;
 using System.Linq;
+using System.Management;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -175,7 +175,7 @@ namespace KeePassRDP.Utils
         }
 
         /// <summary>
-        ///
+        /// Replaces domain in username with local computer name.
         /// </summary>
         /// <param name="username"><see cref="ProtectedString"/> to modify.</param>
         /// <param name="host">Hostname to replace.</param>
@@ -186,8 +186,7 @@ namespace KeePassRDP.Utils
                 return username;
 
             var chars = username.ReadChars();
-            var entryUsername = new string(chars);
-            var seperatorIndex = entryUsername.IndexOf('\\');
+            var seperatorIndex = Array.FindIndex(chars, x => x == '\\');
 
             if (seperatorIndex >= 0 &&
                 (string.IsNullOrEmpty(host) ||
@@ -198,13 +197,59 @@ namespace KeePassRDP.Utils
                         .SequenceEqual(chars.Take(seperatorIndex).Select(x => char.ToLowerInvariant(x))))))
             {
                 username = username.Remove(0, seperatorIndex);
-                username = username.Insert(0, Environment.GetEnvironmentVariable("COMPUTERNAME"));
+                username = username.Insert(0, Environment.MachineName);
             }
 
-            MemoryUtil.SecureZeroMemory(entryUsername);
             MemoryUtil.SecureZeroMemory(chars);
 
             return username;
+        }
+
+        /// <summary>
+        /// Converts from HOST.NAME\USERNAME to username@host.name
+        /// </summary>
+        /// <param name="username"><see cref="ProtectedString"/> to modify.</param>
+        /// <returns></returns>
+        public static ProtectedString ForceUPN(this ProtectedString username)
+        {
+            if (username.IsEmpty)
+                return username;
+
+            var user = new StringBuilder(NativeMethods.CREDUI_MAX_USERNAME_LENGTH + 1);
+            var domain = new StringBuilder(NativeMethods.CREDUI_MAX_DOMAIN_TARGET_LENGTH + 1);
+
+            if (NativeMethods.CredUIParseUserName(username.ReadString(), user, user.Capacity, domain, domain.Capacity) == 0 &&
+                user.Length > 0 &&
+                domain.Length > 0)
+            {
+                var newUser = user.ToString().TrimEnd(char.MinValue);
+                var newDomain = domain.ToString().TrimEnd(char.MinValue);
+
+                if (!string.IsNullOrWhiteSpace(newUser) && !string.IsNullOrWhiteSpace(newDomain) && newDomain.Contains('.') && newDomain != ".")
+                {
+                    username = username.Remove(0, username.Length);
+                    username = username.Insert(0, string.Format("{0}@{1}", newUser, newDomain).ToLowerInvariant());
+                }
+            }
+
+            return username;
+        }
+
+        internal static void RemoveHintFromRegistry(string host)
+        {
+            if (string.IsNullOrEmpty(host))
+                return;
+
+            try
+            {
+                using (var tsc = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Terminal Server Client", true))
+                using (var srv = tsc.OpenSubKey("Servers", true))
+                    if (srv != null /*&& srv.GetSubKeyNames().Contains(host)*/)
+                        srv.DeleteSubKey(host, false);
+            }
+            catch
+            {
+            }
         }
 
         /*private static readonly Regex _r1 = new Regex(@"^(?:http(?:s)?://)?(?:www(?:[0-9]+)?.)?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -253,6 +298,116 @@ namespace KeePassRDP.Utils
 
             return tsmi;
         }
+
+        internal static bool CheckCredentialGuard()
+        {
+            try
+            {
+                var scope = new ManagementScope(@"\\.\root\Microsoft\Windows\DeviceGuard", new ConnectionOptions
+                {
+                    Impersonation = ImpersonationLevel.Impersonate,
+                    Authentication = AuthenticationLevel.Connect
+                });
+
+                scope.Connect();
+
+                var searcher = new ManagementObjectSearcher(scope, new ObjectQuery("SELECT SecurityServicesConfigured FROM Win32_DeviceGuard"));
+                var result = searcher.Get().OfType<ManagementObject>().Select(x => x["SecurityServicesConfigured"]).FirstOrDefault();
+
+                if (result != null)
+                    return Array.Exists((uint[])result, x => x == 1);
+            }
+            catch
+            {
+            }
+
+            return false;
+        }
+
+        /*internal enum OidGroup
+        {
+            AllGroups = 0,
+            HashAlgorithm = 1,                              // CRYPT_HASH_ALG_OID_GROUP_ID
+            EncryptionAlgorithm = 2,                        // CRYPT_ENCRYPT_ALG_OID_GROUP_ID
+            PublicKeyAlgorithm = 3,                         // CRYPT_PUBKEY_ALG_OID_GROUP_ID
+            SignatureAlgorithm = 4,                         // CRYPT_SIGN_ALG_OID_GROUP_ID
+            Attribute = 5,                                  // CRYPT_RDN_ATTR_OID_GROUP_ID
+            ExtensionOrAttribute = 6,                       // CRYPT_EXT_OR_ATTR_OID_GROUP_ID
+            EnhancedKeyUsage = 7,                           // CRYPT_ENHKEY_USAGE_OID_GROUP_ID
+            Policy = 8,                                     // CRYPT_POLICY_OID_GROUP_ID
+            Template = 9,                                   // CRYPT_TEMPLATE_OID_GROUP_ID
+            KeyDerivationFunction = 10,                     // CRYPT_KDF_OID_GROUP_ID
+
+            // This can be ORed into the above groups to turn off an AD search
+            DisableSearchDS = unchecked((int)0x80000000)    // CRYPT_OID_DISABLE_SEARCH_DS_FLAG
+        }
+
+        internal enum OidKeyType
+        {
+            Oid = 1,                                        // CRYPT_OID_INFO_OID_KEY
+            Name = 2,                                       // CRYPT_OID_INFO_NAME_KEY
+            AlgorithmID = 3,                                // CRYPT_OID_INFO_ALGID_KEY
+            SignatureID = 4,                                // CRYPT_OID_INFO_SIGN_KEY
+            CngAlgorithmID = 5,                             // CRYPT_OID_INFO_CNG_ALGID_KEY
+            CngSignatureID = 6,                             // CRYPT_OID_INFO_CNG_SIGN_KEY
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct CRYPTOAPI_BLOB
+        {
+            internal int cbData;
+
+            internal IntPtr pbData; // BYTE*
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct CRYPT_OID_INFO
+        {
+            internal int cbSize;
+
+            [MarshalAs(UnmanagedType.LPStr)]
+            internal string pszOID;
+
+            [MarshalAs(UnmanagedType.LPWStr)]
+            internal string pwszName;
+
+            internal OidGroup dwGroupId;
+
+            // Really a union of dwValue, dwLength, or ALG_ID Algid
+            internal int dwValue;
+
+            internal CRYPTOAPI_BLOB ExtraInfo;
+
+            [MarshalAs(UnmanagedType.LPWStr)]
+            internal string pwszCNGAlgid;
+
+            [MarshalAs(UnmanagedType.LPWStr)]
+            internal string pwszCNGExtraAlgid;
+        }
+
+        [SecurityCritical]
+        [SuppressUnmanagedCodeSecurity]
+        [DllImport("crypt32.dll", SetLastError = true)]
+        private static extern IntPtr CryptFindOIDInfo(OidKeyType dwKeyType, IntPtr pvKey, OidGroup dwGroupId);
+
+        // https://learn.microsoft.com/de-de/windows/win32/seccrypto/alg-id
+        //private const int CALG_SHA_256 = 0x0000800c;
+
+        private static CRYPT_OID_INFO OIDInfo(OidKeyType keyType, string key)
+        {
+            IntPtr rawKey;
+            if (keyType == OidKeyType.Oid)
+                rawKey = Marshal.StringToCoTaskMemAnsi(key);
+            else
+                rawKey = Marshal.StringToCoTaskMemUni(key);
+            var poidinfo = CryptFindOIDInfo(keyType, rawKey, OidGroup.AllGroups);
+            if (poidinfo == IntPtr.Zero)
+                return new CRYPT_OID_INFO();
+            var coinfo = (CRYPT_OID_INFO)Marshal.PtrToStructure(poidinfo, typeof(CRYPT_OID_INFO));
+            if (rawKey != IntPtr.Zero)
+                Marshal.FreeCoTaskMem(rawKey);
+            return coinfo;
+        }*/
     }
 
     public static class MemoryUtil
@@ -260,6 +415,8 @@ namespace KeePassRDP.Utils
         /*[DllImport("Kernel32.dll", EntryPoint = "RtlZeroMemory", SetLastError = false)]
         private static extern void RtlZeroMemory(IntPtr dest, IntPtr size);*/
 
+        [SecurityCritical]
+        [SuppressUnmanagedCodeSecurity]
         [DllImport("KeePassRDP.unmanaged.dll", EntryPoint = "KprSecureZeroMemory", SetLastError = false)]
         private static extern IntPtr RtlSecureZeroMemory([In] IntPtr dest, [In] IntPtr size);
 
@@ -267,6 +424,9 @@ namespace KeePassRDP.Utils
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
         public static void SafeSecureZeroMemory(IntPtr dest, long size)
         {
+            if (dest == IntPtr.Zero)
+                return;
+
             try
             {
                 RtlSecureZeroMemory(dest, (IntPtr)size);
