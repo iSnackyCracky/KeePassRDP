@@ -120,6 +120,9 @@
   <data name="&amp;Cancel" xml:space="preserve">
     <value>&amp;Abbrechen</value>
   </data>
+  <data name="&amp;Exit" xml:space="preserve">
+    <value>&amp;Beenden</value>
+  </data>
   <data name="&amp;Export" xml:space="preserve">
     <value>&amp;Exportieren</value>
   </data>
@@ -131,9 +134,6 @@
   </data>
   <data name="&amp;No" xml:space="preserve">
     <value>&amp;Nein</value>
-  </data>
-  <data name="&amp;Quit" xml:space="preserve">
-    <value>&amp;Beenden</value>
   </data>
   <data name="&amp;Save" xml:space="preserve">
     <value>&amp;Speichern</value>
@@ -248,9 +248,6 @@ TTL kann auf 0 gesetzt werden um Zugangsdaten nur beim Beenden zu löschen.</val
   <data name="Continue with selected credentials" xml:space="preserve">
     <value>Mit ausgewählten Zugangsdaten fortfahren</value>
   </data>
-  <data name="Continue?" xml:space="preserve">
-    <value>Fortfahren?</value>
-  </data>
   <data name="Create a self-signed certificate." xml:space="preserve">
     <value>Selbst signiertes Zertifikat erzeugen.</value>
   </data>
@@ -278,6 +275,9 @@ Unbestimmt = Vererbung von Einstellungen erlauben (standard)</value>
   </data>
   <data name="Display" xml:space="preserve">
     <value>Anzeige</value>
+  </data>
+  <data name="Do you want to continue?" xml:space="preserve">
+    <value>Fortfahren?</value>
   </data>
   <data name="Enable or disable resolving of references for entries shown in credential picker." xml:space="preserve">
     <value>(De-)Aktivieren des Auflösens von Verweisen in Einträgen die im Credential Picker angezeigt werden.</value>

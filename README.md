@@ -1,5 +1,5 @@
-[zip]: https://github.com/iSnackyCracky/KeePassRDP/releases/latest/download/KeePassRDP_v2.2.zip
-[exe]: https://github.com/iSnackyCracky/KeePassRDP/releases/latest/download/KeePassRDP_v2.2.exe
+[zip]: https://github.com/iSnackyCracky/KeePassRDP/releases/latest/download/KeePassRDP_v2.2.1.zip
+[exe]: https://github.com/iSnackyCracky/KeePassRDP/releases/latest/download/KeePassRDP_v2.2.1.exe
 
 # KeePassRDP
 [![Latest version](https://img.shields.io/github/v/release/iSnackyCracky/KeePassRDP?style=flat-square)](https://github.com/iSnackyCracky/KeePassRDP/releases/latest)
@@ -167,7 +167,7 @@ resgen.exe KeePassRDP.es-ES.resx
 The following example will extract the .plgx file and overwrite it in the target folder:
 
 ```bat
-KeePassRDP_v2.1.exe /Q:A /C /T:"%ProgramFiles%\KeePass Password Safe 2\Plugins"
+KeePassRDP_v2.2.1.exe /Q:A /C /T:"%ProgramFiles%\KeePass Password Safe 2\Plugins"
 ```
 
 <small>:bulb: *Writing into %ProgramFiles% usually requires administrator privileges.*</small>

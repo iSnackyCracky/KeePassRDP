@@ -474,17 +474,21 @@ namespace KeePassRDP
                         };
                         title = SprEngine.Compile(account.Strings.ReadSafe(PwDefs.TitleField), ctx);
 
-                        var entryUsername = new string(account.Strings.GetSafe(PwDefs.UserNameField).ReadChars());
+                        var usernameChars = account.Strings.GetSafe(PwDefs.UserNameField).ReadChars();
+                        var entryUsername = new string(usernameChars);
                         username = SprEngine.Compile(entryUsername, ctx);
                         if (username != entryUsername)
                             MemoryUtil.SecureZeroMemory(entryUsername);
+                        MemoryUtil.SecureZeroMemory(usernameChars);
 
                         notes = SprEngine.Compile(account.Strings.ReadSafe(PwDefs.NotesField), ctx);
                     }
                     else
                     {
                         title = account.Strings.ReadSafe(PwDefs.TitleField);
-                        username = new string(account.Strings.GetSafe(PwDefs.UserNameField).ReadChars());
+                        var usernameChars = account.Strings.GetSafe(PwDefs.UserNameField).ReadChars();
+                        username = new string(usernameChars);
+                        MemoryUtil.SecureZeroMemory(usernameChars);
                         notes = account.Strings.ReadSafe(PwDefs.NotesField);
                     }
 

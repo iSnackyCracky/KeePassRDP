@@ -50,6 +50,7 @@ namespace KeePassRDP
     {
         private class TaskWithCancellationToken : Task
         {
+            public CancellationToken CancellationToken { get {  return _cancellationTokenSource.Token; } }
             public bool IsCancellationRequested { get { return _cancellationTokenSource.IsCancellationRequested; } }
 
             private readonly CancellationTokenSource _cancellationTokenSource;
@@ -370,7 +371,6 @@ namespace KeePassRDP
                                                 VtdIcon.Information,
                                                 _host.MainWindow,
                                                 null, 0, null, 0);
-
                                         continue;
                                     }
                                     else
@@ -466,8 +466,10 @@ namespace KeePassRDP
                                         if (tmpUnresolvedCredEntry != null)
                                         {
                                             var uncompiledUsername = tmpUnresolvedCredEntry.Strings.GetSafe(PwDefs.UserNameField);
-                                            if (uncompiledUsername.ReadString().IndexOf("{TIMEOTP}", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                                uncompiledUsername.ReadString().IndexOf("{HMACOTP}", StringComparison.OrdinalIgnoreCase) >= 0)
+                                            var uncompiledChars = uncompiledUsername.ReadChars();
+                                            var uncompiledString = new string(uncompiledChars);
+                                            if (uncompiledString.IndexOf("{TIMEOTP}", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                                uncompiledString.IndexOf("{HMACOTP}", StringComparison.OrdinalIgnoreCase) >= 0)
                                             {
                                                 var tmpCredEntry = new PwEntry(false, false)
                                                 {
@@ -478,6 +480,8 @@ namespace KeePassRDP
                                                     tmpCredEntry.Strings.Set(kv.Key, kv.Value.WithProtection(true));
                                                 retryCredEntry = tmpCredEntry;
                                             }
+                                            MemoryUtil.SecureZeroMemory(uncompiledString);
+                                            MemoryUtil.SecureZeroMemory(uncompiledChars);
                                         }
                                         retryUsername = username;
                                         retryPassword = securePassword;
@@ -488,37 +492,45 @@ namespace KeePassRDP
                                 else
                                     retryOnce = false;
 
-                                if ((tmpUseCreds || _config.KeePassAlwaysConfirm) && _tasks.ContainsKey(taskUuid) && !_tasks[taskUuid].IsCompleted)
-                                    if (VistaTaskDialog.ShowMessageBoxEx(
-                                        tmpUseCreds ?
-                                            string.Format(KprResourceManager.Instance["Already connected with the same credentials to URL/target '{0}'."], host) :
-                                            string.Format(KprResourceManager.Instance["Already connected to URL/target '{0}'."], host),
-                                        KprResourceManager.Instance["Continue?"],
-                                        Util.KeePassRDP,
-                                        VtdIcon.Information,
-                                        _host.MainWindow,
-                                        KprResourceManager.Instance["&Yes"], 0,
-                                        KprResourceManager.Instance["&No"], 1) == 1)
-                                    {
-                                        if (cred != null)
+                                TaskWithCancellationToken oldTask = null;
+                                try
+                                {
+                                    if ((tmpUseCreds || _config.KeePassAlwaysConfirm) && _tasks.TryGetValue(taskUuid, out oldTask) && !oldTask.IsCompleted)
+                                        if (VistaTaskDialog.ShowMessageBoxEx(
+                                            tmpUseCreds ?
+                                                string.Format(KprResourceManager.Instance["Already connected with the same credentials to URL/target '{0}'."], host) :
+                                                string.Format(KprResourceManager.Instance["Already connected to URL/target '{0}'."], host),
+                                            KprResourceManager.Instance[KPRes.AskContinue],
+                                            Util.KeePassRDP,
+                                            VtdIcon.Information,
+                                            _host.MainWindow,
+                                            KprResourceManager.Instance[KPRes.YesCmd], 0,
+                                            KprResourceManager.Instance[KPRes.NoCmd], 1) == 1)
                                         {
-                                            cred.Dispose();
-                                            cred = null;
-                                        }
-                                        if (gatewayCred != null)
-                                        {
-                                            gatewayCred.Dispose();
-                                            gatewayCred = null;
-                                        }
+                                            if (cred != null)
+                                            {
+                                                cred.Dispose();
+                                                cred = null;
+                                            }
+                                            if (gatewayCred != null)
+                                            {
+                                                gatewayCred.Dispose();
+                                                gatewayCred = null;
+                                            }
 
-                                        continue;
-                                    }
+                                            continue;
+                                        }
+                                }
+                                catch (ObjectDisposedException)
+                                {
+                                }
 
                                 var title = string.Empty;
                                 if (_config.MstscReplaceTitle)
                                     title = SprEngine.Compile(connPwEntry.Strings.ReadSafe(PwDefs.TitleField), ctx);
 
-                                _tasks[taskUuid] = new TaskWithCancellationToken(thisTaskUuid =>
+                                TaskWithCancellationToken newTask = null;
+                                _tasks[taskUuid] = newTask = new TaskWithCancellationToken(thisTaskUuid =>
                                 {
                                     RdpFile rdpFile = null;
 
@@ -1071,9 +1083,11 @@ namespace KeePassRDP
                                                                                             if (forceUpn)
                                                                                                 retryUsername = retryUsername.ForceUPN();
                                                                                         }
-                                                                                        var chars = retryUsername.ReadChars();
-                                                                                        vp.SetValue(new string(chars));
-                                                                                        MemoryUtil.SecureZeroMemory(chars);
+                                                                                        var usernameChars = retryUsername.ReadChars();
+                                                                                        var usernameString = new string(usernameChars);
+                                                                                        vp.SetValue(usernameString);
+                                                                                        MemoryUtil.SecureZeroMemory(usernameString);
+                                                                                        MemoryUtil.SecureZeroMemory(usernameChars);
                                                                                     }
                                                                                 }
                                                                             }
@@ -1204,39 +1218,42 @@ namespace KeePassRDP
                                                 Util.RemoveHintFromRegistry(host);
                                         }
 
-                                        TaskWithCancellationToken oldtask;
-                                        if (_tasks.TryRemove((string)thisTaskUuid, out oldtask))
-                                            oldtask.ContinueWith(t =>
+                                        var localTaskUuid = (string)thisTaskUuid;
+                                        TaskWithCancellationToken localOldTask = null;
+                                        if (_tasks.TryRemove(localTaskUuid, out localOldTask) && localOldTask != newTask && !localOldTask.IsCompleted)
+                                            _tasks.TryAdd(localTaskUuid, localOldTask);
+
+                                        newTask.ContinueWith(t =>
+                                        {
+                                            try
                                             {
-                                                try
-                                                {
-                                                    t.Wait();
-                                                }
-                                                catch (Exception ex)
-                                                {
-                                                    VistaTaskDialog.ShowMessageBoxEx(
-                                                        string.Format(
-                                                            "{0}{1}{2}",
-                                                            host,
-                                                            Environment.NewLine,
-                                                            ex.InnerException != null && !string.IsNullOrWhiteSpace(ex.InnerException.Message) ?
-                                                                ex.InnerException.Message :
-                                                                !string.IsNullOrWhiteSpace(ex.Message) ?
-                                                                    ex.Message :
-                                                                    ex.InnerException != null ?
-                                                                        ex.InnerException.GetType().Name :
-                                                                        ex.GetType().Name),
-                                                        null,
-                                                        string.Format("{0} - {1}", Util.KeePassRDP, KPRes.Error),
-                                                        VtdIcon.Error,
-                                                        _host.MainWindow,
-                                                        null, 0, null, 0);
-                                                }
-                                                finally
-                                                {
-                                                    oldtask.Dispose();
-                                                }
-                                            });
+                                                t.Wait();
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                VistaTaskDialog.ShowMessageBoxEx(
+                                                    string.Format(
+                                                        "{0}{1}{2}",
+                                                        host,
+                                                        Environment.NewLine,
+                                                        ex.InnerException != null && !string.IsNullOrWhiteSpace(ex.InnerException.Message) ?
+                                                            ex.InnerException.Message :
+                                                            !string.IsNullOrWhiteSpace(ex.Message) ?
+                                                                ex.Message :
+                                                                ex.InnerException != null ?
+                                                                    ex.InnerException.GetType().Name :
+                                                                    ex.GetType().Name),
+                                                    null,
+                                                    string.Format("{0} - {1}", Util.KeePassRDP, KPRes.Error),
+                                                    VtdIcon.Error,
+                                                    _host.MainWindow,
+                                                    null, 0, null, 0);
+                                            }
+                                            finally
+                                            {
+                                                newTask.Dispose();
+                                            }
+                                        });
                                     }
                                 }, taskUuid, new CancellationTokenSource());
                             }

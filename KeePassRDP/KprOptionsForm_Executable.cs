@@ -215,12 +215,12 @@ namespace KeePassRDP
         {
             if (VistaTaskDialog.ShowMessageBoxEx(
                 KprResourceManager.Instance["This will create a self-signed certificate that can be used for signing .rdp files and save it into the current users \"my\" and \"root\" certificate store."],
-                KprResourceManager.Instance["Continue?"],
+                KprResourceManager.Instance[KPRes.AskContinue],
                 Util.KeePassRDP,
                 VtdIcon.Information,
                 this,
-                KprResourceManager.Instance["&Yes"], 0,
-                KprResourceManager.Instance["&No"], 1) != 0)
+                KprResourceManager.Instance[KPRes.YesCmd], 0,
+                KprResourceManager.Instance[KPRes.NoCmd], 1) != 0)
                 return;
 
             try
@@ -236,8 +236,8 @@ namespace KeePassRDP
                         Util.KeePassRDP,
                         VtdIcon.Warning,
                         this,
-                        KprResourceManager.Instance["&Yes"], 0,
-                        KprResourceManager.Instance["&No"], 1) != 0)
+                        KprResourceManager.Instance[KPRes.YesCmd], 0,
+                        KprResourceManager.Instance[KPRes.NoCmd], 1) != 0)
                         return;
 
                     if (cngKeyExists)

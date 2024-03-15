@@ -294,7 +294,9 @@ namespace KeePassRDP.Utils
             };
 
             // Silently ignore inacceptable shortcuts.
-            UIUtil.AssignShortcut(tsmi, Enum.IsDefined(typeof(Shortcut), (int)keyCode) ? keyCode : Keys.None);
+            //UIUtil.AssignShortcut(tsmi, Enum.IsDefined(typeof(Shortcut), (int)keyCode) ? keyCode : Keys.None);
+            keyCode = ToolStripManager.IsValidShortcut(keyCode) ? keyCode : Keys.None;
+            UIUtil.AssignShortcut(tsmi, keyCode);
 
             return tsmi;
         }

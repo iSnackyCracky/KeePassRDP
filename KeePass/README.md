@@ -1,0 +1,1 @@
+Place a copy of KeePass.exe here before building KeePassRDP.

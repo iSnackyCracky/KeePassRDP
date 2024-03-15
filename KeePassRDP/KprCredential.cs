@@ -52,9 +52,17 @@ namespace KeePassRDP
             GUID = Guid.NewGuid();
             ValidUntil = ttl > 0 ? DateTimeOffset.UtcNow + TimeSpan.FromSeconds(ttl) : DateTimeOffset.MaxValue;
 
+            var usernameString = string.Empty;
+            if (!username.IsEmpty)
+            {
+                var usernameChars = username.ReadChars();
+                usernameString = new string(usernameChars);
+                MemoryUtil.SecureZeroMemory(usernameChars);
+            }
+
             Type = type;
             TargetName = targetName;
-            UserName = username.IsEmpty ? string.Empty : new string(username.ReadChars());
+            UserName = usernameString;
             //CredentialBlob = password.IsEmpty ? string.Empty : new string(password.ReadChars());
             CredentialBlob = password.Copy();
             Persist = NativeCredentials.CRED_PERSIST.SESSION;

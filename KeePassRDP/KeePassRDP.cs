@@ -18,10 +18,10 @@
  *
  */
 
-using KeePass;
 using KeePass.Ecas;
 using KeePass.Forms;
 using KeePass.Plugins;
+using KeePass.Resources;
 using KeePass.UI;
 using KeePass.Util;
 using KeePassLib;
@@ -35,7 +35,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
-using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -121,6 +120,7 @@ namespace KeePassRDP
             _host.TriggerSystem.RaisingEvent += TriggerSystem_RaisingEvent_AppInitPost;
 
             GlobalWindowManager.WindowAdded += GlobalWindowManager_WindowAdded;
+            GlobalWindowManager.WindowRemoved += GlobalWindowManager_WindowRemoved;
 
             _toolStripMenuItem.DropDownOpening += DropDownOpening;
             _host.MainWindow.EntryContextMenu.Opening += ContextMenuOpening;
@@ -210,12 +210,12 @@ namespace KeePassRDP
                                 {
                                     if (VistaTaskDialog.ShowMessageBoxEx(
                                         string.Format(KprResourceManager.Instance["{0} connection" + (_connectionManager.Value.Count == 1 ? " is" : "s are") + " still open."], _connectionManager.Value.Count),
-                                        KprResourceManager.Instance["Continue?"],
+                                        KprResourceManager.Instance[KPRes.AskContinue],
                                         Util.KeePassRDP,
                                         VtdIcon.Information,
                                         _host.MainWindow,
-                                        KprResourceManager.Instance["&Wait"], 0,
-                                        KprResourceManager.Instance["&Quit"], 1) == 0)
+                                        KprResourceManager.Instance[string.Format("&{0}", KPRes.Wait)], 0,
+                                        KprResourceManager.Instance[string.Format("&{0}", KPRes.Exit)], 1) == 0)
                                     {
                                         if (_isWaitingOnCloseSignal != null)
                                         {
@@ -281,6 +281,7 @@ namespace KeePassRDP
             _toolStripMenuItem.DropDownOpening -= DropDownOpening;
 
             GlobalWindowManager.WindowAdded -= GlobalWindowManager_WindowAdded;
+            GlobalWindowManager.WindowRemoved -= GlobalWindowManager_WindowRemoved;
 
             try
             {
@@ -295,32 +296,41 @@ namespace KeePassRDP
                 _host.MainWindow.RemoveCustomToolBarButton(menu.ToString());
 
             foreach (var button in _toolbarItems)
+            {
                 if (button.Key != KprMenu.MenuItem.IgnoreCredentials)
-                {
-                    switch (button.Key)
-                    {
-                        case KprMenu.MenuItem.OpenRdpConnection:
-                            button.Value.Click -= OnOpenRDP_Click;
-                            break;
-                        case KprMenu.MenuItem.OpenRdpConnectionAdmin:
-                            button.Value.Click -= OnOpenRDPAdmin_Click;
-                            break;
-                        case KprMenu.MenuItem.OpenRdpConnectionNoCred:
-                            button.Value.Click -= OnOpenRDPNoCred_Click;
-                            break;
-                        case KprMenu.MenuItem.OpenRdpConnectionNoCredAdmin:
-                            button.Value.Click -= OnOpenRDPNoCredAdmin_Click;
-                            break;
-                        case KprMenu.MenuItem.IgnoreCredentials:
-                            button.Value.Click -= OnIgnoreCredEntry_Click;
-                            break;
-                    }
                     button.Value.Image.Dispose();
-                }
                 else
                     button.Value.Paint -= IgnoreButtonPaint;
-
+                if (!_host.TriggerSystem.Enabled)
+                    button.Value.Click -= OnToolstripItem_Click;
+            }
             _toolbarItems.Clear();
+
+            foreach (ToolStripMenuItem tsmiItem in _toolStripMenuItem.DropDownItems)
+            {
+                KprMenu.MenuItem menu;
+                if (Enum.TryParse(tsmiItem.Name, out menu))
+                    switch (menu)
+                    {
+                        case KprMenu.MenuItem.OpenRdpConnection:
+                            tsmiItem.Click -= OnOpenRDP_Click;
+                            break;
+                        case KprMenu.MenuItem.OpenRdpConnectionAdmin:
+                            tsmiItem.Click -= OnOpenRDPAdmin_Click;
+                            break;
+                        case KprMenu.MenuItem.OpenRdpConnectionNoCred:
+                            tsmiItem.Click -= OnOpenRDPNoCred_Click;
+                            break;
+                        case KprMenu.MenuItem.OpenRdpConnectionNoCredAdmin:
+                            tsmiItem.Click -= OnOpenRDPNoCredAdmin_Click;
+                            break;
+                        case KprMenu.MenuItem.IgnoreCredentials:
+                            tsmiItem.Click -= OnIgnoreCredEntry_Click;
+                            break;
+                        default:
+                            continue;
+                    }
+            }
             _toolStripMenuItem.DropDownItems.Clear();
 
             //if (_smallIcon.IsValueCreated)
@@ -338,6 +348,24 @@ namespace KeePassRDP
         {
             if (e.Form is PwEntryForm)
                 AddKprTab(e.Form as PwEntryForm);
+        }
+
+        private void GlobalWindowManager_WindowRemoved(object sender, GwmWindowEventArgs e)
+        {
+            if (e.Form is EcasTriggersForm)
+                foreach (var button in _toolbarItems)
+                {
+                    try
+                    {
+                        button.Value.Click -= OnToolstripItem_Click;
+                    }
+                    catch
+                    {
+                    }
+
+                    if (!_host.TriggerSystem.Enabled)
+                        button.Value.Click += OnToolstripItem_Click;
+                }
         }
 
         private void TriggerSystem_RaisingEvent_AppInitPost(object sender, EcasRaisingEventArgs e)
@@ -379,8 +407,12 @@ namespace KeePassRDP
             if (string.IsNullOrEmpty(strID))
                 return;
 
-            if (_toolStripMenuItem.DropDownItems.ContainsKey(strID))
-                _toolStripMenuItem.DropDownItems[strID].PerformClick();
+            /*if (_toolStripMenuItem.DropDownItems.ContainsKey(strID))
+                _toolStripMenuItem.DropDownItems[strID].PerformClick();*/
+
+            var idx = _toolStripMenuItem.DropDownItems.IndexOfKey(strID);
+            if (idx >= 0)
+                _toolStripMenuItem.DropDownItems[idx].PerformClick();
         }
 
         private void UIStateUpdated(object sender, EventArgs e)
@@ -423,6 +455,7 @@ namespace KeePassRDP
                 _host.MainWindow.AddCustomToolBarButton(menuString, menuString, KprMenu.GetText(menu));
 
                 var button = toolStrip.Items[toolStrip.Items.Count - 1];
+                button.Name = menuString;
                 button.DisplayStyle = ToolStripItemDisplayStyle.Image;
 
                 // Replace custom toolbar button text with image.
@@ -431,7 +464,6 @@ namespace KeePassRDP
                     if (!toolStrip.ImageList.Images.ContainsKey(menuString) && KprImageList.Instance.Images.ContainsKey("Checkmark"))
                         toolStrip.ImageList.Images.Add(menuString, KprImageList.Instance.Images["Checkmark"]);
                     button.Paint += IgnoreButtonPaint;
-                    button.Click += OnIgnoreCredEntry_Click;
                 }
                 else
                 {
@@ -447,24 +479,11 @@ namespace KeePassRDP
                                 toolStrip.ImageList.Images.Add(menuString, icon.ToBitmap());
                         }
                     button.ImageKey = menuString;
-                    switch (menu)
-                    {
-                        case KprMenu.MenuItem.OpenRdpConnection:
-                            button.Click += OnOpenRDP_Click;
-                            break;
-                        case KprMenu.MenuItem.OpenRdpConnectionAdmin:
-                            button.Click += OnOpenRDPAdmin_Click;
-                            break;
-                        case KprMenu.MenuItem.OpenRdpConnectionNoCred:
-                            button.Click += OnOpenRDPNoCred_Click;
-                            break;
-                        case KprMenu.MenuItem.OpenRdpConnectionNoCredAdmin:
-                            button.Click += OnOpenRDPNoCredAdmin_Click;
-                            break;
-                    }
                 }
 
                 button.Visible = _config.KeePassToolbarItems.HasFlag(menu);
+                if (!_host.TriggerSystem.Enabled)
+                    button.Click += OnToolstripItem_Click;
 
                 _toolbarItems.Add(menu, button);
             }
@@ -812,8 +831,10 @@ namespace KeePassRDP
 
                 if (_config.KeePassHotkeysRegisterLast || keyCode != tsmi.ShortcutKeys)
                 {
+                    var tbItem = _toolbarItems[menu];
+                    var tooltipText = tbItem.ToolTipText.Replace(tsmi.ShortcutKeyDisplayString, string.Empty).TrimEnd();
                     UIUtil.AssignShortcut(tsmi, keyCode);
-                    UIUtil.ConfigureTbButton(_toolbarItems[menu], _toolbarItems[menu].ToolTipText, null, tsmi);
+                    UIUtil.ConfigureTbButton(tbItem, tooltipText, null, tsmi);
                 }
 
                 if (_config.KeePassHotkeysRegisterLast && ToolStripManager.IsShortcutDefined(keyCode))
@@ -901,6 +922,14 @@ namespace KeePassRDP
             }
             AssignShortcuts();
             RemoveOldShortcuts();
+        }
+
+        private void OnToolstripItem_Click(object sender, EventArgs e)
+        {
+            var button = sender as ToolStripItem;
+            var idx = _toolStripMenuItem.DropDownItems.IndexOfKey(button.Name);
+            if (idx >= 0)
+                _toolStripMenuItem.DropDownItems[idx].PerformClick();
         }
 
         private void OnOpenRDP_Click(object sender, EventArgs e)
