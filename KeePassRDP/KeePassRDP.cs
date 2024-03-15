@@ -832,7 +832,7 @@ namespace KeePassRDP
                 if (_config.KeePassHotkeysRegisterLast || keyCode != tsmi.ShortcutKeys)
                 {
                     var tbItem = _toolbarItems[menu];
-                    var tooltipText = tbItem.ToolTipText.Replace(tsmi.ShortcutKeyDisplayString, string.Empty).TrimEnd();
+                    var tooltipText = !string.IsNullOrWhiteSpace(tsmi.ShortcutKeyDisplayString) ? tbItem.ToolTipText.Replace(string.Format("({0})", tsmi.ShortcutKeyDisplayString), string.Empty).TrimEnd() : tbItem.ToolTipText;
                     UIUtil.AssignShortcut(tsmi, keyCode);
                     UIUtil.ConfigureTbButton(tbItem, tooltipText, null, tsmi);
                 }

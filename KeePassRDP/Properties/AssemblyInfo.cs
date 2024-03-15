@@ -38,6 +38,6 @@ using System.Runtime.InteropServices;
 [assembly: SatelliteContractVersion("1.0.0.0")]
 
 // Version information
-[assembly: AssemblyVersion("2.2.1")]
-[assembly: AssemblyFileVersion("2.2.1")]
-[assembly: AssemblyInformationalVersion("2.2.1")]
+[assembly: AssemblyVersion("2.2.2")]
+[assembly: AssemblyFileVersion("2.2.2")]
+[assembly: AssemblyInformationalVersion("2.2.2")]
