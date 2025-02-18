@@ -102,7 +102,7 @@ namespace KeePassRDP.Generator
         public bool ShouldSerializeSpanMonitors() { return SpanMonitors != false; }
         public bool ShouldSerializeSuperpanaccelerationfactor() { return Superpanaccelerationfactor != 1; }
         public bool ShouldSerializeUsbdevicestoredirect() { return !string.IsNullOrWhiteSpace(Usbdevicestoredirect) && Usbdevicestoredirect != "*"; }
-        public bool ShouldSerializeUseMultimon() { return UseMultimon != false; }
+        public bool ShouldSerializeUseMultimon() { return UseMultimon == false; }
         public bool ShouldSerializeUsername() { return !string.IsNullOrWhiteSpace(Username); }
         public bool ShouldSerializeVideoplaybackmode() { return Videoplaybackmode != VideoPlaybackModes.Efficient; }
         public bool ShouldSerializeWinposstr() { return !string.IsNullOrWhiteSpace(Winposstr) && Winposstr != "0,3,0,0,800,600"; }
