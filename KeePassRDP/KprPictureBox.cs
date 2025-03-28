@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -18,6 +18,7 @@
  *
  */
 
+using KeePassRDP.Utils;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -26,7 +27,10 @@ using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using Timer = System.Windows.Forms.Timer;
 
 namespace KeePassRDP
 {
@@ -49,11 +53,21 @@ namespace KeePassRDP
         private PointF _offset;
         private Rectangle _rect;
 
+        private bool _isPainting;
         private bool _needsApple;
         private bool _paused;
-        private int _direction;
         private int _totalScore;
         private int _nextScore;
+        private Direction _direction;
+
+        private enum Direction : int
+        {
+            None = 0,
+            Up = 1,
+            Down = -1,
+            Left = 2,
+            Right = -2
+        }
 
         public KprPictureBox()
         {
@@ -87,10 +101,10 @@ namespace KeePassRDP
             };
 
             _snake = new LinkedList<Point>();
-
+            _isPainting = false;
             _needsApple = true;
             _paused = true;
-            _direction = 0;
+            _direction = Direction.None;
             _totalScore = 0;
             _nextScore = 32;
 
@@ -105,6 +119,7 @@ namespace KeePassRDP
                         g.SmoothingMode = SmoothingMode.AntiAlias;
                         g.PixelOffsetMode = PixelOffsetMode.HighQuality;
                         g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                        g.CompositingQuality = CompositingQuality.HighQuality;
                         g.DrawIconUnstretched(icon, new Rectangle(new Point(16, 20), icon.Size));
                     }
 
@@ -133,18 +148,36 @@ namespace KeePassRDP
                 _greenCursor = new Cursor(bGreen.GetHicon());
                 _yellowCursor = new Cursor(bYellow.GetHicon());
                 _currentCursor = _redCursor = new Cursor(bRed.GetHicon());
+
+                IconUtil.DestroyIcon(icon.Handle);
             }
         }
 
-        public new void Dispose()
+        /// <summary>
+        /// Verwendete Ressourcen bereinigen.
+        /// </summary>
+        /// <param name="disposing">True, wenn verwaltete Ressourcen gelöscht werden sollen; andernfalls False.</param>
+        protected override void Dispose(bool disposing)
         {
-            _timer.Tick -= Tick;
-            base.Dispose();
-            _bitmap.Dispose();
-            _currentCursor = null;
-            _greenCursor.Dispose();
-            _yellowCursor.Dispose();
-            _redCursor.Dispose();
+            if (disposing)
+            {
+                if (components != null)
+                {
+                    components.Dispose();
+                    components = null;
+                }
+
+                _timer.Tick -= Tick;
+                base.Dispose(disposing);
+                _timer.Dispose();
+                _bitmap.Dispose();
+                _currentCursor = null;
+                _greenCursor.Dispose();
+                _yellowCursor.Dispose();
+                _redCursor.Dispose();
+            }
+            else
+                base.Dispose(disposing);
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
@@ -237,8 +270,8 @@ namespace KeePassRDP
 
             Font = new Font(FontFamily.Families.FirstOrDefault(x => x.Name == "Consolas") ?? FontFamily.GenericMonospace, 12, FontStyle.Regular, GraphicsUnit.Pixel);
             Image = _bitmap;
-            _timer.Enabled = true;
             _paused = false;
+            _timer.Start();
 
             Focus();
             Invalidate();
@@ -247,7 +280,7 @@ namespace KeePassRDP
         protected override void OnClick(EventArgs e)
         {
             base.OnClick(e);
-            if (!Focused && _direction != 0)
+            if (!Focused && _direction != Direction.None)
                 _paused = false;
             Focus();
         }
@@ -255,7 +288,7 @@ namespace KeePassRDP
         protected override void OnLeave(EventArgs e)
         {
             base.OnLeave(e);
-            if (_direction != 0)
+            if (_direction != Direction.None)
                 _paused = true;
         }
 
@@ -272,7 +305,7 @@ namespace KeePassRDP
             _rect.Width = (int)Math.Floor(_scale.X) + 2;
             _rect.Height = (int)Math.Floor(_scale.Y) + 2;
 
-            if (_paused || _direction == 0 || !_timer.Enabled)
+            if (_paused || _direction == Direction.None || !_timer.Enabled)
                 return;
 
             Invalidate();
@@ -284,16 +317,16 @@ namespace KeePassRDP
                 switch (e.KeyCode)
                 {
                     case Keys.Up:
-                        _direction = 1;
+                        _direction = Direction.Up;
                         return;
                     case Keys.Down:
-                        _direction = -1;
+                        _direction = Direction.Down;
                         return;
                     case Keys.Left:
-                        _direction = 2;
+                        _direction = Direction.Left;
                         return;
                     case Keys.Right:
-                        _direction = -2;
+                        _direction = Direction.Right;
                         return;
                     case Keys.Space:
                         _paused = !_paused;
@@ -305,6 +338,9 @@ namespace KeePassRDP
 
         protected override void OnPaint(PaintEventArgs pe)
         {
+            if (_isPainting)
+                return;
+
             if (Image != _bitmap)
             {
                 base.OnPaint(pe);
@@ -316,31 +352,52 @@ namespace KeePassRDP
             pe.Graphics.SmoothingMode = SmoothingMode.None;
             pe.Graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
             pe.Graphics.CompositingMode = CompositingMode.SourceCopy;
+            pe.Graphics.CompositingQuality = CompositingQuality.HighSpeed;
             pe.Graphics.PixelOffsetMode = PixelOffsetMode.Half;
             pe.Graphics.TextRenderingHint = TextRenderingHint.SystemDefault;
 
             base.OnPaint(pe);
 
-            if (_direction != 0 && !_timer.Enabled)
+            if (_direction != Direction.None && !_timer.Enabled)
             {
+                pe.Graphics.Restore(state);
+
                 pe.Graphics.SmoothingMode = SmoothingMode.HighQuality;
                 pe.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
                 pe.Graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                pe.Graphics.CompositingQuality = CompositingQuality.HighQuality;
                 pe.Graphics.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
-                var text = string.Format("Game over!{0}Score: {1}", Environment.NewLine, _totalScore);
-                var size = TextRenderer.MeasureText(pe.Graphics, text, Font, Size.Empty, TextFormatFlags.Default | TextFormatFlags.NoPadding | TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
-                if (Size.IsEmpty || size.IsEmpty)
-                    return;
-                var frect = new Rectangle(new Point(Width / 2 - size.Width / 2, Height / 2 - size.Height / 2), size);
-                frect.Inflate(4, 4);
-                pe.Graphics.FillRectangle(Brushes.DarkOrange, frect);
-                TextRenderer.DrawText(pe.Graphics, text, Font, frect, Color.White, TextFormatFlags.Default | TextFormatFlags.NoPadding | TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
-                pe.Graphics.DrawRectangle(new Pen(Color.White, 2), frect);
-                frect.Inflate(2, 2);
-                if (!pe.ClipRectangle.Contains(frect))
-                    Invalidate(frect);
-                else
-                    Update();
+                using (var sf = new StringFormat(StringFormat.GenericTypographic)
+                {
+                    Alignment = StringAlignment.Center,
+                    LineAlignment = StringAlignment.Center,
+                    HotkeyPrefix = HotkeyPrefix.None,
+                    Trimming = StringTrimming.None
+                })
+                {
+                    var font = Font;
+                    var text = string.Format("Game over!{0}{1}: {2}", Environment.NewLine, KprResourceManager.Instance["Score"], _totalScore);
+                    var size = pe.Graphics.MeasureString(text, font, SizeF.Empty, sf);
+                    if (Size.IsEmpty || size.IsEmpty)
+                    {
+                        pe.Graphics.Restore(state);
+                        return;
+                    }
+                    var frect = new RectangleF(new PointF(Width / 2f - size.Width / 2f, Height / 2f - size.Height / 2f), size);
+                    var rrect = Rectangle.Round(frect);
+                    rrect.Inflate(6, 6);
+                    using (var brush = new SolidBrush(Color.FromArgb(200, Color.DarkOrange)))
+                        pe.Graphics.FillRectangle(brush, rrect);
+                    frect.Inflate(.5f, .5f);
+                    frect.Offset(1, 1);
+                    pe.Graphics.DrawString(text, font, Brushes.White, frect, sf);
+                    rrect.Inflate(-1, -1);
+                    pe.Graphics.DrawRectangle(new Pen(Color.White, 2), rrect);
+                    if (!pe.ClipRectangle.Contains(rrect))
+                        Invalidate(rrect);
+                    else
+                        Update();
+                }
             }
 
             pe.Graphics.Restore(state);
@@ -348,9 +405,10 @@ namespace KeePassRDP
 
         private void Tick(object sender, EventArgs e)
         {
-            if (_paused || _direction == 0)
+            if (_isPainting || _paused || _direction == Direction.None)
                 return;
 
+            _isPainting = true;
             SuspendLayout();
 
             var bits = _bitmap.LockBits(
@@ -363,8 +421,8 @@ namespace KeePassRDP
             var height = bits.Height;
             var stride = bits.Stride;
 
-            _pos.X -= _direction / 2;
-            _pos.Y -= _direction % 2;
+            _pos.X -= (int)_direction / 2;
+            _pos.Y -= (int)_direction % 2;
 
             if (_pos.X >= width)
                 _pos.X = 0;
@@ -376,56 +434,105 @@ namespace KeePassRDP
             else if (_pos.Y < 0)
                 _pos.Y = height - 1;
 
-            _snake.AddLast(new Point(_pos.X, _pos.Y));
-            Point? endPoint = _snake.First.Value;
-
+            var start = _snake.AddLast(new Point(_pos.X, _pos.Y));
             var off = _pos.X * _perPixel + _pos.Y * stride;
-            if (Marshal.ReadByte(ptr, off + 2) == 255)
-            {
-                _needsApple = true;
-                _totalScore += Math.Max(1, _nextScore + (_interval - _timer.Interval));
-                _nextScore = 32;
-            }
-            else
-            {
-                _nextScore--;
-                _snake.RemoveFirst();
-            }
 
-            var end = endPoint.Value.X * _perPixel + endPoint.Value.Y * stride;
-            Marshal.WriteByte(ptr, end + 1, 0);
-
-            if (Marshal.ReadByte(ptr, off + 1) == 255)
-            {
-                _timer.Enabled = _needsApple = false;
-                Marshal.WriteByte(ptr, off + 1, 0);
-                endPoint = null;
-                Marshal.WriteByte(ptr, end + 1, 255);
-            }
-            else
-                Marshal.WriteByte(ptr, off + 1, 255);
-
+            Point? endPoint = _snake.First.Value;
             Point? apple = null;
-            if (_needsApple)
-            {
-                _timer.Interval = Math.Max(_interval / 10, _interval - (int)(((float)_interval) * (_snake.Count / (width * height) * _interval)));
-                Marshal.WriteByte(ptr, off + 2, 0);
 
-                var napple = new Point();
-                int papple;
-                do
+            using (var cts = new CancellationTokenSource())
+                try
                 {
-                    napple.X = _rnd.Next(width);
-                    napple.Y = _rnd.Next(height);
-                    papple = napple.X * _perPixel + napple.Y * stride;
-                } while (Marshal.ReadByte(ptr, papple + 1) != 0 || Marshal.ReadByte(ptr, papple + 2) != 0);
+                    Parallel.Invoke(new ParallelOptions
+                    {
+                        MaxDegreeOfParallelism = 2,
+                        CancellationToken = cts.Token,
+                        TaskScheduler = TaskScheduler.Default
+                    }, () =>
+                    {
+                        if (Marshal.ReadByte(ptr, off + 2) == 255)
+                        {
+                            Marshal.WriteByte(ptr, off + 2, 0);
+                            _needsApple = true;
+                            _totalScore += Math.Max(1, _nextScore + (_interval - _timer.Interval));
+                            _nextScore = 32;
+                        }
+                        else
+                        {
+                            _nextScore--;
+                            _snake.RemoveFirst();
+                        }
 
-                apple = napple;
-                _needsApple = false;
-                Marshal.WriteByte(ptr, papple + 2, 255);
-            }
+                        if (_needsApple)
+                        {
+                            _needsApple = false;
+                            if (!cts.IsCancellationRequested)
+                            {
+                                _timer.Interval = Math.Max(_interval / 10, _interval - (int)(((float)_interval) * (_snake.Count / (width * height) * _interval)));
+
+                                var napple = new Point();
+                                int papple;
+                                do
+                                {
+                                    napple.X = _rnd.Next(width);
+                                    napple.Y = _rnd.Next(height);
+                                    papple = napple.X * _perPixel + napple.Y * stride;
+                                } while (Marshal.ReadByte(ptr, papple + 1) != 0 || Marshal.ReadByte(ptr, papple + 2) != 0);
+
+                                Marshal.WriteByte(ptr, papple + 2, 255);
+                                apple = napple;
+                            }
+                        }
+                    }, () =>
+                    {
+                        var end = endPoint.Value.X * _perPixel + endPoint.Value.Y * stride;
+                        Marshal.WriteByte(ptr, end + 1, 0);
+
+                        if (Marshal.ReadByte(ptr, off + 1) != 0)
+                        {
+                            if (!cts.IsCancellationRequested)
+                                cts.Cancel();
+
+                            Marshal.WriteByte(ptr, off + 1, 85);
+                            _timer.Enabled = _needsApple = false;
+                            //Marshal.WriteByte(ptr, end + 1, 255);
+                            endPoint = apple = null;
+                        }
+                        else
+                        {
+                            Marshal.WriteByte(ptr, off + 1, 255);
+
+                            var r = Rectangle.Empty;
+                            var p = start.Previous;
+                            for (var i = 10; i <= 100; i += 10)
+                            {
+                                if (p == null || p.Value == null || p.Previous == null)
+                                    break;
+                                var pos = p.Value;
+                                var offP = pos.X * _perPixel + pos.Y * stride;
+                                Marshal.WriteByte(ptr, offP + 1, (byte)(255 - i));
+                                r = Rectangle.Union(r, new Rectangle(
+                                    (int)Math.Floor(pos.X * _scale.X + _offset.X) - 1,
+                                    (int)Math.Floor(pos.Y * _scale.Y + _offset.Y) - 1,
+                                    _rect.Width,
+                                    _rect.Height));
+                                p = p.Previous;
+                            }
+
+                            Invalidate(r);
+                        }
+                    });
+                }
+                catch (OperationCanceledException)
+                {
+                    Marshal.WriteByte(ptr, off + 1, 85);
+                    _timer.Enabled = _needsApple = false;
+                    //Marshal.WriteByte(ptr, end + 1, 255);
+                    endPoint = apple = null;
+                }
 
             _bitmap.UnlockBits(bits);
+            _isPainting = false;
 
             _rect.X = (int)Math.Floor(_pos.X * _scale.X + _offset.X) - 1;
             _rect.Y = (int)Math.Floor(_pos.Y * _scale.Y + _offset.Y) - 1;
@@ -446,6 +553,7 @@ namespace KeePassRDP
             }
 
             ResumeLayout(false);
+            Update();
         }
     }
 }

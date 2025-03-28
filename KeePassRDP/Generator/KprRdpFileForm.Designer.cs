@@ -36,6 +36,7 @@
             this.flpCommandButtonsLeft = new System.Windows.Forms.FlowLayoutPanel();
             this.cmdImport = new System.Windows.Forms.Button();
             this.cmdExport = new System.Windows.Forms.Button();
+            this.cmdReset = new System.Windows.Forms.Button();
             this.flpCommandButtonsRight = new System.Windows.Forms.FlowLayoutPanel();
             this.cmdOk = new System.Windows.Forms.Button();
             this.cmdCancel = new System.Windows.Forms.Button();
@@ -59,7 +60,7 @@
             this.tblRdpFileForm.Location = new System.Drawing.Point(0, 0);
             this.tblRdpFileForm.Margin = new System.Windows.Forms.Padding(0);
             this.tblRdpFileForm.Name = "tblRdpFileForm";
-            this.tblRdpFileForm.Padding = new System.Windows.Forms.Padding(3);
+            this.tblRdpFileForm.Padding = new System.Windows.Forms.Padding(3, 2, 2, 3);
             this.tblRdpFileForm.RowCount = 2;
             this.tblRdpFileForm.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tblRdpFileForm.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
@@ -79,7 +80,7 @@
             this.tblCommandButtons.Name = "tblCommandButtons";
             this.tblCommandButtons.RowCount = 1;
             this.tblCommandButtons.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tblCommandButtons.Size = new System.Drawing.Size(478, 25);
+            this.tblCommandButtons.Size = new System.Drawing.Size(479, 25);
             this.tblCommandButtons.TabIndex = 3;
             // 
             // flpCommandButtonsLeft
@@ -89,10 +90,11 @@
             this.flpCommandButtonsLeft.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.flpCommandButtonsLeft.Controls.Add(this.cmdImport);
             this.flpCommandButtonsLeft.Controls.Add(this.cmdExport);
+            this.flpCommandButtonsLeft.Controls.Add(this.cmdReset);
             this.flpCommandButtonsLeft.Location = new System.Drawing.Point(0, 2);
             this.flpCommandButtonsLeft.Margin = new System.Windows.Forms.Padding(0, 2, 0, 0);
             this.flpCommandButtonsLeft.Name = "flpCommandButtonsLeft";
-            this.flpCommandButtonsLeft.Size = new System.Drawing.Size(145, 23);
+            this.flpCommandButtonsLeft.Size = new System.Drawing.Size(169, 23);
             this.flpCommandButtonsLeft.TabIndex = 3;
             // 
             // cmdImport
@@ -135,6 +137,23 @@
             this.cmdExport.UseVisualStyleBackColor = true;
             this.cmdExport.Click += new System.EventHandler(this.cmdExport_Click);
             // 
+            // cmdReset
+            // 
+            this.cmdReset.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.cmdReset.AutoSize = true;
+            this.cmdReset.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.cmdReset.ImageKey = "Refresh";
+            this.cmdReset.ImageList = this.imageList1;
+            this.cmdReset.Location = new System.Drawing.Point(145, 0);
+            this.cmdReset.Margin = new System.Windows.Forms.Padding(0);
+            this.cmdReset.Name = "cmdReset";
+            this.cmdReset.Padding = new System.Windows.Forms.Padding(1, 1, 1, 0);
+            this.cmdReset.Size = new System.Drawing.Size(24, 23);
+            this.cmdReset.TabIndex = 2;
+            this.ttGeneral.SetToolTip(this.cmdReset, "Reset all settings to default");
+            this.cmdReset.UseVisualStyleBackColor = true;
+            this.cmdReset.Click += new System.EventHandler(this.cmdReset_Click);
+            // 
             // flpCommandButtonsRight
             // 
             this.flpCommandButtonsRight.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -142,7 +161,7 @@
             this.flpCommandButtonsRight.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.flpCommandButtonsRight.Controls.Add(this.cmdOk);
             this.flpCommandButtonsRight.Controls.Add(this.cmdCancel);
-            this.flpCommandButtonsRight.Location = new System.Drawing.Point(341, 2);
+            this.flpCommandButtonsRight.Location = new System.Drawing.Point(342, 2);
             this.flpCommandButtonsRight.Margin = new System.Windows.Forms.Padding(0, 2, 2, 0);
             this.flpCommandButtonsRight.Name = "flpCommandButtonsRight";
             this.flpCommandButtonsRight.Size = new System.Drawing.Size(135, 23);
@@ -193,11 +212,11 @@
             // tcRdpFileSettings
             // 
             this.tcRdpFileSettings.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tcRdpFileSettings.Location = new System.Drawing.Point(3, 3);
+            this.tcRdpFileSettings.Location = new System.Drawing.Point(3, 2);
             this.tcRdpFileSettings.Margin = new System.Windows.Forms.Padding(0);
             this.tcRdpFileSettings.Name = "tcRdpFileSettings";
             this.tcRdpFileSettings.SelectedIndex = 0;
-            this.tcRdpFileSettings.Size = new System.Drawing.Size(478, 380);
+            this.tcRdpFileSettings.Size = new System.Drawing.Size(479, 381);
             this.tcRdpFileSettings.TabIndex = 0;
             this.tcRdpFileSettings.Selected += new System.Windows.Forms.TabControlEventHandler(this.tcRdpFileSettings_Selected);
             // 
@@ -258,5 +277,6 @@
         private System.Windows.Forms.Button cmdExport;
         private System.Windows.Forms.TabControl tcRdpFileSettings;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.Windows.Forms.Button cmdReset;
     }
 }

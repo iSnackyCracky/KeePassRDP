@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -21,6 +21,7 @@
 using KeePassRDP.Utils;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -28,6 +29,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security;
 using System.Text;
+using _FILETIME = System.Runtime.InteropServices.ComTypes.FILETIME;
 
 namespace KeePassRDP
 {
@@ -58,24 +60,24 @@ namespace KeePassRDP
 
             var ncred = new NativeCredential
             {
-                Type = (uint)cred.Type,
-                Flags = (uint)cred.Flags,
-                Persist = (uint)cred.Persist,
-                LastWritten = lastWritten > 0 ? new System.Runtime.InteropServices.ComTypes.FILETIME
+                Type = cred.Type,
+                Flags = cred.Flags,
+                Persist = cred.Persist,
+                LastWritten = lastWritten > 0 ? new _FILETIME
                 {
                     dwHighDateTime = (int)((lastWritten >> 32) & 0xFFFFFFFFL),
                     dwLowDateTime = (int)(lastWritten & 0xFFFFFFFFL)
-                } : new System.Runtime.InteropServices.ComTypes.FILETIME(),
+                } : new _FILETIME(),
                 UserName = cred.UserName, // Marshal.StringToCoTaskMemUni(ncred.UserName);
                 TargetName = cred.TargetName, // Marshal.StringToCoTaskMemUni(ncred.TargetName);
                 TargetAlias = cred.TargetAlias, // Marshal.StringToCoTaskMemUni(ncred.TargetAlias);
                 Comment = cred.Comment, // Marshal.StringToCoTaskMemUni(ncred.Comment);
-                CredentialBlobSize = (uint)(cred.CredentialBlob.Length * 2), // (uint)Encoding.Unicode.GetByteCount(cred.CredentialBlob),
+                CredentialBlobSize = (uint)(cred.CredentialBlob != null ? cred.CredentialBlob.Length * 2 : 0), // (uint)Encoding.Unicode.GetByteCount(cred.CredentialBlob),
                 AttributeCount = (uint)cred.Attributes.Count
             };
 
             if (ncred.CredentialBlobSize > 0)
-                ncred.CredentialBlob = Marshal.SecureStringToCoTaskMemUnicode(cred.CredentialBlob); // Marshal.StringToCoTaskMemUni(cred.CredentialBlob);
+                ncred.CredentialBlob = Marshal.SecureStringToGlobalAllocUnicode(cred.CredentialBlob); // Marshal.SecureStringToCoTaskMemUnicode(cred.CredentialBlob); // Marshal.StringToCoTaskMemUni(cred.CredentialBlob);
 
             if (ncred.AttributeCount > 0)
             {
@@ -124,7 +126,7 @@ namespace KeePassRDP
         /// <param name="type"></param>
         /// <param name="credential"></param>
         /// <returns><see langword="true"/> on sucess, <see langword="false"/> otherwise.</returns>
-        /// <exception cref="System.ComponentModel.Win32Exception"></exception>
+        /// <exception cref="Win32Exception"></exception>
         public static bool CredRead(string target, CRED_TYPE type, out Credential credential)
         {
             IntPtr pCredential;
@@ -136,11 +138,11 @@ namespace KeePassRDP
                     credential = null;
                     return false;
                 }
-                throw new System.ComponentModel.Win32Exception(error);
+                throw new Win32Exception(error);
             }
 
-            var credHandle = new CriticalCredentialHandle(pCredential);
-            return credHandle.GetCredential(out credential);
+            using (var credHandle = new CriticalCredentialHandle(pCredential))
+                return credHandle.GetCredential(out credential);
         }
 
         /// <summary>
@@ -148,7 +150,7 @@ namespace KeePassRDP
         /// </summary>
         /// <param name="userCredential"></param>
         /// <returns><see langword="true"/> on sucess, <see langword="false"/> otherwise.</returns>
-        /// <exception cref="System.ComponentModel.Win32Exception"></exception>
+        /// <exception cref="Win32Exception"></exception>
         public static bool CredWrite(Credential userCredential)
         {
             var nativeCredential = TranslateToNativeCred(userCredential);
@@ -163,11 +165,11 @@ namespace KeePassRDP
                             TargetName = nativeCredential.TargetName
                         };
                         if (!CredWriteDomainCredentials(targetInfo, ref nativeCredential, 0))
-                            throw new System.ComponentModel.Win32Exception(Marshal.GetHRForLastWin32Error());
+                            throw new Win32Exception(Marshal.GetHRForLastWin32Error());
                         break;
                     default:
                         if (!CredWrite(ref nativeCredential, 0))
-                            throw new System.ComponentModel.Win32Exception(Marshal.GetHRForLastWin32Error());
+                            throw new Win32Exception(Marshal.GetHRForLastWin32Error());
                         break;
                 }
             }
@@ -185,11 +187,11 @@ namespace KeePassRDP
         /// <param name="target"></param>
         /// <param name="type"></param>
         /// <returns><see langword="true"/> on sucess, <see langword="false"/> otherwise.</returns>
-        /// <exception cref="System.ComponentModel.Win32Exception"></exception>
+        /// <exception cref="Win32Exception"></exception>
         public static bool CredDelete(string target, CRED_TYPE type)
         {
             if (!CredDelete(target, type, 0))
-                throw new System.ComponentModel.Win32Exception(Marshal.GetHRForLastWin32Error());
+                throw new Win32Exception(Marshal.GetHRForLastWin32Error());
 
             return true;
         }
@@ -200,7 +202,7 @@ namespace KeePassRDP
         /// <param name="filter"></param>
         /// <param name="credentials"></param>
         /// <returns><see langword="true"/> on sucess, <see langword="false"/> otherwise.</returns>
-        /// <exception cref="System.ComponentModel.Win32Exception"></exception>
+        /// <exception cref="Win32Exception"></exception>
         public static bool CredEnumerate(string filter, out Credential[] credentials)
         {
             var flags = (uint)CRED_ENUMERATE.NONE;
@@ -214,7 +216,7 @@ namespace KeePassRDP
             uint count;
             IntPtr pCredentials;
             if (!CredEnumerate(filter, flags, out count, out pCredentials))
-                throw new System.ComponentModel.Win32Exception(Marshal.GetHRForLastWin32Error());
+                throw new Win32Exception(Marshal.GetHRForLastWin32Error());
 
             if (pCredentials == null || pCredentials == IntPtr.Zero)
             {
@@ -222,8 +224,8 @@ namespace KeePassRDP
                 return false;
             }
 
-            var credHandle = new CriticalCredentialHandle(pCredentials);
-            return credHandle.GetCredentials(count, out credentials);
+            using (var credHandle = new CriticalCredentialHandle(pCredentials))
+                return credHandle.GetCredentials(count, out credentials);
         }
 
         /// <summary>
@@ -231,14 +233,14 @@ namespace KeePassRDP
         /// </summary>
         /// <param name="type"></param>
         /// <returns><see langword="true"/> on sucess, <see langword="false"/> otherwise.</returns>
-        /// <exception cref="System.ComponentModel.Win32Exception"></exception>
+        /// <exception cref="Win32Exception"></exception>
         public static bool CredCanPersist(CRED_TYPE type)
         {
             var count = (uint)CRED_TYPE.MAXIMUM;
             var arr = new CRED_PERSIST[count];
 
             if (!CredGetSessionTypes(count, arr))
-                throw new System.ComponentModel.Win32Exception(Marshal.GetHRForLastWin32Error());
+                throw new Win32Exception(Marshal.GetHRForLastWin32Error());
 
             var persist = arr[(int)type];
 
@@ -257,7 +259,7 @@ namespace KeePassRDP
                     credentials = null;
                     return false;
                 }
-                throw new System.ComponentModel.Win32Exception(error);
+                throw new Win32Exception(error);
             }
 
             if (pTargetInfo == null || pTargetInfo == IntPtr.Zero)
@@ -278,7 +280,7 @@ namespace KeePassRDP
                     credentials = null;
                     return false;
                 }
-                throw new System.ComponentModel.Win32Exception(error);
+                throw new Win32Exception(error);
             }
 
             if (pCredentials == null || pCredentials == IntPtr.Zero)
@@ -292,17 +294,16 @@ namespace KeePassRDP
 
             credentials = new Credential[count];
 
-            for (var i = 0; i < credentials.Length; i++)
+            for (var i = 0; i < credentials.Length; i++, ptr = IntPtr.Add(ptr, size))
             {
                 var ncred = (NativeCredential)Marshal.PtrToStructure(ptr, typeof(NativeCredential)); //new IntPtr(ptr + i * size), typeof(NativeCredential));
-                ptr = IntPtr.Add(ptr, size);
-                credentials[i] = new Credential(ncred);
+                credentials[i] = TranslateFromNativeCred(ncred);
             }
 
             return true;
         }
 
-        #region Native windows functions
+        #region Native Windows functions
         [SecurityCritical]
         [SuppressUnmanagedCodeSecurity]
         [DllImport("Advapi32.dll", EntryPoint = "CredReadW", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
@@ -358,7 +359,7 @@ namespace KeePassRDP
                     throw new InvalidOperationException("Invalid CriticalHandle!");
 
                 var ncred = (NativeCredential)Marshal.PtrToStructure(handle, typeof(NativeCredential));
-                cred = new Credential(ncred);
+                cred = TranslateFromNativeCred(ncred);
 
                 return true;
             }
@@ -373,7 +374,7 @@ namespace KeePassRDP
                 for (var i = 0; i < credentials.Length; i++)
                 {
                     var ncred = (NativeCredential)Marshal.PtrToStructure(Marshal.ReadIntPtr(handle, i * IntPtr.Size), typeof(NativeCredential));
-                    credentials[i] = new Credential(ncred);
+                    credentials[i] = TranslateFromNativeCred(ncred);
                 }
 
                 return true;
@@ -415,9 +416,9 @@ namespace KeePassRDP
             [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
             internal Credential(NativeCredential ncred)
             {
-                Type = (CRED_TYPE)ncred.Type;
-                Flags = (CRED_FLAGS)ncred.Flags;
-                Persist = (CRED_PERSIST)ncred.Persist;
+                Type = ncred.Type;
+                Flags = ncred.Flags;
+                Persist = ncred.Persist;
                 LastWritten = DateTime.FromFileTime((long)((ulong)ncred.LastWritten.dwHighDateTime << 32 | (uint)ncred.LastWritten.dwLowDateTime));
                 UserName = ncred.UserName; //Marshal.PtrToStringUni(ncred.UserName),
                 TargetName = ncred.TargetName; //Marshal.PtrToStringUni(ncred.TargetName),
@@ -427,11 +428,12 @@ namespace KeePassRDP
 
                 if (ncred.CredentialBlobSize > 0)
                 {
-                    //CredentialBlob = Marshal.PtrToStringUni(ncred.CredentialBlob, (int)ncred.CredentialBlobSize / 2);
                     CredentialBlob = new SecureString();
-                    foreach (var c in Marshal.PtrToStringUni(ncred.CredentialBlob, (int)(ncred.CredentialBlobSize / 2)))
+                    var tempString = Marshal.PtrToStringUni(ncred.CredentialBlob, (int)(ncred.CredentialBlobSize / 2));
+                    foreach (var c in tempString)
                         CredentialBlob.AppendChar(c);
-                    MemoryUtil.SafeSecureZeroMemory(ncred.CredentialBlob, ncred.CredentialBlobSize);
+                    //CredentialBlob.MakeReadOnly();
+                    MemoryUtil.SecureZeroMemory(tempString);
                 }
 
                 if (ncred.AttributeCount > 0)
@@ -439,10 +441,9 @@ namespace KeePassRDP
                     var formatter = new BinaryFormatter();
                     var size = Marshal.SizeOf(typeof(CREDENTIAL_ATTRIBUTE));
                     var ptr = ncred.Attributes; //IntPtr.Size == 8 ? ncred.Attributes.ToInt64() : ncred.Attributes.ToInt32();
-                    for (var i = 0; i < ncred.AttributeCount; i++)
+                    for (var i = 0; i < ncred.AttributeCount; i++, ptr = IntPtr.Add(ptr, size))
                     {
                         var attr = (CREDENTIAL_ATTRIBUTE)Marshal.PtrToStructure(ptr, typeof(CREDENTIAL_ATTRIBUTE)); //new IntPtr(ptr + i * size), typeof(CREDENTIAL_ATTRIBUTE));
-                        ptr = IntPtr.Add(ptr, size);
 
                         if (attr.ValueSize > 0)
                         {
@@ -494,6 +495,8 @@ namespace KeePassRDP
                             Attributes[attr.Keyword] = null;
                     }
                 }
+
+                ncred.ZeroMemory(false);
             }
 
             /// <summary>
@@ -509,13 +512,7 @@ namespace KeePassRDP
                     UserName = string.Empty;
                 }
 
-                /*if (!string.IsNullOrEmpty(CredentialBlob))
-                {
-                    MemoryUtil.SecureZeroMemory(CredentialBlob);
-                    CredentialBlob = string.Empty;
-                }*/
-
-                if (CredentialBlob != null && CredentialBlob.Length > 0)
+                if (CredentialBlob != null && CredentialBlob.Length > 0 && !CredentialBlob.IsReadOnly())
                     CredentialBlob.Clear();
             }
         }
@@ -603,18 +600,21 @@ namespace KeePassRDP
         /// Unmanaged credentials struct wrapped by <see cref="Credential"/>.
         /// </summary>
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-        internal struct NativeCredential
+        internal struct NativeCredential // CREDENTIALW
         {
-            public uint Flags;
-            public uint Type;
+            [MarshalAs(UnmanagedType.U4)]
+            public CRED_FLAGS Flags;
+            [MarshalAs(UnmanagedType.U4)]
+            public CRED_TYPE Type;
             [MarshalAs(UnmanagedType.LPWStr)]
             public string TargetName;
             [MarshalAs(UnmanagedType.LPWStr)]
             public string Comment;
-            public System.Runtime.InteropServices.ComTypes.FILETIME LastWritten;
+            public _FILETIME LastWritten;
             public uint CredentialBlobSize;
             public IntPtr CredentialBlob;
-            public uint Persist;
+            [MarshalAs(UnmanagedType.U4)]
+            public CRED_PERSIST Persist;
             public uint AttributeCount;
             public IntPtr Attributes;
             [MarshalAs(UnmanagedType.LPWStr)]
@@ -622,6 +622,8 @@ namespace KeePassRDP
             [MarshalAs(UnmanagedType.LPWStr)]
             public string UserName;
         }
+
+        //public const string CRED_SESSION_WILDCARD_NAME = "*Session";
         #endregion
 
         /// <summary>
@@ -629,29 +631,38 @@ namespace KeePassRDP
         /// </summary>
         [SecurityCritical]
         [MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-        public static void ZeroMemory(this NativeCredential nativeCredential)
+        public static void ZeroMemory(this NativeCredential nativeCredential, bool managed = true)
         {
             // Free unmanaged resources
 
             if (nativeCredential.CredentialBlobSize > 0)
             {
                 MemoryUtil.SafeSecureZeroMemory(nativeCredential.CredentialBlob, nativeCredential.CredentialBlobSize);
-                Marshal.FreeCoTaskMem(nativeCredential.CredentialBlob);
+                if (managed)
+                    Marshal.ZeroFreeGlobalAllocUnicode(nativeCredential.CredentialBlob);
+                nativeCredential.CredentialBlob = IntPtr.Zero;
+                nativeCredential.CredentialBlobSize = 0;
             }
 
             if (nativeCredential.AttributeCount > 0)
             {
-                var size = Marshal.SizeOf(typeof(CREDENTIAL_ATTRIBUTE));
-                var ptr = IntPtr.Size == 8 ? nativeCredential.Attributes.ToInt64() : nativeCredential.Attributes.ToInt32();
-
-                for (var i = 0; i < nativeCredential.AttributeCount; i++)
+                if (managed)
                 {
-                    /*var attr = (CREDENTIAL_ATTRIBUTE)Marshal.PtrToStructure(new IntPtr(ptr + i * size), typeof(CREDENTIAL_ATTRIBUTE));
-                    Marshal.FreeHGlobal(attr.Value);*/
-                    Marshal.DestroyStructure(new IntPtr(ptr + i * size), typeof(CREDENTIAL_ATTRIBUTE));
+                    var size = Marshal.SizeOf(typeof(CREDENTIAL_ATTRIBUTE));
+                    var ptr = nativeCredential.Attributes;
+
+                    for (var i = 0; i < nativeCredential.AttributeCount; i++, ptr = IntPtr.Add(ptr, size))
+                    {
+                        /*var attr = (CREDENTIAL_ATTRIBUTE)Marshal.PtrToStructure(new IntPtr(ptr + i * size), typeof(CREDENTIAL_ATTRIBUTE));
+                        Marshal.FreeHGlobal(attr.Value);*/
+                        Marshal.DestroyStructure(ptr, typeof(CREDENTIAL_ATTRIBUTE));
+                    }
+
+                    Marshal.FreeHGlobal(nativeCredential.Attributes);
                 }
 
-                Marshal.FreeHGlobal(nativeCredential.Attributes);
+                nativeCredential.Attributes = IntPtr.Zero;
+                nativeCredential.AttributeCount = 0;
             }
         }
     }

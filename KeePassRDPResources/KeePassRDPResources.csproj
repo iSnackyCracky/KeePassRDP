@@ -92,9 +92,17 @@
     <None Include="Resources\Expander.png" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\Certificate.png" />
-    <Content Include="Resources\FileDestination.png" />
-    <Content Include="Resources\OpenFile.png" />
+    <None Include="Resources\Certificate.png" />
+    <None Include="Resources\FileDestination.png" />
+    <None Include="Resources\OpenFile.png" />
+    <None Include="Resources\SwitchSourceOrTarget.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\Disconnect.png" />
+    <Content Include="Resources\ListMembers.png" />
+    <Content Include="Resources\LoginScreen.png" />
+    <Content Include="Resources\User.png" />
+    <Content Include="Resources\UserFeedback.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

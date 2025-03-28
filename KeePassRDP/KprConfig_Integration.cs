@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -26,189 +26,204 @@ namespace KeePassRDP
     public partial class KprConfig
     {
         private bool _cachedKeePassSprCompileFlags = false;
-        private SprCompileFlags _cachedKeePassSprCompileFlagsValue = SprCompileFlags.All;
+        private SprCompileFlags _cachedKeePassSprCompileFlagsValue = Default.KeePassSprCompileFlags;
         public SprCompileFlags KeePassSprCompileFlags
         {
             get
             {
-                return EnumGetter(KeePassSprCompileFlagsKey, ref _cachedKeePassSprCompileFlags, ref _cachedKeePassSprCompileFlagsValue, SprCompileFlags.All);
+                return EnumGetter(Key.KeePassSprCompileFlags, ref _cachedKeePassSprCompileFlags, ref _cachedKeePassSprCompileFlagsValue, Default.KeePassSprCompileFlags);
             }
             set
             {
-                EnumSetter(KeePassSprCompileFlagsKey, value, ref _cachedKeePassSprCompileFlags, ref _cachedKeePassSprCompileFlagsValue, SprCompileFlags.All);
+                EnumSetter(Key.KeePassSprCompileFlags, value, ref _cachedKeePassSprCompileFlags, ref _cachedKeePassSprCompileFlagsValue, Default.KeePassSprCompileFlags);
             }
         }
 
         private bool _cachedKeePassConfirmOnClose = false;
-        private bool _cachedKeePassConfirmOnCloseValue = true;
+        private bool _cachedKeePassConfirmOnCloseValue = Default.KeePassConfirmOnClose;
         public bool KeePassConfirmOnClose
         {
             get
             {
-                return BoolGetter(KeePassConfirmOnCloseKey, ref _cachedKeePassConfirmOnClose, ref _cachedKeePassConfirmOnCloseValue, true);
+                return BoolGetter(Key.KeePassConfirmOnClose, ref _cachedKeePassConfirmOnClose, ref _cachedKeePassConfirmOnCloseValue, Default.KeePassConfirmOnClose);
             }
             set
             {
-                BoolSetter(KeePassConfirmOnCloseKey, value, ref _cachedKeePassConfirmOnClose, ref _cachedKeePassConfirmOnCloseValue, true);
+                BoolSetter(Key.KeePassConfirmOnClose, value, ref _cachedKeePassConfirmOnClose, ref _cachedKeePassConfirmOnCloseValue, Default.KeePassConfirmOnClose);
             }
         }
 
         private bool _cachedKeePassConnectToAll = false;
-        private bool _cachedKeePassConnectToAllValue = true;
+        private bool _cachedKeePassConnectToAllValue = Default.KeePassConnectToAll;
         public bool KeePassConnectToAll
         {
             get
             {
-                return BoolGetter(KeePassConnectToAllKey, ref _cachedKeePassConnectToAll, ref _cachedKeePassConnectToAllValue, true);
+                return BoolGetter(Key.KeePassConnectToAll, ref _cachedKeePassConnectToAll, ref _cachedKeePassConnectToAllValue, Default.KeePassConnectToAll);
             }
             set
             {
-                BoolSetter(KeePassConnectToAllKey, value, ref _cachedKeePassConnectToAll, ref _cachedKeePassConnectToAllValue, true);
+                BoolSetter(Key.KeePassConnectToAll, value, ref _cachedKeePassConnectToAll, ref _cachedKeePassConnectToAllValue, Default.KeePassConnectToAll);
             }
         }
 
 
         private bool _cachedKeePassAlwaysConfirm = false;
-        private bool _cachedKeePassAlwaysConfirmValue = true;
+        private bool _cachedKeePassAlwaysConfirmValue = Default.KeePassAlwaysConfirm;
         public bool KeePassAlwaysConfirm
         {
             get
             {
-                return BoolGetter(KeePassAlwaysConfirmKey, ref _cachedKeePassAlwaysConfirm, ref _cachedKeePassAlwaysConfirmValue);
+                return BoolGetter(Key.KeePassAlwaysConfirm, ref _cachedKeePassAlwaysConfirm, ref _cachedKeePassAlwaysConfirmValue, Default.KeePassAlwaysConfirm);
             }
             set
             {
-                BoolSetter(KeePassAlwaysConfirmKey, value, ref _cachedKeePassAlwaysConfirm, ref _cachedKeePassAlwaysConfirmValue);
+                BoolSetter(Key.KeePassAlwaysConfirm, value, ref _cachedKeePassAlwaysConfirm, ref _cachedKeePassAlwaysConfirmValue, Default.KeePassAlwaysConfirm);
+            }
+        }
+
+
+        private bool _cacheKeePassDefaultEntryAction = false;
+        private bool _cacheKeePassDefaultEntryActionValue = Default.KeePassDefaultEntryAction;
+        public bool KeePassDefaultEntryAction
+        {
+            get
+            {
+                return BoolGetter(Key.KeePassDefaultEntryAction, ref _cacheKeePassDefaultEntryAction, ref _cacheKeePassDefaultEntryActionValue, Default.KeePassDefaultEntryAction);
+            }
+            set
+            {
+                BoolSetter(Key.KeePassDefaultEntryAction, value, ref _cacheKeePassDefaultEntryAction, ref _cacheKeePassDefaultEntryActionValue, Default.KeePassDefaultEntryAction);
             }
         }
 
         private bool _cachedKeePassContextMenuOnScreenKey = false;
-        private bool _cachedKeePassContextMenuOnScreenKeyValue = true;
+        private bool _cachedKeePassContextMenuOnScreenKeyValue = Default.KeePassContextMenuOnScreen;
         public bool KeePassContextMenuOnScreen
         {
             get
             {
-                return BoolGetter(KeePassContextMenuOnScreenKey, ref _cachedKeePassContextMenuOnScreenKey, ref _cachedKeePassContextMenuOnScreenKeyValue, true);
+                return BoolGetter(Key.KeePassContextMenuOnScreen, ref _cachedKeePassContextMenuOnScreenKey, ref _cachedKeePassContextMenuOnScreenKeyValue, Default.KeePassContextMenuOnScreen);
             }
             set
             {
-                BoolSetter(KeePassContextMenuOnScreenKey, value, ref _cachedKeePassContextMenuOnScreenKey, ref _cachedKeePassContextMenuOnScreenKeyValue, true);
+                BoolSetter(Key.KeePassContextMenuOnScreen, value, ref _cachedKeePassContextMenuOnScreenKey, ref _cachedKeePassContextMenuOnScreenKeyValue, Default.KeePassContextMenuOnScreen);
             }
         }
 
         private bool _cachedKeePassHotkeysRegisterLast = false;
-        private bool _cachedKeePassHotkeysRegisterLastValue = false;
+        private bool _cachedKeePassHotkeysRegisterLastValue = Default.KeePassHotkeysRegisterLast;
         public bool KeePassHotkeysRegisterLast
         {
             get
             {
-                return BoolGetter(KeePassHotkeysRegisterLastKey, ref _cachedKeePassHotkeysRegisterLast, ref _cachedKeePassHotkeysRegisterLastValue);
+                return BoolGetter(Key.KeePassHotkeysRegisterLast, ref _cachedKeePassHotkeysRegisterLast, ref _cachedKeePassHotkeysRegisterLastValue, Default.KeePassHotkeysRegisterLast);
             }
             set
             {
-                BoolSetter(KeePassHotkeysRegisterLastKey, value, ref _cachedKeePassHotkeysRegisterLast, ref _cachedKeePassHotkeysRegisterLastValue);
+                BoolSetter(Key.KeePassHotkeysRegisterLast, value, ref _cachedKeePassHotkeysRegisterLast, ref _cachedKeePassHotkeysRegisterLastValue, Default.KeePassHotkeysRegisterLast);
             }
         }
 
         private bool _cachedKeePassContextMenuItems = false;
-        private KprMenu.MenuItem _cachedKeePassContextMenuItemsValue = KprMenu.DefaultContextMenuItems;
+        private KprMenu.MenuItem _cachedKeePassContextMenuItemsValue = Default.KeePassContextMenuItems;
         public KprMenu.MenuItem KeePassContextMenuItems
         {
             get
             {
-                return EnumGetter(KeePassContextMenuItemsKey, ref _cachedKeePassContextMenuItems, ref _cachedKeePassContextMenuItemsValue, KprMenu.DefaultContextMenuItems);
+                return EnumGetter(Key.KeePassContextMenuItems, ref _cachedKeePassContextMenuItems, ref _cachedKeePassContextMenuItemsValue, Default.KeePassContextMenuItems);
             }
             set
             {
-                EnumSetter(KeePassContextMenuItemsKey, value, ref _cachedKeePassContextMenuItems, ref _cachedKeePassContextMenuItemsValue, KprMenu.DefaultContextMenuItems);
+                EnumSetter(Key.KeePassContextMenuItems, value, ref _cachedKeePassContextMenuItems, ref _cachedKeePassContextMenuItemsValue, Default.KeePassContextMenuItems);
             }
         }
 
         private bool _cachedKeePassToolbarItems = false;
-        private KprMenu.MenuItem _cachedKeePassToolbarItemsValue = KprMenu.DefaultToolbarItems;
+        private KprMenu.MenuItem _cachedKeePassToolbarItemsValue = Default.KeePassToolbarItems;
         public KprMenu.MenuItem KeePassToolbarItems
         {
             get
             {
-                return EnumGetter(KeePassToolbarItemsKey, ref _cachedKeePassToolbarItems, ref _cachedKeePassToolbarItemsValue, KprMenu.DefaultToolbarItems);
+                return EnumGetter(Key.KeePassToolbarItems, ref _cachedKeePassToolbarItems, ref _cachedKeePassToolbarItemsValue, Default.KeePassToolbarItems);
             }
             set
             {
-                EnumSetter(KeePassToolbarItemsKey, value, ref _cachedKeePassToolbarItems, ref _cachedKeePassToolbarItemsValue, KprMenu.DefaultToolbarItems);
+                EnumSetter(Key.KeePassToolbarItems, value, ref _cachedKeePassToolbarItems, ref _cachedKeePassToolbarItemsValue, Default.KeePassToolbarItems);
             }
         }
 
         private bool _cachedCredVaultUseWindows = false;
-        private bool _cachedCredVaultUseWindowsValue = true;
+        private bool _cachedCredVaultUseWindowsValue = Default.CredVaultUseWindows;
         public bool CredVaultUseWindows
         {
             get
             {
-                return BoolGetter(CredVaultUseWindowsKey, ref _cachedCredVaultUseWindows, ref _cachedCredVaultUseWindowsValue, true);
+                return BoolGetter(Key.CredVaultUseWindows, ref _cachedCredVaultUseWindows, ref _cachedCredVaultUseWindowsValue, Default.CredVaultUseWindows);
             }
             set
             {
-                BoolSetter(CredVaultUseWindowsKey, value, ref _cachedCredVaultUseWindows, ref _cachedCredVaultUseWindowsValue, true);
+                BoolSetter(Key.CredVaultUseWindows, value, ref _cachedCredVaultUseWindows, ref _cachedCredVaultUseWindowsValue, Default.CredVaultUseWindows);
             }
         }
 
         private bool _cachedCredVaultOverwriteExisting = false;
-        private bool _cachedCredVaultOverwriteExistingValue = false;
+        private bool _cachedCredVaultOverwriteExistingValue = Default.CredVaultOverwriteExisting;
         public bool CredVaultOverwriteExisting
         {
             get
             {
-                return BoolGetter(CredVaultOverwriteExistingKey, ref _cachedCredVaultOverwriteExisting, ref _cachedCredVaultOverwriteExistingValue);
+                return BoolGetter(Key.CredVaultOverwriteExisting, ref _cachedCredVaultOverwriteExisting, ref _cachedCredVaultOverwriteExistingValue, Default.CredVaultOverwriteExisting);
             }
             set
             {
-                BoolSetter(CredVaultOverwriteExistingKey, value, ref _cachedCredVaultOverwriteExisting, ref _cachedCredVaultOverwriteExistingValue);
+                BoolSetter(Key.CredVaultOverwriteExisting, value, ref _cachedCredVaultOverwriteExisting, ref _cachedCredVaultOverwriteExistingValue, Default.CredVaultOverwriteExisting);
             }
         }
 
         private bool _cachedCredVaultRemoveOnExit = false;
-        private bool _cachedCredVaultRemoveOnExitValue = true;
+        private bool _cachedCredVaultRemoveOnExitValue = Default.CredVaultRemoveOnExit;
         public bool CredVaultRemoveOnExit
         {
             get
             {
-                return BoolGetter(CredVaultRemoveOnExitKey, ref _cachedCredVaultRemoveOnExit, ref _cachedCredVaultRemoveOnExitValue, true);
+                return BoolGetter(Key.CredVaultRemoveOnExit, ref _cachedCredVaultRemoveOnExit, ref _cachedCredVaultRemoveOnExitValue, Default.CredVaultRemoveOnExit);
             }
             set
             {
-                BoolSetter(CredVaultRemoveOnExitKey, value, ref _cachedCredVaultRemoveOnExit, ref _cachedCredVaultRemoveOnExitValue, true);
+                BoolSetter(Key.CredVaultRemoveOnExit, value, ref _cachedCredVaultRemoveOnExit, ref _cachedCredVaultRemoveOnExitValue, Default.CredVaultRemoveOnExit);
             }
         }
 
         private bool _cachedCredVaultTtl = false;
-        private long _cachedCredVaultTtlValue = 10L;
+        private long _cachedCredVaultTtlValue = Default.CredVaultTtl;
         public int CredVaultTtl
         {
             get
             {
-                return (int)LongGetter(CredVaultTtlKey, ref _cachedCredVaultTtl, ref _cachedCredVaultTtlValue, 10L);
+                return (int)LongGetter(Key.CredVaultTtl, ref _cachedCredVaultTtl, ref _cachedCredVaultTtlValue, Default.CredVaultTtl);
             }
             set
             {
-                LongSetter(CredVaultTtlKey, value, ref _cachedCredVaultTtl, ref _cachedCredVaultTtlValue, 10L);
+                LongSetter(Key.CredVaultTtl, value, ref _cachedCredVaultTtl, ref _cachedCredVaultTtlValue, Default.CredVaultTtl);
             }
         }
 
         private bool _cachedCredVaultAdaptiveTtl = false;
-        private bool _cachedCredVaultAdaptiveTtlValue = true;
+        private bool _cachedCredVaultAdaptiveTtlValue = Default.CredVaultAdaptiveTtl;
         public bool CredVaultAdaptiveTtl
         {
             get
             {
-                return BoolGetter(CredVaultAdaptiveTtlKey, ref _cachedCredVaultAdaptiveTtl, ref _cachedCredVaultAdaptiveTtlValue, true);
+                return BoolGetter(Key.CredVaultAdaptiveTtl, ref _cachedCredVaultAdaptiveTtl, ref _cachedCredVaultAdaptiveTtlValue, Default.CredVaultAdaptiveTtl);
             }
             set
             {
-                BoolSetter(CredVaultAdaptiveTtlKey, value, ref _cachedCredVaultAdaptiveTtl, ref _cachedCredVaultAdaptiveTtlValue, true);
+                BoolSetter(Key.CredVaultAdaptiveTtl, value, ref _cachedCredVaultAdaptiveTtl, ref _cachedCredVaultAdaptiveTtlValue, Default.CredVaultAdaptiveTtl);
             }
         }
 
-        public Keys ShortcutOpenRdpConnection
+        /*public Keys ShortcutOpenRdpConnection
         {
             get { return (Keys)_config.GetLong(ShortcutOpenRdpConnectionKey, (long)KprMenu.DefaultOpenRdpConnectionShortcut); }
             set
@@ -281,6 +296,48 @@ namespace KeePassRDP
                 else
                     _config.SetLong(ShortcutIgnoreCredentialsKey, (long)value);
             }
+        }*/
+
+        public Keys GetShortcut(KprMenu.MenuItem menuItem)
+        {
+            var configKey = string.Format("KPR_shortcut{0}", menuItem.ToString());
+            var defaultKey = Keys.None;
+
+            switch (menuItem)
+            {
+                case KprMenu.MenuItem.OpenRdpConnection:
+                    defaultKey = KprMenu.DefaultOpenRdpConnectionShortcut;
+                    break;
+                case KprMenu.MenuItem.OpenRdpConnectionAdmin:
+                    defaultKey = KprMenu.DefaultOpenRdpConnectionAdminShortcut;
+                    break;
+            }
+
+            return (Keys)_config.GetLong(configKey, (long)defaultKey);
+        }
+
+        public void SetShortcut(KprMenu.MenuItem menuItem, Keys value)
+        {
+            var configKey = string.Format("KPR_shortcut{0}", menuItem.ToString());
+            var defaultKey = Keys.None;
+
+            switch (menuItem)
+            {
+                case KprMenu.MenuItem.OpenRdpConnection:
+                    defaultKey = KprMenu.DefaultOpenRdpConnectionShortcut;
+                    break;
+                case KprMenu.MenuItem.OpenRdpConnectionAdmin:
+                    defaultKey = KprMenu.DefaultOpenRdpConnectionAdminShortcut;
+                    break;
+            }
+
+            if (value == defaultKey)
+            {
+                if (!string.IsNullOrEmpty(_config.GetString(configKey)))
+                    _config.SetString(configKey, null);
+            }
+            else
+                _config.SetLong(configKey, (long)value);
         }
     }
 }

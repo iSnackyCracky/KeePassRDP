@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -46,17 +46,17 @@ namespace KeePassRDP
             lvVault.Font = new Font(_font.FontFamily, _font.Size * 2f);
             lvVault.Columns.AddRange(new[]
             {
-                        new ColumnHeader { Text = "TargetName" },
-                        new ColumnHeader { Text = "TargetAlias" },
-                        new ColumnHeader { Text = "UserName" },
-                        new ColumnHeader { Text = "CredentialBlob" },
-                        new ColumnHeader { Text = "Type" },
-                        new ColumnHeader { Text = "Persist" },
-                        new ColumnHeader { Text = "Flags" },
-                        new ColumnHeader { Text = "Comment" },
-                        new ColumnHeader { Text = "LastWritten" },
-                        new ColumnHeader { Text = "Attributes" }
-                    });
+                new ColumnHeader { Text = "TargetName" },
+                new ColumnHeader { Text = "TargetAlias" },
+                new ColumnHeader { Text = "UserName" },
+                new ColumnHeader { Text = "CredentialBlob" },
+                new ColumnHeader { Text = "Type" },
+                new ColumnHeader { Text = "Persist" },
+                new ColumnHeader { Text = "Flags" },
+                new ColumnHeader { Text = "Comment" },
+                new ColumnHeader { Text = "LastWritten" },
+                new ColumnHeader { Text = "Attributes" }
+            });
             lvVault.Invalidated += lvVault_Invalidated;
 
             KprResourceManager.Instance.TranslateMany(
@@ -66,6 +66,16 @@ namespace KeePassRDP
             tabVault.ResumeLayout(false);
             tabVault.UseWaitCursor = false;
             lvVault.ResumeLayout(false);
+
+            if (!tabVault.Created)
+                tabVault.CreateControl();
+
+            tblVault.Visible = true;
+
+            Task.Factory.FromAsync(BeginInvoke(new Action(() =>
+            {
+                lvVault_SizeChanged(null, EventArgs.Empty);
+            })), endInvoke => EndInvoke(endInvoke), TaskCreationOptions.AttachedToParent, TaskScheduler.Default);
         }
 
         private void LoadCredentials()
@@ -97,6 +107,8 @@ namespace KeePassRDP
                         lvi.SubItems.Add(new ListViewItem.ListViewSubItem { Font = _font, Text = cred.LastWritten.ToString() });
                         if (cred.Attributes.Count > 0)
                             lvi.SubItems.Add(new ListViewItem.ListViewSubItem { Text = cred.Attributes.Count + " " + string.Join(" / ", cred.Attributes.Select(x => x.Key + ": " + x.Value)) });
+                        else
+                            lvi.SubItems.Add(new ListViewItem.ListViewSubItem { Text = string.Empty });
                         return lvi;
                     }).ToArray();
                     if (items.Length > 0)
@@ -110,8 +122,8 @@ namespace KeePassRDP
 
                 lvVault_SizeChanged(null, EventArgs.Empty);
 
-                lvVault.EndUpdate();
                 lvVault.UseWaitCursor = false;
+                lvVault.EndUpdate();
             }));
 
             if (!invoke.IsCompleted)
@@ -120,12 +132,6 @@ namespace KeePassRDP
                     endinvoke => EndInvoke(endinvoke),
                     TaskCreationOptions.AttachedToParent,
                     TaskScheduler.Default);
-                /*new Task(() =>
-                {
-                    invoke.AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(1), true);
-                    EndInvoke(invoke);
-                }, CancellationToken.None, TaskCreationOptions.PreferFairness | TaskCreationOptions.AttachedToParent)
-                    .Start(TaskScheduler.Default);*/
             else
                 EndInvoke(invoke);
         }
@@ -238,31 +244,27 @@ namespace KeePassRDP
             else
                 e.DrawBackground();
 
+            var tf = TextFormatFlags.EndEllipsis |
+                TextFormatFlags.VerticalCenter |
+                TextFormatFlags.Default |
+                TextFormatFlags.NoPadding |
+                TextFormatFlags.TextBoxControl |
+                TextFormatFlags.PreserveGraphicsClipping |
+                TextFormatFlags.PreserveGraphicsTranslateTransform;
+
+            if (e.Header.Text == "Attributes")
+                tf |= TextFormatFlags.WordBreak;
+
             TextRenderer.DrawText(
                 e.Graphics,
                 e.SubItem.Text,
                 e.Item.UseItemStyleForSubItems ? e.Item.Font : e.SubItem.Font,
                 new Rectangle(new Point(e.Bounds.Location.X + 3, e.Bounds.Location.Y + 3), new Size(e.Bounds.Width - 6, e.Bounds.Height - 6)),
                 itemColor,
-                e.Header.Text != "Attributes" ?
-                TextFormatFlags.EndEllipsis |
-                    TextFormatFlags.VerticalCenter |
-                    TextFormatFlags.Default |
-                    TextFormatFlags.NoPadding |
-                    TextFormatFlags.TextBoxControl |
-                    TextFormatFlags.PreserveGraphicsClipping |
-                    TextFormatFlags.PreserveGraphicsTranslateTransform :
-                TextFormatFlags.WordBreak |
-                    TextFormatFlags.EndEllipsis |
-                    TextFormatFlags.VerticalCenter |
-                    TextFormatFlags.Default |
-                    TextFormatFlags.NoPadding |
-                    TextFormatFlags.TextBoxControl |
-                    TextFormatFlags.PreserveGraphicsClipping |
-                    TextFormatFlags.PreserveGraphicsTranslateTransform);
+                tf);
         }
 
-        private bool _lvVaultResizing = false;
+        private volatile bool _lvVaultResizing = false;
         private void lvVault_SizeChanged(object sender, EventArgs e)
         {
             if (_lvVaultResizing || !_tabVaultInitialized || (lvVault.UseWaitCursor && sender != null))
@@ -270,39 +272,88 @@ namespace KeePassRDP
 
             _lvVaultResizing = true;
 
-            if (sender == null)
+            var columnsCount = lvVault.Columns.Count - 1;
+
+            if (columnsCount >= 0)
             {
+                var wasActiveControl = ActiveControl == lvVault;
+                lvVault.Visible = false;
                 lvVault.SuspendLayout();
+                lvVault.BeginUpdate();
+
                 var oldFont = lvVault.Font;
                 lvVault.Font = _font;
 
-                if (lvVault.Items.Count > 0)
-                    lvVault.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
-                else
-                    lvVault.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
+                if (sender == null)
+                {
+                    if (lvVault.Items.Count > 0)
+                    {
+                        lvVault.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
+                        var minWidths = lvVault.Columns.OfType<ColumnHeader>().Select(x => x.Width).ToArray();
 
-                lvVault.Columns[3].Width = -2;
-                lvVault.Columns[lvVault.Columns.Count - 1].Width = -2;
+                        lvVault.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+
+                        for (var i = columnsCount; i >= 0; i--)
+                        {
+                            var width = lvVault.Columns[i].Width;
+                            if (width < minWidths[i])
+                                lvVault.Columns[i].Width = minWidths[i];
+                        }
+                    }
+                    else
+                        lvVault.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
+
+                    lvVault.Columns[columnsCount].Width = -2;
+                }
+
+                lvVault.Columns.Add(string.Empty, 0);
+
+                var column = lvVault.Columns[columnsCount];
+                column.AutoResize(ColumnHeaderAutoResizeStyle.HeaderSize);
+                var minWidth = column.Width;
+                column.AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                column.Width = Math.Max(minWidth, column.Width);
+
+                lvVault.Columns.RemoveAt(lvVault.Columns.Count - 1);
+
+                column = lvVault.Columns[3];
+                column.AutoResize(ColumnHeaderAutoResizeStyle.HeaderSize);
+                minWidth = column.Width;
+                column.AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                var oldWidth = Math.Max(minWidth, column.Width);
+                var allWidth = lvVault.Columns.OfType<ColumnHeader>().Sum(x => x.Width);
+                column.Width = Math.Max(oldWidth, lvVault.Width - (allWidth - column.Width));
+
+                lvVault.Columns[columnsCount].Width = -2;
+
+                if (lvVault.Items.Count == 0)
+                {
+                    allWidth = lvVault.Columns.OfType<ColumnHeader>().Sum(x => x.Width);
+                    if (allWidth > lvVault.Width)
+                        column.Width -= Math.Min(allWidth - lvVault.Width, column.Width);
+                }
 
                 lvVault.Font = oldFont;
+
+                if (ScrollbarUtil.GetVisibleScrollbars(lvVault) >= ScrollBars.Vertical)
+                    column.Width = Math.Max(oldWidth, column.Width - UIUtil.GetVScrollBarWidth());
+
+                lvVault.EndUpdate();
                 lvVault.ResumeLayout(false);
+                lvVault.Visible = true;
+                if (wasActiveControl)
+                    ActiveControl = lvVault;
             }
-            /*else
-            {
-                lvVault.Columns[lvVault.Columns.Count - 1].AutoResize(ColumnHeaderAutoResizeStyle.None);
-                lvVault.Columns[lvVault.Columns.Count - 1].Width += lvVault.Width -
-                    lvVault.Columns.Cast<ColumnHeader>().Sum(column => column.Width) -
-                    (ScrollbarUtil.GetVisibleScrollbars(lvVault).HasFlag(ScrollBars.Vertical) ? UIUtil.GetVScrollBarWidth() : 0) - 10;
-            }*/
 
             _lvVaultResizing = false;
         }
 
         private void lvVault_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
         {
-            if (!_tabVaultInitialized || lvVault.UseWaitCursor)
+            if (_lvVaultResizing || !_tabVaultInitialized || lvVault.UseWaitCursor)
                 return;
 
+            lvVault_SizeChanged(sender, EventArgs.Empty);
             lvVault.Invalidate();
         }
 

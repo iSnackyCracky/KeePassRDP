@@ -1,0 +1,54 @@
+<#@ template compilerOptions="optimize+" hostspecific="true" language="C#" #>
+<#@ output extension=".yaml" encoding="utf-8" #>
+<#@ assembly name="EnvDTE" #>
+<#@ import namespace="Microsoft.VisualStudio.TextTemplating" #>
+<#@ import namespace="System.IO" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Text.RegularExpressions" #>
+<#
+    var directory = Path.GetDirectoryName(Host.TemplateFile);
+    var parent = Path.GetDirectoryName(Path.GetDirectoryName(directory));
+
+    var buildDate = DateTime.UtcNow;
+    var informationalVersion = string.Empty;
+    var assemblyVersion = string.Empty;
+
+    var assemblyInfo = File.ReadAllText(Path.Combine(parent, @"KeePassRDP\Properties\AssemblyInfo.cs"));
+    var match = Regex.Match(assemblyInfo, "\\[assembly: AssemblyInformationalVersion\\(\"([^\"]+)\"\\)\\]");
+    if (match.Success)
+        informationalVersion = match.Groups[1].Value;
+
+    match = Regex.Match(assemblyInfo, "\\[assembly: AssemblyVersion\\(\"([^\"]+)\"\\)\\]");
+    if (match.Success)
+    {
+        assemblyVersion = match.Groups[1].Value;
+        if (string.IsNullOrEmpty(informationalVersion))
+            informationalVersion = assemblyVersion;
+    }
+#>
+PackageIdentifier: KeePassRDP.KeePassRDP
+PackageVersion: <#= informationalVersion #>
+MinimumOSVersion: 10.0.0.0
+InstallerType: wix
+UpgradeBehavior: install
+InstallerSwitches:
+  InstallLocation: KEEPASS="<INSTALLPATH>"
+InstallModes:
+- interactive
+- silent
+- silentWithProgress
+ElevationRequirement: elevatesSelf
+Dependencies:
+  PackageDependencies:
+  - PackageIdentifier: DominikReichl.KeePass
+AppsAndFeaturesEntries:
+- ProductCode: "{9EAFF850-2B28-4AF1-AE41-056F319393B5}"
+  UpgradeCode: "{9EAFF850-2B28-4AF1-AE41-056F319393B5}"
+Installers:
+- Architecture: x64
+  InstallerUrl: https://github.com/iSnackyCracky/KeePassRDP/releases/download/v<#= informationalVersion #>/KeePassRDP_v<#= informationalVersion #>.msi
+  InstallerSha256: ###FILE_HASH###
+  ProductCode: "{9EAFF850-2B28-4AF1-AE41-056F319393B5}"
+  ReleaseDate: <#= buildDate.ToString("yyyy-MM-dd") #>
+ManifestType: installer
+ManifestVersion: 1.6.0

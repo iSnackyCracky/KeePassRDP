@@ -7,19 +7,6 @@
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
-            base.Dispose(disposing);
-        }
-
         #region Windows Form Designer generated code
 
         /// <summary>
@@ -137,10 +124,12 @@
             this.lvEntries.UseCompatibleStateImageBehavior = false;
             this.lvEntries.View = System.Windows.Forms.View.Details;
             this.lvEntries.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.lvEntries_ColumnClick);
+            this.lvEntries.ColumnWidthChanged += new System.Windows.Forms.ColumnWidthChangedEventHandler(this.lvEntries_ColumnWidthChanged);
             this.lvEntries.DrawColumnHeader += new System.Windows.Forms.DrawListViewColumnHeaderEventHandler(this.lvEntries_DrawColumnHeader);
             this.lvEntries.DrawItem += new System.Windows.Forms.DrawListViewItemEventHandler(this.lvEntries_DrawItem);
             this.lvEntries.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.lvEntries_DrawSubItem);
             this.lvEntries.ItemActivate += new System.EventHandler(this.lvEntries_ItemActivate);
+            this.lvEntries.SizeChanged += new System.EventHandler(this.lvEntries_SizeChanged);
             this.lvEntries.KeyDown += new System.Windows.Forms.KeyEventHandler(this.lvEntries_KeyDown);
             // 
             // columnPath
@@ -155,6 +144,7 @@
             this.tblCredentialPickerForm.Controls.Add(this.lvEntries, 0, 0);
             this.tblCredentialPickerForm.Controls.Add(this.flpCommandButtons, 0, 1);
             this.tblCredentialPickerForm.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tblCredentialPickerForm.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tblCredentialPickerForm.Location = new System.Drawing.Point(0, 0);
             this.tblCredentialPickerForm.Margin = new System.Windows.Forms.Padding(0);
             this.tblCredentialPickerForm.Name = "tblCredentialPickerForm";
@@ -187,7 +177,6 @@
             this.ClientSize = new System.Drawing.Size(1134, 461);
             this.Controls.Add(this.tblCredentialPickerForm);
             this.DoubleBuffered = true;
-            this.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.MinimumSize = new System.Drawing.Size(300, 200);
@@ -195,9 +184,11 @@
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "KeePassRDP | ";
+            this.Activated += new System.EventHandler(this.KprCredentialPickerForm_Activated);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.KprCredentialPickerForm_FormClosing);
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.KprCredentialPickerForm_FormClosed);
             this.Load += new System.EventHandler(this.KprCredentialPickerForm_Load);
+            this.Shown += new System.EventHandler(this.KprCredentialPickerForm_Shown);
             this.flpCommandButtons.ResumeLayout(false);
             this.flpCommandButtons.PerformLayout();
             this.tblCredentialPickerForm.ResumeLayout(false);

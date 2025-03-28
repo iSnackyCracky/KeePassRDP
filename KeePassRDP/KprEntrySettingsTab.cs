@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -60,7 +60,7 @@ namespace KeePassRDP
             _txtGroupUUIDsTooltipTimer = new Timer
             {
                 Interval = 500,
-                Enabled = false,
+                Enabled = false
             };
 
             _txtGroupUUIDsCursorSize = new Lazy<Size>(() =>
@@ -176,11 +176,13 @@ namespace KeePassRDP
             txtMstscParameters.Tag = cmdMstscParametersRemove.Tag = cmdMstscParametersReset.Tag = lstMstscParameters;
             cmdMstscParametersAdd.Tag = txtMstscParameters;
 
-            Util.SetDoubleBuffered(tblKprEntrySettingsTab);
-            Util.SetDoubleBuffered(lstCpGroupUUIDs);
-            Util.SetDoubleBuffered(lstCpExcludedGroupUUIDs);
-            Util.SetDoubleBuffered(lstCpRegExPatterns);
-            Util.SetDoubleBuffered(lstMstscParameters);
+            Util.EnableDoubleBuffered(
+                tblKprEntrySettingsTab,
+                lstCpGroupUUIDs,
+                lstCpExcludedGroupUUIDs,
+                lstCpRegExPatterns,
+                lstMstscParameters
+            );
 
             var cpGroupUUIDsList = _pwEntrySettings.CpGroupUUIDs.ToList();
             _cpGroupUUIDs = new BindingList<string>(cpGroupUUIDsList);
@@ -296,7 +298,7 @@ namespace KeePassRDP
 
             MouseEventHandler firstOpen = null;
 
-            firstOpen = delegate (object s, MouseEventArgs e)
+            firstOpen = (object s, MouseEventArgs e) =>
             {
                 if (firstOpen == null)
                     return;
@@ -309,6 +311,7 @@ namespace KeePassRDP
                 }
 
                 cms.Items.Clear();
+                cms.SuspendLayout();
 
                 var pgRoot = host.Database.RootGroup;
                 var iconCache = host.Database.CustomIcons.ToDictionary(x => x.Uuid, x => host.Database.CustomIcons.IndexOf(x));
@@ -335,8 +338,14 @@ namespace KeePassRDP
 
                     var tsmi = new ToolStripMenuItem(strName)
                     {
+                        AutoSize = true,
+                        AutoToolTip = false,
+                        ShowShortcutKeys = false,
+                        Dock = DockStyle.Fill,
                         Tag = pg,
-                        Image = clientIcons.Images[nIconID]
+                        Image = clientIcons.Images[nIconID],
+                        Margin = Padding.Empty,
+                        Padding = Padding.Empty
                     };
                     tsmi.Click += click;
                     items.Add(tsmi);
@@ -348,6 +357,7 @@ namespace KeePassRDP
                 pgRoot.TraverseTree(TraversalMethod.PreOrder, gh, null);
 
                 cms.Items.AddRange(items.ToArray());
+                cms.ResumeLayout(false);
             };
 
             txtCpGroupUUIDs.MouseDown += firstOpen;
@@ -423,7 +433,7 @@ namespace KeePassRDP
 
             ParentForm.Deactivate += (s, ee) =>
             {
-                if (cmsMore.Visible && !cmsMore.RectangleToScreen(cmsMore.DisplayRectangle).Contains(Cursor.Position))
+                if (cmsMore.Visible && !cmsMore.RectangleToScreen(cmsMore.DisplayRectangle).Contains(MousePosition))
                     cmsMore.Close();
             };
 
@@ -635,13 +645,13 @@ namespace KeePassRDP
         private void txtGroupUUIDs_ShowToolTip(object sender, EventArgs e)
         {
             var timer = sender as Timer;
-            timer.Enabled = false;
+            timer.Stop();
 
             var control = timer.Tag as Control;
             if (!string.IsNullOrEmpty(ttGroupPicker.GetToolTip(control)))
                 return;
 
-            var point = control.PointToClient(Cursor.Position);
+            var point = control.PointToClient(MousePosition);
             var size = _txtGroupUUIDsCursorSize.Value;
 
             if (!size.IsEmpty)
@@ -661,43 +671,67 @@ namespace KeePassRDP
         {
             _txtGroupUUIDsTooltipTimer.Tag = sender;
             _txtGroupUUIDsTooltipTimer.Tick += txtGroupUUIDs_ShowToolTip;
-            if (_txtGroupUUIDsTooltipTimer.Enabled)
-                _txtGroupUUIDsTooltipTimer.Enabled = false;
-            _txtGroupUUIDsTooltipTimer.Enabled = !_lastTooltipMousePosition.HasValue;
+
+            _txtGroupUUIDsTooltipTimer.Stop();
+            if (!_lastTooltipMousePosition.HasValue)
+                _txtGroupUUIDsTooltipTimer.Start();
+
+            try
+            {
+                ttGroupPicker.Hide(sender as Control);
+            }
+            catch { }
         }
 
         private void txtGroupUUIDs_MouseLeave(object sender, EventArgs e)
         {
-            _txtGroupUUIDsTooltipTimer.Tick -= txtGroupUUIDs_ShowToolTip;
-            if (_txtGroupUUIDsTooltipTimer.Enabled)
-                _txtGroupUUIDsTooltipTimer.Enabled = false;
-            ttGroupPicker.Hide(sender as Control);
+            try
+            {
+                _txtGroupUUIDsTooltipTimer.Tick -= txtGroupUUIDs_ShowToolTip;
+            }
+            catch { }
+
+            _txtGroupUUIDsTooltipTimer.Stop();
             _lastTooltipMousePosition = null;
+
+            try
+            {
+                ttGroupPicker.Hide(sender as Control);
+            }
+            catch { }
         }
 
         private void txtGroupUUIDs_MouseMove(object sender, MouseEventArgs e)
         {
             if (_lastTooltipMousePosition.HasValue && _lastTooltipMousePosition.Value == e.Location)
                 return;
+
             _lastTooltipMousePosition = e.Location;
-            if (_txtGroupUUIDsTooltipTimer.Enabled)
-                _txtGroupUUIDsTooltipTimer.Enabled = false;
-            _txtGroupUUIDsTooltipTimer.Enabled = true;
+            _txtGroupUUIDsTooltipTimer.Stop();
+            _txtGroupUUIDsTooltipTimer.Start();
         }
 
         private void txtGroupUUIDs_Enter(object sender, EventArgs e)
         {
-            if (_txtGroupUUIDsTooltipTimer.Enabled)
-                _txtGroupUUIDsTooltipTimer.Enabled = false;
-            ttGroupPicker.Hide(sender as Control);
+            _txtGroupUUIDsTooltipTimer.Stop();
+
+            try
+            {
+                ttGroupPicker.Hide(sender as Control);
+            }
+            catch { }
         }
 
         private void txtGroupUUIDs_Leave(object sender, EventArgs e)
         {
-            if (_txtGroupUUIDsTooltipTimer.Enabled)
-                _txtGroupUUIDsTooltipTimer.Enabled = false;
-            ttGroupPicker.Hide(sender as Control);
+            _txtGroupUUIDsTooltipTimer.Stop();
             _lastTooltipMousePosition = null;
+
+            try
+            {
+                ttGroupPicker.Hide(sender as Control);
+            }
+            catch { }
         }
     }
 }

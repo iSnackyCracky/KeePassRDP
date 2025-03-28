@@ -76,6 +76,7 @@ PostInstallCmd=%PostInstallCmd%
 AdminQuietInstCmd=%AdminQuietInstCmd%
 UserQuietInstCmd=%UserQuietInstCmd%
 SourceFiles=SourceFiles
+VersionInfo=VersionInfo
 [Strings]
 InstallPrompt=
 DisplayLicense=<#= parent #>\COPYING
@@ -91,3 +92,5 @@ FILE0="KeePassRDP.plgx"
 SourceFiles0=<#= sourceFiles #>\
 [SourceFiles0]
 %FILE0%=
+[VersionInfo]
+FromFile=<#= sourceFiles #>\KeePassRDP.dll

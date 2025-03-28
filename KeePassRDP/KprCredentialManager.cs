@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -109,7 +109,7 @@ namespace KeePassRDP
                 VistaTaskDialog.ShowMessageBoxEx(
                     KprResourceManager.Instance["Unable to persist credentials in Windows vault."],
                     null,
-                    Util.KeePassRDP + " - " + KPRes.FatalError,
+                    string.Format("{0} - {1}", Util.KeePassRDP, KPRes.Error),
                     VtdIcon.Error,
                     null, null, 0, null, 0);
 
@@ -123,9 +123,7 @@ namespace KeePassRDP
                         ncred.ZeroMemory();
                 }
             }
-            catch (Win32Exception) // Do not fail when vault is empty.
-            {
-            }
+            catch (Win32Exception) { } // Do not fail when vault is empty.
 
             if (_credentials.Count > 0)
                 ManageTimer(Action.Add);
@@ -136,7 +134,9 @@ namespace KeePassRDP
         {
             credential.Write(_config.CredVaultOverwriteExisting);
             credential.ZeroMemory();
+
             _credentials.Add(credential);
+
             ManageTimer(Action.Add);
         }
 
@@ -145,7 +145,9 @@ namespace KeePassRDP
         {
             credential.Write(_config.CredVaultOverwriteExisting);
             credential.ZeroMemory();
+
             _credentials.Insert(index, credential);
+
             ManageTimer(Action.Add);
         }
 
@@ -154,12 +156,14 @@ namespace KeePassRDP
         {
             if (!credentials.Any())
                 return;
+
             foreach (var credential in credentials)
             {
                 credential.Write(_config.CredVaultOverwriteExisting);
                 credential.ZeroMemory();
                 _credentials.Add(credential);
             }
+
             ManageTimer(Action.Add);
         }
 
@@ -167,12 +171,15 @@ namespace KeePassRDP
         public bool Remove(Guid credentialGuid)
         {
             var result = false;
+
             foreach (var credential in _credentials.FindAll(x => x.GUID == credentialGuid))
                 using (credential)
                     if (_credentials.Remove(credential))
                         result = true;
+
             if (result)
                 ManageTimer(Action.Remove);
+
             return result;
         }
 
@@ -185,6 +192,7 @@ namespace KeePassRDP
                     ManageTimer(Action.Remove);
                     return true;
                 }
+
             return false;
         }
 
@@ -192,14 +200,17 @@ namespace KeePassRDP
         public int RemoveAll(Predicate<T> match)
         {
             var count = 0;
+
             foreach (var credential in _credentials.FindAll(match))
             {
                 using (credential)
                     if (_credentials.Remove(credential))
                         count++;
             }
+
             if (count > 0)
                 ManageTimer(Action.Remove);
+
             return count;
         }
 
@@ -208,6 +219,7 @@ namespace KeePassRDP
         {
             using (_credentials[index])
                 _credentials.RemoveAt(index);
+
             ManageTimer(Action.Remove);
         }
 
@@ -216,7 +228,9 @@ namespace KeePassRDP
         {
             foreach (var credential in _credentials)
                 credential.Dispose();
+
             _credentials.Clear();
+
             ManageTimer(Action.Remove);
         }
 

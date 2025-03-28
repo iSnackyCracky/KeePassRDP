@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+     <RootNamespace>KeePassRDP</RootNamespace>
+     <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="*.msi" />
+    <None Remove="*.exe" />
+    <None Remove="*.wxs" />
+    <None Remove="*.wixpdb" />
+    <None Remove="*.wixobj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WixSharp_wix4" Version="2.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\KeePassRDP\KeePassRDP.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="winget\KeePassRDP.KeePassRDP.installer.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>KeePassRDP.KeePassRDP.installer.yaml</LastGenOutput>
+    </None>
+    <None Update="winget\KeePassRDP.KeePassRDP.installer.yaml">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>KeePassRDP.KeePassRDP.installer.tt</DependentUpon>
+    </None>
+    <None Update="winget\KeePassRDP.KeePassRDP.locale.en-US.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>KeePassRDP.KeePassRDP.locale.en-US.yaml</LastGenOutput>
+    </None>
+    <None Update="winget\KeePassRDP.KeePassRDP.locale.en-US.yaml">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>KeePassRDP.KeePassRDP.locale.en-US.tt</DependentUpon>
+    </None>
+    <None Update="winget\KeePassRDP.KeePassRDP.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>KeePassRDP.KeePassRDP.yaml</LastGenOutput>
+    </None>
+    <None Update="winget\KeePassRDP.KeePassRDP.yaml">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>KeePassRDP.KeePassRDP.tt</DependentUpon>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="cd .\&#xD;&#xA;set ide=true&#xD;&#xA;&quot;$(TargetPath)&quot;&#xD;&#xA;&#xD;&#xA;if $(ConfigurationName) == Release goto release&#xD;&#xA;goto end&#xD;&#xA;&#xD;&#xA;:release&#xD;&#xA;powershell.exe -NoProfile -NoLogo -NonInteractive -ExecutionPolicy Bypass -Command &quot;&amp; {cd '$(SolutionDir)'; .\make_winget.ps1}&quot;&#xD;&#xA;goto end&#xD;&#xA;&#xD;&#xA;:end" />
+  </Target>
+
+</Project>

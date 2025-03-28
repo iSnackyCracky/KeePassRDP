@@ -153,6 +153,9 @@
   <data name="Adaptive lifetime" xml:space="preserve">
     <value>Adaptive Verweildauer</value>
   </data>
+  <data name="Add as default action" xml:space="preserve">
+    <value>Als Standardaktion hinzufügen</value>
+  </data>
   <data name="Add excluded group" xml:space="preserve">
     <value>Ausgeschlossene Gruppe hinzufügen</value>
   </data>
@@ -218,11 +221,17 @@ TTL kann auf 0 gesetzt werden um Zugangsdaten nur beim Beenden zu löschen.</val
   <data name="Cannot connect to empty hostname." xml:space="preserve">
     <value>Verbindung ohne Hostname nicht möglich.</value>
   </data>
+  <data name="Cleanup credentials dialog if it pops up." xml:space="preserve">
+    <value>Anmeldedialog bereinigen falls er angezeigt wird.</value>
+  </data>
   <data name="Cleanup registry hint" xml:space="preserve">
     <value>Registry-Hint bereinigen</value>
   </data>
   <data name="Click here to select a certificate from the user store." xml:space="preserve">
     <value>Hier klicken um ein Benutzerzertifikat auszuwählen.</value>
+  </data>
+  <data name="Close KeePass without waiting for connections to finish." xml:space="preserve">
+    <value>KeePass schließen ohne auf Verbindungen zu warten.</value>
   </data>
   <data name="Configure extended settings via .rdp file." xml:space="preserve">
     <value>Erweiterte Einstellung über .rdp-Datei konfigurieren.</value>
@@ -260,6 +269,9 @@ TTL kann auf 0 gesetzt werden um Zugangsdaten nur beim Beenden zu löschen.</val
   <data name="Custom trigger group:" xml:space="preserve">
     <value>Benutzerdefinierte Gruppe:</value>
   </data>
+  <data name="Default value: {0}" xml:space="preserve">
+    <value>Standardwert: {0}</value>
+  </data>
   <data name="Define a custom group name that triggers the credential picker.&#xD;&#xA;Defaults to &quot;RDP&quot; if unset." xml:space="preserve">
     <value>Benutzerdefinierten Namen der Gruppe die den Credential Picker auslöst festlegen.
 Verwendet "RDP" als Standard.</value>
@@ -273,8 +285,14 @@ Unbestimmt = Vererbung von Einstellungen erlauben (standard)</value>
   <data name="Discard changes" xml:space="preserve">
     <value>Änderungen verwerfen</value>
   </data>
+  <data name="Disconnect" xml:space="preserve">
+    <value>Trennen</value>
+  </data>
   <data name="Display" xml:space="preserve">
     <value>Anzeige</value>
+  </data>
+  <data name="Do not show confirmation prompt to user" xml:space="preserve">
+    <value>Benutzer keinen Bestätigungsdialog zeigen</value>
   </data>
   <data name="Do you want to continue?" xml:space="preserve">
     <value>Fortfahren?</value>
@@ -287,6 +305,10 @@ Unbestimmt = Vererbung von Einstellungen erlauben (standard)</value>
   </data>
   <data name="Enlarge row height of entries shown in credential picker list." xml:space="preserve">
     <value>Höhe von Reihen der angezeigten Einträge im Credential Picker vergrößern.</value>
+  </data>
+  <data name="Enter the path for the custom command executable.&#xD;&#xA;To use built-in logic 'MstscCommand:' or 'FreeRdpCommand:' can be prepended." xml:space="preserve">
+    <value>Pfad für benutzerdefinierte Programmdatei eingeben.
+Um integrierte Logik zu verwenden 'MstscCommand:' oder 'FreeRdpCommand:' voranstellen.</value>
   </data>
   <data name="Entries" xml:space="preserve">
     <value>Einträge</value>
@@ -338,6 +360,9 @@ Nur bei Notwendigkeit aktivieren. Kann unerwartetes Verhalten verursachen.</valu
   <data name="General" xml:space="preserve">
     <value>Allgemein</value>
   </data>
+  <data name="Handle credentials dialog" xml:space="preserve">
+    <value>Anmeldedialog verwalten</value>
+  </data>
   <data name="Height - /h:" xml:space="preserve">
     <value>Höhe - /h:</value>
   </data>
@@ -349,6 +374,9 @@ Nur bei Notwendigkeit aktivieren. Kann unerwartetes Verhalten verursachen.</valu
   </data>
   <data name="Ignore entry credentials" xml:space="preserve">
     <value>Zugangsdaten von Eintrag ignorieren</value>
+  </data>
+  <data name="Ignore windows on secure desktop." xml:space="preserve">
+    <value>Fenster auf sicherem Desktop ignorieren.</value>
   </data>
   <data name="import" xml:space="preserve">
     <value>importieren</value>
@@ -402,8 +430,17 @@ Monitor behalten</value>
   <data name="License" xml:space="preserve">
     <value>Lizenz</value>
   </data>
+  <data name="Locked" xml:space="preserve">
+    <value>Gesperrt</value>
+  </data>
+  <data name="Logoff" xml:space="preserve">
+    <value>Abmelden</value>
+  </data>
   <data name="Make the context menu stay on the same screen when opening." xml:space="preserve">
     <value>Öffnen des Kontextmenüs auf dem selben Monitor bevorzugen.</value>
+  </data>
+  <data name="Message" xml:space="preserve">
+    <value>Nachricht</value>
   </data>
   <data name="More" xml:space="preserve">
     <value>Mehr</value>
@@ -420,8 +457,17 @@ Monitor behalten</value>
   <data name="Never open credential picker for entry if unchecked." xml:space="preserve">
     <value>Credential Picker niemals für Eintrag öffnen wenn deaktiviert.</value>
   </data>
+  <data name="No consent prompt" xml:space="preserve">
+    <value>Keine Zustimmung abfragen</value>
+  </data>
   <data name="Notes" xml:space="preserve">
     <value>Kommentare</value>
+  </data>
+  <data name="Open credential picker on an isolated desktop to prevent sniffing and key-logging." xml:space="preserve">
+    <value>Zum Schutz vor Datenabfluss Picker auf einem isolierten Desktop öffnen.</value>
+  </data>
+  <data name="Open on secure desktop" xml:space="preserve">
+    <value>Auf sicherem Desktop öffnen</value>
   </data>
   <data name="Open RDP connection" xml:space="preserve">
     <value>RDP-Verbindung starten</value>
@@ -459,6 +505,18 @@ Monitor behalten</value>
   <data name="Please select an entry first." xml:space="preserve">
     <value>Bitte zuerst einen Eintrag auswählen.</value>
   </data>
+  <data name="Please select exactly one credential from the list." xml:space="preserve">
+    <value>Bitte genau einen Eintrag mit Zugangsdaten aus der Liste auswählen.</value>
+  </data>
+  <data name="Please select exactly one session to shadow." xml:space="preserve">
+    <value>Bitte genau eine Sitzung zum Spiegeln auswählen.</value>
+  </data>
+  <data name="Press Ctrl+Alt+Del to unlock." xml:space="preserve">
+    <value>Strg+Alt+Entf zum Entsperren drücken.</value>
+  </data>
+  <data name="Press delete key to clear the hotkey." xml:space="preserve">
+    <value>Entfernen-Taste drücken um Tastaturkürzel zu leeren.</value>
+  </data>
   <data name="Press right mouse button to open group picker,&#xD;&#xA;or enter hexstring of group UUID." xml:space="preserve">
     <value>Rechte Maustaste drücken um Gruppenauswahl zu öffnen,
 oder Hexstring der Gruppen-UUID eingeben.</value>
@@ -466,14 +524,23 @@ oder Hexstring der Gruppen-UUID eingeben.</value>
   <data name="Really continue?" xml:space="preserve">
     <value>Wirklich fortfahren?</value>
   </data>
+  <data name="Really reset all values to default? This action cannot be undone." xml:space="preserve">
+    <value>Wirklich alle Werte auf Standard zurücksetzen? Diese Aktion kann nicht rückgängig gemacht werden.</value>
+  </data>
   <data name="Recursive group search" xml:space="preserve">
     <value>Rekursive Gruppen-Suche</value>
+  </data>
+  <data name="Recursive trigger" xml:space="preserve">
+    <value>Rekursiver Auslöser</value>
   </data>
   <data name="Redirect" xml:space="preserve">
     <value>Umleitung</value>
   </data>
   <data name="Refresh credentials list" xml:space="preserve">
     <value>Liste der Zugangsdaten aktualisieren</value>
+  </data>
+  <data name="Refresh session list" xml:space="preserve">
+    <value>Liste der Sitzungen aktualisieren</value>
   </data>
   <data name="RegEx postfixes:" xml:space="preserve">
     <value>RegEx-Postfixe:</value>
@@ -486,6 +553,9 @@ oder Hexstring der Gruppen-UUID eingeben.</value>
   </data>
   <data name="Remember sort order" xml:space="preserve">
     <value>Sortierreihenfolge merken</value>
+  </data>
+  <data name="Remote control user session" xml:space="preserve">
+    <value>Benutzersitzung fernsteuern</value>
   </data>
   <data name="Remotedesktop (RDP) Files" xml:space="preserve">
     <value>Remotedesktop (RDP)-Datein</value>
@@ -523,6 +593,12 @@ oder Hexstring der Gruppen-UUID eingeben.</value>
   <data name="Replace window title" xml:space="preserve">
     <value>Fenstertitel ersetzen</value>
   </data>
+  <data name="Reset all options to default" xml:space="preserve">
+    <value>Alle Optionen auf Standardwert zurücksetzen</value>
+  </data>
+  <data name="Reset all settings to default" xml:space="preserve">
+    <value>Alle Einstellungen auf Standardwert zurücksetzen</value>
+  </data>
   <data name="Reset context menu items to default" xml:space="preserve">
     <value>Kontextmenüeinträge auf Standardwert zurücksetzen</value>
   </data>
@@ -556,6 +632,22 @@ oder Hexstring der Gruppen-UUID eingeben.</value>
   <data name="Retry credentials once" xml:space="preserve">
     <value>Anmeldung einmalig wiederverwenden</value>
   </data>
+  <data name="Run" xml:space="preserve">
+    <value>Ausführen</value>
+  </data>
+  <data name="Run executable on an isolated desktop to prevent sniffing and key-logging.&#xD;&#xA;When enabled, switchting to other windows is not possible." xml:space="preserve">
+    <value>Zum Schutz vor Datenabfluss Programmdatei auf einem isolierten Desktop ausführen.
+Wenn aktiviert, ist wechseln zu anderen Fenstern nicht möglich.</value>
+  </data>
+  <data name="Run on secure desktop" xml:space="preserve">
+    <value>Auf sicherem Desktop ausführen</value>
+  </data>
+  <data name="Run {0}" xml:space="preserve">
+    <value>{0} ausführen</value>
+  </data>
+  <data name="Running processes" xml:space="preserve">
+    <value>Ausgeführte Prozesse</value>
+  </data>
   <data name="Save changes" xml:space="preserve">
     <value>Änderungen speichern</value>
   </data>
@@ -567,14 +659,29 @@ Sollte aus Sicherheitsgründen aktiviert bleiben, wenn keine Einschränkungen au
   <data name="Saving '{0}' failed: {1}" xml:space="preserve">
     <value>Speichern von '{0}' fehlgeschlagen: {1}</value>
   </data>
+  <data name="Score" xml:space="preserve">
+    <value>Punkte</value>
+  </data>
   <data name="Select a certificate from the list for signing .rdp files:" xml:space="preserve">
     <value>Zertifikat zum signieren von .rdp-Datein auswählen:</value>
+  </data>
+  <data name="Select the type of executable." xml:space="preserve">
+    <value>Typ der Programmdatei festlegen.</value>
   </data>
   <data name="Self-signed certificate created successfully." xml:space="preserve">
     <value>Selbst signiertes Zertifikat erfolgreich erstellt.</value>
   </data>
+  <data name="Send message" xml:space="preserve">
+    <value>Nachricht senden</value>
+  </data>
   <data name="Set mstsc.exe window title to title of entry." xml:space="preserve">
     <value>Fenstertitel von mstsc.exe auf Titel des Eintrags setzen.</value>
+  </data>
+  <data name="Shadow session over RDP connection (/shadow)" xml:space="preserve">
+    <value>Sitzung über RDP-Verbindung spiegeln (/shadow)</value>
+  </data>
+  <data name="Shadow session over RDP connection without credentials (/shadow)" xml:space="preserve">
+    <value>Sitzung über RDP-Verbindung ohne Zugangsdaten spiegeln (/shadow)</value>
   </data>
   <data name="Shortcut" xml:space="preserve">
     <value>Tastaturkürzel</value>
@@ -604,8 +711,19 @@ Sollte aus Sicherheitsgründen aktiviert bleiben, wenn keine Einschränkungen au
   <data name="Store as Windows credentials" xml:space="preserve">
     <value>Als Windows-Zugangsdaten speichern</value>
   </data>
-  <data name="String1" xml:space="preserve">
-    <value />
+  <data name="Switch to default desktop" xml:space="preserve">
+    <value>Zu normalem Desktop wechseln</value>
+  </data>
+  <data name="Switch to secure desktop" xml:space="preserve">
+    <value>Zu sicherem Desktop wechseln</value>
+  </data>
+  <data name="Take control" xml:space="preserve">
+    <value>Kontrolle übernehmen</value>
+  </data>
+  <data name="The following PIDs could not be stopped when closing the secure desktop:&#xD;&#xA;'{0}'&#xD;&#xA;Please confirm to try killing them with administrator privileges." xml:space="preserve">
+    <value>Die folgenden PIDs konnten beim Schließen des sicheren Desktops nicht gestoppt werden:
+'{0}'
+Bitte das Beenden mit Administratorrechten bestätigen.</value>
   </data>
   <data name="The URL/target '{0}' of the selected entry could not be parsed." xml:space="preserve">
     <value>URL/Ziel '{0}' des ausgewählten Eintrags konnte nicht vearbeitet werden.</value>
@@ -627,18 +745,33 @@ oder nur wenn die selben Zugangsdaten verwendet werden.</value>
   <data name="Toggle showing only credentials managed by KeePassRDP or all." xml:space="preserve">
     <value>Wechseln zwischen nur Zugangsdaten die durch KeePassRDP verwaltet werden und allen anzeigen.</value>
   </data>
+  <data name="Toggle visibility in context menu" xml:space="preserve">
+    <value>Sichtbarkeit in Kontextmenü umschalten</value>
+  </data>
+  <data name="Toggle visibility on toolbar" xml:space="preserve">
+    <value>Sichtbarkeit auf Werkzeugleiste umschalten</value>
+  </data>
   <data name="Toolbar" xml:space="preserve">
     <value>Werkzeugleiste</value>
   </data>
   <data name="Trigger" xml:space="preserve">
     <value>Auslöser</value>
   </data>
+  <data name="Trigger &quot;Open RDP connection&quot; when double-clicking URL of entries in RDP group(s)" xml:space="preserve">
+    <value>Bei Doppelklick auf URL von Einträgen in RDP-Gruppe(n) "RDP-Verbindung starten" auslösen.</value>
+  </data>
   <data name="Try to reconnect with same credentials one time on connection losses.&#xD;&#xA;Warning: Will need to keep the password in (encrypted) memory." xml:space="preserve">
     <value>Verbindungsversuch mit selben Zugangsdaten ein einziges Mal nach Abbruch wiederholen.
 Warnung: Passwort muss in (verschlüsseltem) Speicher gehalten werden.</value>
   </data>
+  <data name="Type in a message to be sent to the selected users." xml:space="preserve">
+    <value>Nachricht welche an die ausgewählten Benutzer gesendet wird.</value>
+  </data>
   <data name="Unable to persist credentials in Windows vault." xml:space="preserve">
     <value>Speichern von Zugangsdaten in Windows-Tresor nicht möglich.</value>
+  </data>
+  <data name="unset" xml:space="preserve">
+    <value>nicht gesetzt</value>
   </data>
   <data name="Use &amp;admin - /admin" xml:space="preserve">
     <value>Verwende &amp;admin - /admin</value>
@@ -679,11 +812,20 @@ Warnung: Passwort muss in (verschlüsseltem) Speicher gehalten werden.</value>
   <data name="Visibility settings" xml:space="preserve">
     <value>Anzeigeeinstellungen</value>
   </data>
+  <data name="Wait for respones" xml:space="preserve">
+    <value>Auf Rückmeldungen warten</value>
+  </data>
+  <data name="Wait until all connections are finished and cleaned up." xml:space="preserve">
+    <value>Warten bis alle Verbindungen abgeschlossen und bereinigt sind.</value>
+  </data>
   <data name="waiting for 1 connection..." xml:space="preserve">
-    <value>warte auf 1 Verbindung...</value>
+    <value>wartet auf 1 Verbindung...</value>
   </data>
   <data name="waiting for {0} connections..." xml:space="preserve">
-    <value>warte auf {0} Verbindungen...</value>
+    <value>wartet auf {0} Verbindungen...</value>
+  </data>
+  <data name="When enabled sub-groups will trigger the credential picker." xml:space="preserve">
+    <value>Untergruppen lösen Credential Picker aus wenn aktiviert.</value>
   </data>
   <data name="Width - /w:" xml:space="preserve">
     <value>Breite - /w:</value>
@@ -693,6 +835,9 @@ Warnung: Passwort muss in (verschlüsseltem) Speicher gehalten werden.</value>
   </data>
   <data name="Window width:" xml:space="preserve">
     <value>Fensterbreite:</value>
+  </data>
+  <data name="{0} at {1}" xml:space="preserve">
+    <value>{0} bei {1}</value>
   </data>
   <data name="{0} connection is still open." xml:space="preserve">
     <value>{0} Verbindung ist noch geöffnet.</value>
@@ -705,5 +850,8 @@ Warnung: Passwort muss in (verschlüsseltem) Speicher gehalten werden.</value>
   </data>
   <data name="{0} entry of {1} selected." xml:space="preserve">
     <value>{0} Eintrag von {1} ausgewählten.</value>
+  </data>
+  <data name="{0}: {1} at {2}" xml:space="preserve">
+    <value>{0}: {1} bei {2}</value>
   </data>
 </root>

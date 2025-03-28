@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -58,7 +58,7 @@ namespace KeePassRDP
             if (DpiUtil.ScalingRequired)
             {
                 var size = new Size(DpiUtil.ScaleIntX(imageList1.ImageSize.Width), DpiUtil.ScaleIntY(imageList1.ImageSize.Height));
-                var images = imageList1.Images.Cast<Image>().Select(image =>
+                var images = imageList1.Images.OfType<Image>().Select(image =>
                 {
                     if (image.Height < size.Height)
                     {
@@ -129,7 +129,7 @@ namespace KeePassRDP
                 TransparentColor = singleInstance.TransparentColor
             };
             if (_imageList.Images.Empty)
-                _imageList.Images.AddRange(singleInstance.Images.Cast<Image>().ToArray());
+                _imageList.Images.AddRange(singleInstance.Images.OfType<Image>().ToArray());
             _imageInfoCollection.SetValue(_imageList.Images, _imageInfoCollection.GetValue(singleInstance.Images));
             //for (var i = 0; i < singleInstance.Images.Keys.Count; i++)
             //    _imageList.Images.SetKeyName(i, singleInstance.Images.Keys[i]);

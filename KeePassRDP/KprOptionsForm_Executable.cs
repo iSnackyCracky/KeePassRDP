@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -67,11 +67,28 @@ namespace KeePassRDP
                 chkMstscReplaceTitle,
                 chkMstscCleanupRegistry,
                 chkMstscConfirmCertificate,
+                chkMstscHandleCredDialog,
                 chkMstscSignRdpFiles,
                 txtMstscSignRdpFiles,
-                lblMstscExecutable
+                lblMstscExecutable,
+                chkMstscSecureDesktop
             );
 
+            Config_TabExecutable();
+
+            grpMstscParameters.Enabled = File.Exists(KeePassRDPExt.MstscPath);
+
+            tabExecutable.ResumeLayout(false);
+            tabExecutable.UseWaitCursor = false;
+
+            if (!tabExecutable.Created)
+                tabExecutable.CreateControl();
+
+            tblExecutable.Visible = true;
+        }
+
+        private void Config_TabExecutable()
+        {
             // Set form elements to match previously saved options.
             chkMstscUseFullscreen.Checked = _config.MstscUseFullscreen;
             chkMstscUsePublic.Checked = _config.MstscUsePublic;
@@ -83,17 +100,23 @@ namespace KeePassRDP
             chkMstscReplaceTitle.Checked = _config.MstscReplaceTitle;
             chkMstscCleanupRegistry.Checked = _config.MstscCleanupRegistry;
             chkMstscConfirmCertificate.Checked = _config.MstscConfirmCertificate;
+            chkMstscHandleCredDialog.Checked = _config.MstscHandleCredDialog;
             if (!string.IsNullOrWhiteSpace(_config.MstscSignRdpFiles))
             {
                 chkMstscSignRdpFiles.Checked = true;
                 txtMstscSignRdpFiles.Text = _config.MstscSignRdpFiles;
             }
+            else if (chkMstscSignRdpFiles.Checked)
+            {
+                chkMstscSignRdpFiles.Checked = false;
+                txtMstscSignRdpFiles.Text = string.Empty;
+            }
 
-            numMstscWidth.Maximum = Screen.PrimaryScreen.Bounds.Width;
+            numMstscWidth.Maximum = Screen.AllScreens.Max(x => x.Bounds.Width); //Screen.PrimaryScreen.Bounds.Width;
             numMstscWidth.Value = Math.Max(Math.Min(_config.MstscWidth, numMstscWidth.Maximum), numMstscWidth.Minimum);
             _config.MstscWidth = (int)numMstscWidth.Value;
 
-            numMstscHeight.Maximum = Screen.PrimaryScreen.Bounds.Height;
+            numMstscHeight.Maximum = Screen.AllScreens.Max(x => x.Bounds.Height); //Screen.PrimaryScreen.Bounds.Height;
             numMstscHeight.Value = Math.Max(Math.Min(_config.MstscHeight, numMstscHeight.Maximum), numMstscHeight.Minimum);
             _config.MstscHeight = (int)numMstscHeight.Value;
 
@@ -101,7 +124,7 @@ namespace KeePassRDP
 
             if (chkMstscSignRdpFiles.Checked &&
                 !string.IsNullOrWhiteSpace(txtMstscSignRdpFiles.Text) &&
-                txtMstscSignRdpFiles.Text != KprResourceManager.Instance["Click here to select a certificate from the user store."])
+                txtMstscSignRdpFiles.Text != txtMstscSignRdpFiles.Tag as string)
             {
                 var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
 
@@ -125,14 +148,13 @@ namespace KeePassRDP
                 }
             }
 
-            cbMstscExecutable.Items.AddRange(new[] { typeof(MstscCommand).Name, typeof(FreeRdpCommand).Name });
+            cbMstscExecutable.BeginUpdate();
+            cbMstscExecutable.Items.AddRange(new[] { typeof(MstscCommand).Name, typeof(FreeRdpCommand).Name, typeof(CustomCommand).Name });
+            cbMstscExecutable.EndUpdate();
             cbMstscExecutable.SelectedIndex = !string.IsNullOrWhiteSpace(_config.MstscExecutable) ? Math.Max(0, cbMstscExecutable.Items.IndexOf(_config.MstscExecutable.Split(new[] { ':' }, 2).FirstOrDefault())) : 0;
             cbMstscExecutable.Width = Math.Max(grpMstscAutomation.Width - lblMstscExecutable.Width + 3, 0);
 
-            grpMstscParameters.Enabled = File.Exists(KeePassRDPExt.MstscPath);
-
-            tabExecutable.ResumeLayout(false);
-            tabExecutable.UseWaitCursor = false;
+            chkMstscSecureDesktop.Checked = _config.MstscSecureDesktop;
         }
 
         private void chkMstsc_CheckedChanged(object sender, EventArgs e)
@@ -162,8 +184,8 @@ namespace KeePassRDP
         private void txtMstscSignRdpFiles_TextChanged(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(txtMstscSignRdpFiles.Text))
-                txtMstscSignRdpFiles.Text = KprResourceManager.Instance["Click here to select a certificate from the user store."];
-            else if(txtMstscSignRdpFiles.Text == KprResourceManager.Instance["Click here to select a certificate from the user store."])
+                txtMstscSignRdpFiles.Text = txtMstscSignRdpFiles.Tag as string;
+            else if(txtMstscSignRdpFiles.Text == txtMstscSignRdpFiles.Tag as string)
                 txtMstscSignRdpFiles.BackColor = default(Color);
         }
 
@@ -178,7 +200,7 @@ namespace KeePassRDP
             {
                 store.Open(OpenFlags.ReadOnly);
 
-                // pick a certificate from the store
+                // Pick certificate from store.
                 var cert = X509Certificate2UI.SelectFromCollection(
                     new X509Certificate2Collection(
                         store.Certificates
@@ -347,7 +369,7 @@ namespace KeePassRDP
                 VistaTaskDialog.ShowMessageBoxEx(
                     string.Format(KprResourceManager.Instance["Failed to create self-signed certificate:{0}{1}"], Environment.NewLine, ex.ToString()),
                     null,
-                    Util.KeePassRDP + " - " + KPRes.FatalError,
+                    string.Format("{0} - {1}", Util.KeePassRDP, KPRes.Error),
                     VtdIcon.Error,
                     this,
                     null, 0, null, 0);
@@ -357,13 +379,13 @@ namespace KeePassRDP
         private void txtMstscSignRdpFiles_ShowToolTip(object sender, EventArgs e)
         {
             var timer = sender as Timer;
-            timer.Enabled = false;
+            timer.Stop();
 
             var control = timer.Tag as Control;
             if (!string.IsNullOrEmpty(ttMstscAutomation.GetToolTip(control)))
                 return;
 
-            var point = control.PointToClient(Cursor.Position);
+            var point = control.PointToClient(MousePosition);
             var size = _cursorSize.Value;
 
             if (!size.IsEmpty)
@@ -372,54 +394,172 @@ namespace KeePassRDP
             point.X += 2;
             point.Y += 1;
 
-            ttMstscAutomation.Show(
-                KprResourceManager.Instance["Click here to select a certificate from the user store."],
-                control,
-                point,
-                ttMstscAutomation.AutoPopDelay);
+            ttMstscAutomation.Show(control.Tag as string, control, point, ttMstscAutomation.AutoPopDelay);
         }
 
         private void txtMstscSignRdpFiles_MouseEnter(object sender, EventArgs e)
         {
             _tooltipTimer.Tag = sender;
             _tooltipTimer.Tick += txtMstscSignRdpFiles_ShowToolTip;
-            if (_tooltipTimer.Enabled)
-                _tooltipTimer.Enabled = false;
-            _tooltipTimer.Enabled = !_lastTooltipMousePosition.HasValue;
+
+            _tooltipTimer.Stop();
+            if (!_lastTooltipMousePosition.HasValue)
+                _tooltipTimer.Start();
+
+            try
+            {
+                ttMstscAutomation.Hide(sender as Control);
+            }
+            catch { }
         }
 
         private void txtMstscSignRdpFiles_MouseLeave(object sender, EventArgs e)
         {
-            _tooltipTimer.Tick -= txtMstscSignRdpFiles_ShowToolTip;
-            if (_tooltipTimer.Enabled)
-                _tooltipTimer.Enabled = false;
-            ttMstscAutomation.Hide(sender as Control);
+            try
+            {
+                _tooltipTimer.Tick -= txtMstscSignRdpFiles_ShowToolTip;
+            }
+            catch { }
+
+            _tooltipTimer.Stop();
             _lastTooltipMousePosition = null;
+
+            try
+            {
+                ttMstscAutomation.Hide(sender as Control);
+            }
+            catch { }
         }
 
         private void txtMstscSignRdpFiles_MouseMove(object sender, MouseEventArgs e)
         {
             if (_lastTooltipMousePosition.HasValue && _lastTooltipMousePosition.Value == e.Location)
                 return;
+
             _lastTooltipMousePosition = e.Location;
-            if (_tooltipTimer.Enabled)
-                _tooltipTimer.Enabled = false;
-            _tooltipTimer.Enabled = true;
+            _tooltipTimer.Stop();
+            _tooltipTimer.Start();
         }
 
         private void txtMstscSignRdpFiles_Enter(object sender, EventArgs e)
         {
-            if (_tooltipTimer.Enabled)
-                _tooltipTimer.Enabled = false;
-            ttMstscAutomation.Hide(sender as Control);
+            _tooltipTimer.Stop();
+
+            try
+            {
+                ttMstscAutomation.Hide(sender as Control);
+            }
+            catch { }
         }
 
         private void txtMstscSignRdpFiles_Leave(object sender, EventArgs e)
         {
-            if (_tooltipTimer.Enabled)
-                _tooltipTimer.Enabled = false;
-            ttMstscAutomation.Hide(sender as Control);
+            _tooltipTimer.Stop();
             _lastTooltipMousePosition = null;
+
+            try
+            {
+                ttMstscAutomation.Hide(sender as Control);
+            }
+            catch { }
+        }
+
+        private void cbMstscExecutable_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            txtMstscCustomCommand.Visible = cbMstscExecutable.SelectedItem as string == typeof(CustomCommand).Name;
+        }
+
+        private void txtMstscCustomCommand_ShowToolTip(object sender, EventArgs e)
+        {
+            var timer = sender as Timer;
+            timer.Stop();
+
+            var control = timer.Tag as Control;
+            if (!string.IsNullOrEmpty(ttGeneric.GetToolTip(control)))
+                return;
+
+            var point = control.PointToClient(MousePosition);
+            var size = _cursorSize.Value;
+
+            if (!size.IsEmpty)
+                point.Y += size.Height / 2;
+
+            point.X += 2;
+            point.Y += 1;
+
+            ttGeneric.Show(control.Tag as string, control, point, ttGeneric.AutoPopDelay);
+        }
+
+        private void txtMstscCustomCommand_MouseEnter(object sender, EventArgs e)
+        {
+            _tooltipTimer.Tag = sender;
+            _tooltipTimer.Tick += txtMstscCustomCommand_ShowToolTip;
+
+            _tooltipTimer.Stop();
+            if (!_lastTooltipMousePosition.HasValue)
+                _tooltipTimer.Start();
+
+            try
+            {
+                ttGeneric.Hide(sender as Control);
+            }
+            catch { }
+        }
+
+        private void txtMstscCustomCommand_MouseLeave(object sender, EventArgs e)
+        {
+            try
+            {
+                _tooltipTimer.Tick -= txtMstscCustomCommand_ShowToolTip;
+            }
+            catch { }
+
+            _tooltipTimer.Stop();
+            _lastTooltipMousePosition = null;
+
+            try
+            {
+                ttGeneric.Hide(sender as Control);
+            }
+            catch { }
+        }
+
+        private void txtMstscCustomCommand_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (_lastTooltipMousePosition.HasValue && _lastTooltipMousePosition.Value == e.Location)
+                return;
+
+            _lastTooltipMousePosition = e.Location;
+            _tooltipTimer.Stop();
+            _tooltipTimer.Start();
+        }
+
+        private void txtMstscCustomCommand_Enter(object sender, EventArgs e)
+        {
+            _tooltipTimer.Stop();
+
+            try
+            {
+                ttGeneric.Hide(sender as Control);
+            }
+            catch { }
+        }
+
+        private void txtMstscCustomCommand_Leave(object sender, EventArgs e)
+        {
+            _tooltipTimer.Stop();
+            _lastTooltipMousePosition = null;
+
+            try
+            {
+                ttGeneric.Hide(sender as Control);
+            }
+            catch { }
+        }
+
+        private void txtMstscCustomCommand_VisibleChanged(object sender, EventArgs e)
+        {
+            txtMstscCustomCommand.Text = string.Empty;
         }
     }
 }

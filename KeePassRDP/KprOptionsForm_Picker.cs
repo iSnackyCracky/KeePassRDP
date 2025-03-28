@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -48,34 +48,56 @@ namespace KeePassRDP
                 lblCredPickerCustomGroup,
                 lblRegexPrefixes,
                 lblRegexPostfixes,
+                chkCredPickSecureDesktop,
                 chkCredPickRememberSize,
                 chkCredPickRememberSortOrder,
                 chkKeepassShowResolvedReferences,
                 chkCredPickShowInGroups,
                 chkCredPickIncludeSelected,
-                chkCredPickLargeRows
+                chkCredPickLargeRows,
+                chkCredPickerTriggerRecursive
             );
 
             UIUtil.SetCueBanner(txtCredPickerCustomGroup, Util.DefaultTriggerGroup);
 
+            lstRegExPre.Tag = cmdRegExPreRemove;
+            lstRegExPost.Tag = cmdRegExPostRemove;
+            txtRegExPre.Tag = lstRegExPre;
+            txtRegExPost.Tag = lstRegExPost;
+
+            Config_TabPicker();
+
+            tabPicker.ResumeLayout(false);
+            tabPicker.UseWaitCursor = false;
+
+            if (!tabPicker.Created)
+                tabPicker.CreateControl();
+
+            tblPicker.Visible = true;
+        }
+
+        private void Config_TabPicker()
+        {
             // Set form elements to match previously saved options.
             chkKeepassShowResolvedReferences.Checked = _config.KeePassShowResolvedReferences;
 
+            chkCredPickSecureDesktop.Checked = _config.CredPickerSecureDesktop;
             chkCredPickRememberSize.Checked = _config.CredPickerRememberSize;
             chkCredPickRememberSortOrder.Checked = _config.CredPickerRememberSortOrder;
             txtCredPickerCustomGroup.Text = string.IsNullOrWhiteSpace(_config.CredPickerCustomGroup) || _config.CredPickerCustomGroup == Util.DefaultTriggerGroup ?
                 string.Empty :
                 _config.CredPickerCustomGroup;
+            chkCredPickerTriggerRecursive.Checked = _config.CredPickerTriggerRecursive;
             chkCredPickShowInGroups.Checked = _config.CredPickerShowInGroups;
             chkCredPickIncludeSelected.Checked = _config.CredPickerIncludeSelected;
             chkCredPickLargeRows.Checked = _config.CredPickerLargeRows;
 
             // Set width and height fields maximum to (primary) screen resolution.
-            numCredPickWidth.Maximum = Screen.PrimaryScreen.Bounds.Width;
+            numCredPickWidth.Maximum = Screen.AllScreens.Max(x => x.Bounds.Width); //Screen.PrimaryScreen.Bounds.Width;
             numCredPickWidth.Value = Math.Max(Math.Min(_config.CredPickerWidth, numCredPickWidth.Maximum), numCredPickWidth.Minimum);
             _config.CredPickerWidth = (int)numCredPickWidth.Value;
 
-            numCredPickHeight.Maximum = Screen.PrimaryScreen.Bounds.Height;
+            numCredPickHeight.Maximum = Screen.AllScreens.Max(x => x.Bounds.Height); //Screen.PrimaryScreen.Bounds.Height;
             numCredPickHeight.Value = Math.Max(Math.Min(_config.CredPickerHeight, numCredPickHeight.Maximum), numCredPickHeight.Minimum);
             _config.CredPickerHeight = (int)numCredPickHeight.Value;
 
@@ -87,9 +109,6 @@ namespace KeePassRDP
                 lstRegExPost.DataSource = new BindingList<string>(_config.CredPickerRegExPost.Split('|').ToList());
             else
                 lstRegExPost.DataSource = new BindingList<string>();
-
-            tabPicker.ResumeLayout(false);
-            tabPicker.UseWaitCursor = false;
         }
 
         private void txtCredPickerCustomGroup_KeyDown(object sender, KeyEventArgs e)
@@ -105,13 +124,13 @@ namespace KeePassRDP
         private void txtCredPickerCustomGroup_ShowToolTip(object sender, EventArgs e)
         {
             var timer = sender as Timer;
-            timer.Enabled = false;
+            timer.Stop();
 
             var control = timer.Tag as Control;
             if (!string.IsNullOrEmpty(ttTrigger.GetToolTip(control)))
                 return;
 
-            var point = control.PointToClient(Cursor.Position);
+            var point = control.PointToClient(MousePosition);
             var size = _cursorSize.Value;
 
             if (!size.IsEmpty)
@@ -120,54 +139,74 @@ namespace KeePassRDP
             point.X += 2;
             point.Y += 1;
 
-            ttTrigger.Show(
-                KprResourceManager.Instance["Define a custom group name that triggers the credential picker.\r\nDefaults to \"RDP\" if unset."],
-                control,
-                point,
-                ttTrigger.AutoPopDelay);
+            ttTrigger.Show(control.Tag as string, control, point, ttTrigger.AutoPopDelay);
         }
 
         private void txtCredPickerCustomGroup_MouseEnter(object sender, EventArgs e)
         {
             _tooltipTimer.Tag = sender;
             _tooltipTimer.Tick += txtCredPickerCustomGroup_ShowToolTip;
-            if (_tooltipTimer.Enabled)
-                _tooltipTimer.Enabled = false;
-            _tooltipTimer.Enabled = !_lastTooltipMousePosition.HasValue;
+
+            _tooltipTimer.Stop();
+            if (!_lastTooltipMousePosition.HasValue)
+                _tooltipTimer.Start();
+
+            try
+            {
+                ttTrigger.Hide(sender as Control);
+            }
+            catch { }
         }
 
         private void txtCredPickerCustomGroup_MouseLeave(object sender, EventArgs e)
         {
-            _tooltipTimer.Tick -= txtCredPickerCustomGroup_ShowToolTip;
-            if (_tooltipTimer.Enabled)
-                _tooltipTimer.Enabled = false;
-            ttTrigger.Hide(sender as Control);
+            try
+            {
+                _tooltipTimer.Tick -= txtCredPickerCustomGroup_ShowToolTip;
+            }
+            catch { }
+
+            _tooltipTimer.Stop();
             _lastTooltipMousePosition = null;
+
+            try
+            {
+                ttTrigger.Hide(sender as Control);
+            }
+            catch { }
         }
 
         private void txtCredPickerCustomGroup_MouseMove(object sender, MouseEventArgs e)
         {
             if (_lastTooltipMousePosition.HasValue && _lastTooltipMousePosition.Value == e.Location)
                 return;
+
             _lastTooltipMousePosition = e.Location;
-            if (_tooltipTimer.Enabled)
-                _tooltipTimer.Enabled = false;
-            _tooltipTimer.Enabled = true;
+            _tooltipTimer.Stop();
+            _tooltipTimer.Start();
         }
 
         private void txtCredPickerCustomGroup_Enter(object sender, EventArgs e)
         {
-            if (_tooltipTimer.Enabled)
-                _tooltipTimer.Enabled = false;
-            ttTrigger.Hide(sender as Control);
+            _tooltipTimer.Stop();
+
+            try
+            {
+                ttTrigger.Hide(sender as Control);
+            }
+            catch { }
         }
 
         private void txtCredPickerCustomGroup_Leave(object sender, EventArgs e)
         {
-            if (_tooltipTimer.Enabled)
-                _tooltipTimer.Enabled = false;
-            ttTrigger.Hide(sender as Control);
+            _tooltipTimer.Stop();
             _lastTooltipMousePosition = null;
+
+            try
+            {
+                ttTrigger.Hide(sender as Control);
+            }
+            catch { }
         }
 
         private void txtRegExPre_KeyDown(object sender, KeyEventArgs e)

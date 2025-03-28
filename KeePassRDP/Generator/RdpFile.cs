@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -53,15 +53,15 @@ namespace KeePassRDP.Generator
             }
         }
 
-        private static readonly Lazy<ReadOnlyCollection<PropertyInfo>> _propertyCache = new Lazy<ReadOnlyCollection<PropertyInfo>>(
-            () => typeof(RdpFile)
+        private static readonly Lazy<ReadOnlyCollection<PropertyInfo>> _propertyCache = new Lazy<ReadOnlyCollection<PropertyInfo>>(() =>
+            typeof(RdpFile)
                 .GetProperties(BindingFlags.Instance | BindingFlags.Public)
                 .ToArray()
                 .AsReadOnly(),
             LazyThreadSafetyMode.ExecutionAndPublication);
 
-        private static readonly Lazy<ReadOnlyCollection<Tuple<PropertyInfo, RdpSignscopeAttribute, RdpSettingAttribute>>> _signscopeCache = new Lazy<ReadOnlyCollection<Tuple<PropertyInfo, RdpSignscopeAttribute, RdpSettingAttribute>>>(
-            () => _propertyCache.Value
+        private static readonly Lazy<ReadOnlyCollection<Tuple<PropertyInfo, RdpSignscopeAttribute, RdpSettingAttribute>>> _signscopeCache = new Lazy<ReadOnlyCollection<Tuple<PropertyInfo, RdpSignscopeAttribute, RdpSettingAttribute>>>(() =>
+            _propertyCache.Value
                 .Select(x =>
                 {
                     var customAttributes = x.GetCustomAttributes(false);
@@ -76,8 +76,8 @@ namespace KeePassRDP.Generator
                 .AsReadOnly(),
             LazyThreadSafetyMode.ExecutionAndPublication);
 
-        private static readonly Lazy<SortedDictionary<RdpSettingAttribute.SettingCategory, ReadOnlyCollection<Tuple<PropertyInfo, RdpSettingAttribute>>>> _settingsCache = new Lazy<SortedDictionary<RdpSettingAttribute.SettingCategory, ReadOnlyCollection<Tuple<PropertyInfo, RdpSettingAttribute>>>>(
-            () => new SortedDictionary<RdpSettingAttribute.SettingCategory, ReadOnlyCollection<Tuple<PropertyInfo, RdpSettingAttribute>>>(
+        private static readonly Lazy<SortedDictionary<RdpSettingAttribute.SettingCategory, ReadOnlyCollection<Tuple<PropertyInfo, RdpSettingAttribute>>>> _settingsCache = new Lazy<SortedDictionary<RdpSettingAttribute.SettingCategory, ReadOnlyCollection<Tuple<PropertyInfo, RdpSettingAttribute>>>>(() =>
+            new SortedDictionary<RdpSettingAttribute.SettingCategory, ReadOnlyCollection<Tuple<PropertyInfo, RdpSettingAttribute>>>(
                 _propertyCache.Value
                 .Select(x =>
                 {
@@ -216,13 +216,18 @@ namespace KeePassRDP.Generator
 
         public RdpFile(bool createFile)
         {
-            foreach (var prop in _settingsCache.Value.Values.SelectMany(x => x))
-                SetProperty(prop);
+            Reset();
 
             if (createFile)
                 new FileInfo(_path = Path.GetTempFileName()).Attributes = FileAttributes.Temporary;
             else
                 _path = string.Empty;
+        }
+
+        public void Reset()
+        {
+            foreach (var prop in _settingsCache.Value.Values.SelectMany(x => x))
+                SetProperty(prop);
         }
 
         public void Sign(X509Certificate2 certificate)

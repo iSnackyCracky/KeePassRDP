@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -28,10 +28,14 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Windows.Forms;
 
 namespace KeePassRDP.Extensions
 {
@@ -95,23 +99,21 @@ namespace KeePassRDP.Extensions
         /// Toggles the "rdpignore-flag" of a given <see cref="PwEntry"/>.
         /// </summary>
         /// <param name="pe"><see cref="PwEntry"/> of interest.</param>
-        public static void ToggleKprIgnored(this PwEntry pe)
+        /// <param name="touch">Mark <paramref name="pe"/> as modified.</param>
+        public static void ToggleKprIgnored(this PwEntry pe, bool touch = true)
         {
             using (var entrySettings = pe.GetKprSettings() ?? new KprEntrySettings())
             {
-                // Does a CustomField "rdpignore" exist?
+                // Migrate to KprEntrySettings if CustomField "rdpignore" exists.
                 if (pe.Strings.Exists(Util.KprCpIgnoreField))
                 {
                     // Is the CustomField value set to "false"?
                     entrySettings.Ignore = string.Equals(pe.Strings.ReadSafe(Util.KprCpIgnoreField), bool.FalseString, StringComparison.OrdinalIgnoreCase);
                     pe.Strings.Remove(Util.KprCpIgnoreField);
                 }
-                // Othwerwise toggle KprEntrySettings.Ignore as the entry has no "rdpignore-flags" set.
-                // Todo: Migrate "rdpignore-flag"?
-                else
-                    entrySettings.Ignore = !entrySettings.Ignore;
 
-                entrySettings.SaveEntrySettings(pe);
+                entrySettings.Ignore = !entrySettings.Ignore;
+                entrySettings.SaveEntrySettings(pe, touch);
             }
         }
 
@@ -136,7 +138,14 @@ namespace KeePassRDP.Extensions
                 var username = SprEngine.Compile(entryUsername, ctx);
 
                 if (username.StartsWith(@".\", StringComparison.OrdinalIgnoreCase))
-                    username = Environment.MachineName + username.Substring(1);
+                {
+                    var newUsername = string.Format("{0}{1}", Environment.MachineName, username.Substring(1));
+                    if (newUsername != username)
+                    {
+                        MemoryUtil.SecureZeroMemory(username);
+                        username = newUsername;
+                    }
+                }
 
                 if (username != entryUsername)
                 {
@@ -199,6 +208,7 @@ namespace KeePassRDP.Extensions
         /// </summary>
         /// <param name="pwg"><see cref="PwGroup"/> to search in.</param>
         /// <param name="regex"><see cref="Regex"/> to filter for.</param>
+        /// <param name="database"><see cref="PwDatabase"/> used for dereferencing.</param>
         /// <returns><see cref="IEnumerable{PwEntry}"/></returns>
         internal static IEnumerable<PwEntry> GetRdpAccountEntries(this PwGroup pwg, Regex regex, PwDatabase database = null)
         {
@@ -209,7 +219,7 @@ namespace KeePassRDP.Extensions
 
                 var match = pe.Strings.ReadSafe(PwDefs.TitleField);
 
-                if (database != null)
+                if (database != null && !string.IsNullOrWhiteSpace(match))
                     match = SprEngine.Compile(match, new SprContext(pe, database, SprCompileFlags.Deref)
                     {
                         ForcePlainTextPasswords = false
@@ -303,7 +313,8 @@ namespace KeePassRDP.Extensions
         /// </summary>
         /// <param name="kprEntrySettings"><see cref="KprEntrySettings"/> to save.</param>
         /// <param name="pe"><see cref="PwEntry"/> of interest.</param>
-        public static void SaveEntrySettings(this KprEntrySettings kprEntrySettings, PwEntry pe)
+        /// <param name="touch">Mark <paramref name="pe"/> as modified.</param>
+        public static void SaveEntrySettings(this KprEntrySettings kprEntrySettings, PwEntry pe, bool touch = true)
         {
             if (kprEntrySettings.IsReadOnly)
                 return;
@@ -318,7 +329,8 @@ namespace KeePassRDP.Extensions
             if (pe.Strings.Exists(Util.KprEntrySettingsField))
                 pe.Strings.Remove(Util.KprEntrySettingsField);
 
-            pe.Touch(true, false);
+            if (touch)
+                pe.Touch(true, false);
         }
 
         /// <summary>
@@ -409,6 +421,40 @@ namespace KeePassRDP.Extensions
         public static ReadOnlyCollection<T> AsReadOnly<T>(this IList<T> list)
         {
             return new ReadOnlyCollection<T>(list);
+        }
+    }
+
+    /// <summary>
+    /// Extension methods for the <see cref="Control"/> class.
+    /// </summary>
+    internal static class ControlExtensions
+    {
+        private static readonly Lazy<MethodInfo> _setStyleMethodInfo = new Lazy<MethodInfo>(() =>
+            typeof(Control).GetMethod("SetStyle", BindingFlags.NonPublic | BindingFlags.Instance),
+            LazyThreadSafetyMode.ExecutionAndPublication);
+
+        public static void SetStyle(this Control control, ControlStyles controlStyles, bool value = true)
+        {
+            _setStyleMethodInfo.Value.Invoke(control, new object[] { controlStyles, value });
+        }
+
+        private static readonly Lazy<PropertyInfo> _doubleBufferedPropertyInfo = new Lazy<PropertyInfo>(() =>
+            typeof(Control).GetProperty("DoubleBuffered", BindingFlags.Instance | BindingFlags.NonPublic),
+            LazyThreadSafetyMode.ExecutionAndPublication);
+        //private static readonly MethodInfo _doubleBufferedMethodInfo = typeof(Control).GetMethod("SetStyle", BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { typeof(ControlStyles), typeof(bool) }, null);
+
+        public static void SetDoubleBuffered(this Control control, bool enabled = true)
+        {
+            _doubleBufferedPropertyInfo.Value.SetValue(control, enabled, null);
+            //_doubleBufferedMethodInfo.Invoke(control, new object[] { ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, enabled });
+        }
+    }
+
+    internal static class ColorExtensions
+    {
+        public static int ToAbgr(this Color color)
+        {
+            return (color.A << 24) | (color.B << 16) | (color.G << 8) | color.R;
         }
     }
 }

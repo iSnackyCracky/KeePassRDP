@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -19,6 +19,7 @@
  */
 
 using KeePass;
+using KeePass.Resources;
 using KeePass.UI;
 using KeePassRDP.Commands;
 using KeePassRDP.Resources;
@@ -31,13 +32,17 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Timer = System.Windows.Forms.Timer;
 
 namespace KeePassRDP
 {
-    public partial class KprOptionsForm : Form
+    public partial class KprOptionsForm : Form, IGwmWindow
     {
+        public bool CanCloseWithoutDataLoss { get { return true; } }
+
+        private readonly KprConfig _realConfig;
         private readonly KprConfig _config;
         private readonly Font _font;
         private readonly Font _pwFont;
@@ -45,6 +50,7 @@ namespace KeePassRDP
         private readonly Lazy<Image> _largestIcon;
         private readonly Timer _tooltipTimer;
         private readonly Lazy<Size> _cursorSize;
+        private readonly IDictionary<KprMenu.MenuItem, ToolStripItem> _toolbarItems;
 
         private decimal? _oldNumValue;
         private Point? _lastTooltipMousePosition;
@@ -55,10 +61,12 @@ namespace KeePassRDP
         private bool _tabExecutableInitialized;
         private bool _tabVaultInitialized;
         private bool _tabAboutInitialized;
+        private int _tblIntegrationMinHeight;
 
         public KprOptionsForm(KprConfig config, IDictionary<KprMenu.MenuItem, ToolStripItem> toolbarItems)
         {
-            _config = config;
+            _realConfig = config;
+            _config = config.Clone();
 
             _largeIcon = new Lazy<Image>(() =>
             {
@@ -75,7 +83,7 @@ namespace KeePassRDP
             _tooltipTimer = new Timer
             {
                 Interval = 500,
-                Enabled = false,
+                Enabled = false
             };
 
             _cursorSize = new Lazy<Size>(() =>
@@ -96,47 +104,33 @@ namespace KeePassRDP
                 _tabVaultInitialized =
                 _tabAboutInitialized = false;
 
+            _toolbarItems = toolbarItems;
+
             InitializeComponent();
 
             SuspendLayout();
 
-            switch (Resources.Resources.Culture.TwoLetterISOLanguageName)
-            {
-                case "de":
-                    MinimumSize = new Size(Math.Min(MinimumSize.Width + 74, Width), MinimumSize.Height);
-                    break;
-            }
+            Util.EnableDoubleBuffered(
+                tcKprOptionsForm,
+                tabIntegration,
+                tabPicker,
+                tabExecutable,
+                tabVault,
+                tabAbout,
+                tblKprOptionsForm,
+                tblIntegration,
+                tblPicker,
+                tblExecutable,
+                tblMstscExecutable,
+                cbMstscExecutable,
+                tblVault,
+                tblAbout,
+                lstRegExPre,
+                lstRegExPost,
+                lvVault
+            );
 
-            Util.SetDoubleBuffered(tcKprOptionsForm);
-            Util.SetDoubleBuffered(tabIntegration);
-            Util.SetDoubleBuffered(tabPicker);
-            Util.SetDoubleBuffered(tabExecutable);
-            Util.SetDoubleBuffered(tabVault);
-            Util.SetDoubleBuffered(tabAbout);
-            Util.SetDoubleBuffered(tblKprOptionsForm);
-            Util.SetDoubleBuffered(tblIntegration);
-            Util.SetDoubleBuffered(tblKeyboardSettings);
-            Util.SetDoubleBuffered(tblKeePassContextMenuItems);
-            Util.SetDoubleBuffered(tblKeePassToolbarItems);
-            Util.SetDoubleBuffered(tblVisibilitySettings);
-            Util.SetDoubleBuffered(tblPicker);
-            Util.SetDoubleBuffered(tblExecutable);
-            Util.SetDoubleBuffered(tblVault);
-            Util.SetDoubleBuffered(tblAbout);
-            Util.SetDoubleBuffered(lstKeePassContextMenuItems);
-            Util.SetDoubleBuffered(lstKeePassContextMenuItemsAvailable);
-            Util.SetDoubleBuffered(lstKeePassToolbarItems);
-            Util.SetDoubleBuffered(lstKeePassToolbarItemsAvailable);
-            Util.SetDoubleBuffered(lstRegExPre);
-            Util.SetDoubleBuffered(lstRegExPost);
-            Util.SetDoubleBuffered(lvVault);
-
-            btnOpenRdpShortcutIcon.Image = toolbarItems[KprMenu.MenuItem.OpenRdpConnection].Image;
-            btnOpenRdpAdminShortcutIcon.Image = toolbarItems[KprMenu.MenuItem.OpenRdpConnectionAdmin].Image;
-            btnOpenRdpNoCredShortcutIcon.Image = toolbarItems[KprMenu.MenuItem.OpenRdpConnectionNoCred].Image;
-            btnOpenRdpNoCredAdminShortcut.Image = toolbarItems[KprMenu.MenuItem.OpenRdpConnectionNoCredAdmin].Image;
-
-            Icon = IconUtil.ExtractIcon(KeePassRDPExt.MstscPath, 0, UIUtil.GetIconSize().Height);
+            Icon = IconUtil.ExtractIcon(KeePassRDPExt.MstscPath, 0, UIUtil.GetSmallIconSize().Height);
 
             if (Program.Config.UI.StandardFont != null)
             {
@@ -170,15 +164,6 @@ namespace KeePassRDP
             else
                 _pwFont = _font;
 
-            lstKeePassContextMenuItems.Tag = cmdKeePassContextMenuItemsRemove;
-            lstKeePassContextMenuItemsAvailable.Tag = cmdKeePassContextMenuItemsAdd;
-            lstKeePassToolbarItems.Tag = cmdKeePassToolbarItemsRemove;
-            lstKeePassToolbarItemsAvailable.Tag = cmdKeePassToolbarItemsAdd;
-            lstRegExPre.Tag = cmdRegExPreRemove;
-            lstRegExPost.Tag = cmdRegExPostRemove;
-            txtRegExPre.Tag = lstRegExPre;
-            txtRegExPost.Tag = lstRegExPost;
-
             KprResourceManager.Instance.TranslateMany(
                 this,
                 tabIntegration,
@@ -186,24 +171,44 @@ namespace KeePassRDP
                 tabExecutable,
                 tabVault,
                 tabAbout,
+                cmdReset,
                 cmdCancel
             );
+
+            txtCredPickerCustomGroup.Tag = KprResourceManager.Instance["Define a custom group name that triggers the credential picker.\r\nDefaults to \"RDP\" if unset."];
+            txtMstscSignRdpFiles.Tag = KprResourceManager.Instance["Click here to select a certificate from the user store."];
+            txtMstscCustomCommand.Tag = KprResourceManager.Instance["Enter the path for the custom command executable.\r\nTo use built-in logic 'MstscCommand:' or 'FreeRdpCommand:' can be prepended."];
 
             ResumeLayout(false);
         }
 
-        public new void Dispose()
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
         {
-            if (_pwFont != _font)
-                _pwFont.Dispose();
-            if (lvVault.Font != _font)
-                _font.Dispose();
-            Icon.Dispose();
-            if (_largeIcon.IsValueCreated)
-                _largeIcon.Value.Dispose();
-            if (_largestIcon.IsValueCreated)
-                _largestIcon.Value.Dispose();
-            base.Dispose();
+            if (disposing)
+            {
+                if (components != null)
+                {
+                    components.Dispose();
+                    components = null;
+                }
+
+                if (_pwFont != _font)
+                    _pwFont.Dispose();
+                if (lvVault.Font != _font)
+                    _font.Dispose();
+                Icon.Dispose();
+                if (_largeIcon.IsValueCreated)
+                    _largeIcon.Value.Dispose();
+                if (_largestIcon.IsValueCreated)
+                    _largestIcon.Value.Dispose();
+            }
+
+            base.Dispose(disposing);
         }
 
         /*protected override void CreateHandle()
@@ -227,6 +232,22 @@ namespace KeePassRDP
             Marshal.FreeHGlobal(AccentPtr);
         }*/
 
+        private void KprOptionsForm_Shown(object sender, EventArgs e)
+        {
+            Activate();
+            KprOptionsForm_Activated(null, EventArgs.Empty);
+        }
+
+        private void KprOptionsForm_Activated(object sender, EventArgs e)
+        {
+            BringToFront();
+        }
+
+        private volatile int _oldWidth = 0;
+        private volatile int _oldHeight = 0;
+        private volatile bool _isResizing = false;
+        private volatile bool _isMoving = false;
+
         private void KprOptionsForm_Load(object sender, EventArgs e)
         {
             GlobalWindowManager.AddWindow(this);
@@ -234,18 +255,39 @@ namespace KeePassRDP
             UseWaitCursor = true;
             SuspendLayout();
 
-            tcKprOptionsForm_Selected(null, new TabControlEventArgs(tabIntegration, 0, TabControlAction.Selected));
+            switch (Resources.Resources.Culture.TwoLetterISOLanguageName)
+            {
+                case "de":
+                    MinimumSize = new Size(MinimumSize.Width + 110, MinimumSize.Height);
+                    Size = new Size(Math.Max(MinimumSize.Width, Size.Width), Math.Max(MinimumSize.Height, Size.Height));
+                    tblIntegration.MinimumSize = new Size(tblIntegration.MinimumSize.Width, _tblIntegrationMinHeight = Math.Max(tabIntegration.Height, tblIntegration.MinimumSize.Height + 35));
+                    ResumeLayout(true);
+                    SuspendLayout();
+                    break;
+            }
 
-            BannerFactory.CreateBannerEx(
-                this,
-                pbKprOptionsForm,
-                _largeIcon.Value,
-                Util.KeePassRDP,
-                KprResourceManager.Instance["Here you can configure all KeePassRDP related options."],
-                true);
+            _oldWidth = Width;
+            _oldHeight = Height;
 
-            ResumeLayout(false);
-            UseWaitCursor = false;
+            Task.Factory.FromAsync(BeginInvoke(new Action(() =>
+            {
+                BannerFactory.CreateBannerEx(
+                    this,
+                    pbKprOptionsForm,
+                    _largeIcon.Value,
+                    Util.KeePassRDP,
+                    KprResourceManager.Instance["Here you can configure all KeePassRDP related options."],
+                    true);
+
+                Application.DoEvents();
+
+                if (tcKprOptionsForm.SelectedTab == tabIntegration)
+                    tcKprOptionsForm_Selected(null, new TabControlEventArgs(tabIntegration, 0, TabControlAction.Selected));
+
+                ResumeLayout(false);
+                UseWaitCursor = false;
+                tcKprOptionsForm.Visible = true;
+            })), endInvoke => EndInvoke(endInvoke), TaskCreationOptions.AttachedToParent, TaskScheduler.Default);
 
             MessageFilter.ListBoxMouseWheelHandler.Enable(true);
             MessageFilter.FormClickHandler.Enable(true);
@@ -274,63 +316,99 @@ namespace KeePassRDP
 
             MessageFilter.ListBoxMouseWheelHandler.Enable(false);
             MessageFilter.FormClickHandler.Enable(false);
+
+            KprResourceManager.Instance.ClearCache();
         }
 
         private void KprOptionsForm_ResizeBegin(object sender, EventArgs e)
         {
-            foreach(TabPage page in tcKprOptionsForm.TabPages)
+            if (_isResizing || UseWaitCursor)
+                return;
+
+            _isResizing = true;
+
+            Task.Factory.FromAsync(BeginInvoke(new Action(() =>
             {
-                if (page == tcKprOptionsForm.SelectedTab)
+                if (!_isResizing)
+                    return;
+
+                var selectedTab = tcKprOptionsForm.SelectedTab;
+                foreach (TabPage page in tcKprOptionsForm.TabPages)
                 {
-                    if (page == tabIntegration)
+                    if (page == selectedTab)
                     {
-                        tblKeyboardSettings.SuspendLayout();
-                        tblVisibilitySettings.SuspendLayout();
+                        if (page == tabIntegration)
+                        {
+                            if (!_isMoving)
+                            {
+                                page.SuspendLayout();
+                                tblIntegration.SuspendLayout();
+                                flpOptions.SuspendLayout();
+                                kprSettingsControl.SuspendLayout();
+                            }
+                        }
+                        continue;
                     }
-                    continue;
+                    page.SuspendLayout();
+                    page.Controls.Clear();
                 }
-                page.SuspendLayout();
-                page.Controls.Clear();
-            }
+            })), endInvoke => EndInvoke(endInvoke), TaskCreationOptions.AttachedToParent, TaskScheduler.Default);
         }
 
         private void KprOptionsForm_ResizeEnd(object sender, EventArgs e)
         {
-            foreach (TabPage page in tcKprOptionsForm.TabPages)
+            if (!_isResizing || UseWaitCursor)
+                return;
+
+            _isResizing = false;
+
+            Task.Factory.FromAsync(BeginInvoke(new Action(() =>
             {
-                if (page == tabIntegration)
+                if (_isResizing)
+                    return;
+
+                var selectedTab = tcKprOptionsForm.SelectedTab;
+                foreach (TabPage page in tcKprOptionsForm.TabPages)
                 {
-                    if (!page.Controls.Contains(tblIntegration))
-                        page.Controls.Add(tblIntegration);
-                    if (page == tcKprOptionsForm.SelectedTab)
+                    if (page == tabIntegration)
                     {
-                        tblKeyboardSettings.ResumeLayout(true);
-                        tblVisibilitySettings.ResumeLayout(true);
+                        if (!page.Controls.Contains(tblIntegration))
+                            page.Controls.Add(tblIntegration);
+                        if (page == selectedTab)
+                        {
+                            if (!_isMoving)
+                            {
+                                tblIntegration.ResumeLayout(false);
+                                flpOptions.ResumeLayout(false);
+                                kprSettingsControl.ResumeLayout(false);
+                                page.ResumeLayout(false);
+                            }
+                        }
                     }
+                    else if (page == tabPicker)
+                    {
+                        if (!page.Controls.Contains(tblPicker))
+                            page.Controls.Add(tblPicker);
+                    }
+                    else if (page == tabExecutable)
+                    {
+                        if (!page.Controls.Contains(tblExecutable))
+                            page.Controls.Add(tblExecutable);
+                    }
+                    else if (page == tabVault)
+                    {
+                        if (!page.Controls.Contains(tblVault))
+                            page.Controls.Add(tblVault);
+                    }
+                    else if (page == tabAbout)
+                    {
+                        if (!page.Controls.Contains(tblAbout))
+                            page.Controls.Add(tblAbout);
+                    }
+                    if (page != selectedTab)
+                        page.ResumeLayout(false);
                 }
-                else if (page == tabPicker)
-                {
-                    if (!page.Controls.Contains(tblPicker))
-                        page.Controls.Add(tblPicker);
-                }
-                else if (page == tabExecutable)
-                {
-                    if (!page.Controls.Contains(tblExecutable))
-                        page.Controls.Add(tblExecutable);
-                }
-                else if (page == tabVault)
-                {
-                    if (!page.Controls.Contains(tblVault))
-                        page.Controls.Add(tblVault);
-                }
-                else if (page == tabAbout)
-                {
-                    if (!page.Controls.Contains(tblAbout))
-                        page.Controls.Add(tblAbout);
-                }
-                if (page != tcKprOptionsForm.SelectedTab)
-                    page.ResumeLayout(false);
-            }
+            })), endInvoke => EndInvoke(endInvoke), TaskCreationOptions.AttachedToParent, TaskScheduler.Default);
         }
 
         private void KprOptionsForm_SizeChanged(object sender, EventArgs e)
@@ -338,21 +416,55 @@ namespace KeePassRDP
             if (UseWaitCursor || pbKprOptionsForm.Image == null || pbKprOptionsForm.Image.Width == 0)
                 return;
 
-            var oldWidth = pbKprOptionsForm.Image.Width;
-            BannerFactory.UpdateBanner(
-                this,
-                pbKprOptionsForm,
-                _largeIcon.Value,
-                Util.KeePassRDP,
-                KprResourceManager.Instance["Here you can configure all KeePassRDP related options."],
-                ref oldWidth);
-
-            if (tcKprOptionsForm.SelectedTab == tabIntegration)
+            var newWidth = Width;
+            var exec = _oldWidth != newWidth;
+            _oldWidth = newWidth;
+            if (exec)
             {
-                tblKeyboardSettings.ResumeLayout();
-                tblKeyboardSettings.SuspendLayout();
-                tblVisibilitySettings.ResumeLayout();
-                tblVisibilitySettings.SuspendLayout();
+                //Task.Factory.FromAsync(BeginInvoke(new Action(() =>
+                {
+                    /*if (_oldWidth != newWidth)
+                        return;*/
+
+                    var oldWidth = newWidth;
+                    BannerFactory.UpdateBanner(
+                        this,
+                        pbKprOptionsForm,
+                        _largeIcon.Value,
+                        Util.KeePassRDP,
+                        KprResourceManager.Instance["Here you can configure all KeePassRDP related options."],
+                        ref oldWidth);
+
+                    Application.DoEvents();
+                }//)), endInvoke => EndInvoke(endInvoke), TaskCreationOptions.AttachedToParent, TaskScheduler.Default);
+            }
+
+            var newHeight = Height;
+            exec = exec || _oldHeight != newHeight;
+            _oldHeight = newHeight;
+            if (exec)
+            {
+                if (tcKprOptionsForm.SelectedTab == tabIntegration)
+                {
+                    Task.Factory.FromAsync(BeginInvoke(new Action(() =>
+                    {
+                        if (_oldHeight != newHeight || _oldWidth != newWidth)
+                            return;
+
+                        tblIntegration.ResumeLayout(true);
+                        flpOptions.ResumeLayout(true);
+                        kprSettingsControl.ResumeLayout(true);
+                        tabIntegration.ResumeLayout(true);
+
+                        if (_isResizing)
+                        {
+                            tabIntegration.SuspendLayout();
+                            tblIntegration.SuspendLayout();
+                            flpOptions.SuspendLayout();
+                            kprSettingsControl.SuspendLayout();
+                        }
+                    })), endInvoke => EndInvoke(endInvoke), TaskCreationOptions.AttachedToParent, TaskScheduler.Default);
+                }
             }
         }
 
@@ -360,6 +472,8 @@ namespace KeePassRDP
         {
             if (_tabVaultInitialized)
                 CleanCredentials();
+
+            kprSettingsControl.Visible = false;
 
             if (e.TabPage == tabIntegration)
                 Init_TabIntegration();
@@ -390,7 +504,7 @@ namespace KeePassRDP
                     ttGeneric.SetToolTip(llWebsite, Util.WebsiteUrl);
                     ttGeneric.SetToolTip(llLicense, Util.LicenseUrl);
 
-                    lblVersionText.Text = KprVersion.Version + " (" + Resources.Resources.Culture.TwoLetterISOLanguageName + ")";
+                    lblVersionText.Text = string.Format("{0} ({1})", KprVersion.Version, Resources.Resources.Culture.TwoLetterISOLanguageName);
                     lblRevisionText.Text = KprVersion.Revision;
 
                     if (pbAbout.Image == null || pbAbout.Image.Width == 0)
@@ -402,7 +516,31 @@ namespace KeePassRDP
                     tabAbout.ResumeLayout(false);
                     tabAbout.UseWaitCursor = false;
                     tblAbout.ResumeLayout(false);
+
+                    if (!tabAbout.Created)
+                        tabAbout.CreateControl();
                 }
+            }
+        }
+
+        private void cmdReset_Click(object sender, EventArgs e)
+        {
+            if (VistaTaskDialog.ShowMessageBoxEx(
+                KprResourceManager.Instance["Really reset all values to default? This action cannot be undone."],
+                KprResourceManager.Instance[KPRes.AskContinue],
+                string.Format("{0} - {1}", Util.KeePassRDP, KPRes.Warning),
+                VtdIcon.Warning,
+                this,
+                KprResourceManager.Instance[KPRes.YesCmd], 1,
+                KprResourceManager.Instance[KPRes.NoCmd], 0) == 1)
+            {
+                _config.Reset();
+                if (_tabIntegrationInitialized)
+                    Config_TabIntegration();
+                if (_tabPickerInitialized)
+                    Config_TabPicker();
+                if (_tabExecutableInitialized)
+                    Config_TabExecutable();
             }
         }
 
@@ -420,21 +558,27 @@ namespace KeePassRDP
 
                 _config.KeePassConnectToAll = chkKeePassConnectToAll.Checked;
                 _config.KeePassAlwaysConfirm = chkKeePassAlwaysConfirm.Checked;
+                _config.KeePassDefaultEntryAction = chkKeePassDefaultEntryAction.Checked;
                 _config.KeePassContextMenuOnScreen = chkKeePassContextMenuOnScreen.Checked;
                 _config.KeePassHotkeysRegisterLast = chkKeePassHotkeysRegisterLast.Checked;
                 _config.KeePassConfirmOnClose = chkKeePassConfirmOnClose.Checked;
 
-                _config.ShortcutOpenRdpConnection = txtOpenRdpKey.Hotkey;
-                _config.ShortcutOpenRdpConnectionAdmin = txtOpenRdpAdminKey.Hotkey;
-                _config.ShortcutOpenRdpConnectionNoCred = txtOpenRdpNoCredKey.Hotkey;
-                _config.ShortcutOpenRdpConnectionNoCredAdmin = txtOpenRdpNoCredAdminKey.Hotkey;
+                /*_config.ShortcutOpenRdpConnection = kprSettingsControl[KprMenu.MenuItem.OpenRdpConnection].Hotkey; // txtOpenRdpKey.Hotkey;
+                _config.ShortcutOpenRdpConnectionAdmin = kprSettingsControl[KprMenu.MenuItem.OpenRdpConnectionAdmin].Hotkey; // txtOpenRdpAdminKey.Hotkey;
+                _config.ShortcutOpenRdpConnectionNoCred = kprSettingsControl[KprMenu.MenuItem.OpenRdpConnectionNoCred].Hotkey; // txtOpenRdpNoCredKey.Hotkey;
+                _config.ShortcutOpenRdpConnectionNoCredAdmin = kprSettingsControl[KprMenu.MenuItem.OpenRdpConnectionNoCredAdmin].Hotkey; //  txtOpenRdpNoCredAdminKey.Hotkey;
+                _config.ShortcutIgnoreCredentials = kprSettingsControl[KprMenu.MenuItem.IgnoreCredentials].Hotkey;*/
 
-                _config.KeePassContextMenuItems = (lstKeePassContextMenuItems.DataSource as BindingList<KeyValuePair<KprMenu.MenuItem, string>>).Aggregate(KprMenu.MenuItem.Empty, (a, b) => a |= b.Key);
-                _config.KeePassToolbarItems = (lstKeePassToolbarItems.DataSource as BindingList<KeyValuePair<KprMenu.MenuItem, string>>).Aggregate(KprMenu.MenuItem.Empty, (a, b) => a |= b.Key);
+                var menuItems = KprMenu.MenuItemValues.ToDictionary(x => x, x => kprSettingsControl[x]);
+                foreach (var kv in menuItems)
+                    _config.SetShortcut(kv.Key, kv.Value.Hotkey);
+                _config.KeePassContextMenuItems = menuItems.Aggregate(KprMenu.MenuItem.Empty, (a, b) => a |= b.Value.ContextMenuChecked ? b.Key : KprMenu.MenuItem.Empty); //(lstKeePassContextMenuItems.DataSource as BindingList<KeyValuePair<KprMenu.MenuItem, string>>).Aggregate(KprMenu.MenuItem.Empty, (a, b) => a |= b.Key);
+                _config.KeePassToolbarItems = menuItems.Aggregate(KprMenu.MenuItem.Empty, (a, b) => a |= b.Value.ToolbarChecked ? b.Key : KprMenu.MenuItem.Empty); //(lstKeePassToolbarItems.DataSource as BindingList<KeyValuePair<KprMenu.MenuItem, string>>).Aggregate(KprMenu.MenuItem.Empty, (a, b) => a |= b.Key);
             }
 
             if (_tabPickerInitialized)
             {
+                _config.CredPickerSecureDesktop = chkCredPickSecureDesktop.Checked;
                 _config.CredPickerRememberSize = chkCredPickRememberSize.Checked;
                 _config.CredPickerWidth = (int)numCredPickWidth.Value;
                 _config.CredPickerHeight = (int)numCredPickHeight.Value;
@@ -449,9 +593,11 @@ namespace KeePassRDP
                     string.Empty :
                     txtCredPickerCustomGroup.Text;
 
-                if (lstRegExPre.DataSource != null)
+                _config.CredPickerTriggerRecursive = chkCredPickerTriggerRecursive.Checked;
+
+                if (lstRegExPre.DataSource is BindingList<string>)
                     _config.CredPickerRegExPre = string.Join("|", (lstRegExPre.DataSource as BindingList<string>).Where(x => !string.IsNullOrEmpty(x)));
-                if (lstRegExPost.DataSource != null)
+                if (lstRegExPost.DataSource is BindingList<string>)
                     _config.CredPickerRegExPost = string.Join("|", (lstRegExPost.DataSource as BindingList<string>).Where(x => !string.IsNullOrEmpty(x)));
             }
 
@@ -469,8 +615,9 @@ namespace KeePassRDP
                 _config.MstscReplaceTitle = chkMstscReplaceTitle.Checked;
                 _config.MstscCleanupRegistry = chkMstscCleanupRegistry.Checked;
                 _config.MstscConfirmCertificate = chkMstscConfirmCertificate.Checked;
+                _config.MstscHandleCredDialog = chkMstscHandleCredDialog.Checked;
 
-                if (!chkMstscSignRdpFiles.Checked || txtMstscSignRdpFiles.Text == KprResourceManager.Instance["Click here to select a certificate from the user store."])
+                if (!chkMstscSignRdpFiles.Checked || txtMstscSignRdpFiles.Text == txtMstscSignRdpFiles.Tag as string)
                 {
                     txtMstscSignRdpFiles.TextChanged -= txtMstscSignRdpFiles_TextChanged;
                     txtMstscSignRdpFiles.Text = string.Empty;
@@ -505,25 +652,32 @@ namespace KeePassRDP
                                 if (pbl.GetValue(thumbprint, 0) as int? != 0xff)
                                     pbl.SetValue(thumbprint, 0xff, RegistryValueKind.DWord);
                         }
-                        catch
-                        {
-                        }
+                        catch { }
 
                         _config.MstscSignRdpFiles = txtMstscSignRdpFiles.Text;
                     }
                 }
                 else
-                    _config.MstscSignRdpFiles = string.Empty;
+                    _config.MstscSignRdpFiles = KprConfig.Default.MstscSignRdpFiles;
 
                 // HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Group Policy Objects\{B143DA1D-E406-4B17-A27F-BC9BDF1DBE3A}User\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
                 // TrustedCertThumbprints
 
                 var item = cbMstscExecutable.SelectedItem as string;
                 if (!string.IsNullOrWhiteSpace(item) && item != typeof(MstscCommand).Name)
-                    _config.MstscExecutable = item;
+                {
+                    if (!string.IsNullOrWhiteSpace(txtMstscCustomCommand.Text))
+                        _config.MstscExecutable = string.Format("{0}:{1}", item, txtMstscCustomCommand.Text);
+                    else
+                        _config.MstscExecutable = item;
+                }
                 else
-                    _config.MstscExecutable = string.Empty;
+                    _config.MstscExecutable = KprConfig.Default.MstscExecutable;
+
+                _config.MstscSecureDesktop = chkMstscSecureDesktop.Checked;
             }
+
+            _realConfig.CopyFrom(_config);
         }
 
         private void num_Enter(object sender, EventArgs e)
@@ -623,7 +777,7 @@ namespace KeePassRDP
 
         private void tabAbout_SizeChanged(object sender, EventArgs e)
         {
-            if (!_tabAboutInitialized || tabAbout.UseWaitCursor)
+            if (!_tabAboutInitialized || UseWaitCursor)
                 return;
 
             var rowCount = tblAbout.RowCount;
@@ -675,6 +829,44 @@ namespace KeePassRDP
         {
             if (control == null || ActiveControl == control)
                 ActiveControl = null;
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            const int WM_MOVING = 0x0216;
+            if (m.Msg == WM_MOVING && !UseWaitCursor)
+            {
+                _isMoving = true;
+
+                var page = tcKprOptionsForm.SelectedTab;
+                if (page != tabIntegration)
+                    page.SuspendLayout();
+
+                tabIntegration.SuspendLayout();
+                tblIntegration.SuspendLayout();
+                flpOptions.SuspendLayout();
+                kprSettingsControl.SuspendLayout();
+
+                base.WndProc(ref m);
+
+                _isMoving = false;
+
+                Task.Factory.FromAsync(BeginInvoke(new Action(() =>
+                {
+                    if (_isMoving)
+                        return;
+
+                    tblIntegration.ResumeLayout(false);
+                    flpOptions.ResumeLayout(false);
+                    kprSettingsControl.ResumeLayout(false);
+                    tabIntegration.ResumeLayout(false);
+
+                    if (page != tabIntegration)
+                        page.ResumeLayout(false);
+                })), endInvoke => EndInvoke(endInvoke), TaskCreationOptions.AttachedToParent, TaskScheduler.Default);
+            }
+            else
+                base.WndProc(ref m);
         }
 
         /*[DllImport("User32.dll")]

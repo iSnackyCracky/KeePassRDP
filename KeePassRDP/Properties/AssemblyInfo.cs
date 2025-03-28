@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -28,7 +28,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("iSnackyCracky")]
 [assembly: AssemblyProduct("KeePass Plugin")]
-[assembly: AssemblyCopyright("Copyright © 2018 - 2024")]
+[assembly: AssemblyCopyright("Copyright © 2018 - 2025")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -38,6 +38,6 @@ using System.Runtime.InteropServices;
 [assembly: SatelliteContractVersion("1.0.0.0")]
 
 // Version information
-[assembly: AssemblyVersion("2.2.2")]
-[assembly: AssemblyFileVersion("2.2.2")]
-[assembly: AssemblyInformationalVersion("2.2.2")]
+[assembly: AssemblyVersion("2.3")]
+[assembly: AssemblyFileVersion("2.3")]
+[assembly: AssemblyInformationalVersion("2.3")]

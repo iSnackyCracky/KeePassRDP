@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -36,21 +36,24 @@ namespace KeePassRDP
     {
         public const string CredentialComment = Util.KeePassRDP;
 
-        public Guid GUID { get; private set; }
-        public DateTimeOffset ValidUntil { get; private set; }
-        public bool IsValid { get { return ValidUntil + _increase >= DateTimeOffset.UtcNow; } }
+        public Guid GUID { get { return _guid; } }
+        //public DateTimeOffset ValidUntil { get { return _validUntil; } }
+        public bool IsValid { get { return _validUntil + _increase >= DateTimeOffset.UtcNow; } }
 
+        private readonly Guid _guid;
+        private readonly TimeSpan _ttl;
         private TimeSpan _increase;
+        private DateTimeOffset _validUntil;
 
-        internal KprCredential(ProtectedString username, SecureString password, string targetName, NativeCredentials.CRED_TYPE type, int ttl) : base()
+        internal KprCredential(ProtectedString username, SecureString password, string targetName, NativeCredentials.CRED_TYPE type, int ttl = 0) : base()
         {
             if (string.IsNullOrEmpty(targetName))
                 throw new ArgumentNullException("targetName");
 
+            _guid = Guid.NewGuid();
+            _ttl = ttl > 0 ? TimeSpan.FromSeconds(ttl) : TimeSpan.Zero;
             _increase = TimeSpan.Zero;
-
-            GUID = Guid.NewGuid();
-            ValidUntil = ttl > 0 ? DateTimeOffset.UtcNow + TimeSpan.FromSeconds(ttl) : DateTimeOffset.MaxValue;
+            _validUntil = _ttl.TotalMilliseconds > 0 ? DateTimeOffset.UtcNow + _ttl : DateTimeOffset.MaxValue;
 
             var usernameString = string.Empty;
             if (!username.IsEmpty)
@@ -68,24 +71,24 @@ namespace KeePassRDP
             Persist = NativeCredentials.CRED_PERSIST.SESSION;
             Attributes = new Dictionary<string, object>
             {
-                { "ValidUntil", ValidUntil }
+                { "ValidUntil", _validUntil }
             };
             Comment = CredentialComment;
         }
 
         internal KprCredential(NativeCredentials.Credential credential) : base()
         {
+            _guid = Guid.NewGuid();
+            _ttl = TimeSpan.Zero;
             _increase = TimeSpan.Zero;
-
-            GUID = Guid.NewGuid();
             if (credential.Attributes.ContainsKey("ValidUntil"))
-                ValidUntil = (DateTimeOffset)credential.Attributes["ValidUntil"];
+                _validUntil = (DateTimeOffset)credential.Attributes["ValidUntil"];
 
             Flags = credential.Flags;
             Type = credential.Type;
             TargetName = credential.TargetName;
             UserName = credential.UserName;
-            CredentialBlob = credential.CredentialBlob;
+            CredentialBlob = credential.CredentialBlob != null && credential.CredentialBlob.Length > 0 ? credential.CredentialBlob.Copy() : null;
             Persist = credential.Persist;
             Attributes = credential.Attributes;
             Comment = credential.Comment;
@@ -93,7 +96,15 @@ namespace KeePassRDP
 
         public void IncreaseTTL(TimeSpan ttl)
         {
-            if(ttl.TotalMilliseconds > 0)
+            if (ttl == TimeSpan.MaxValue)
+            {
+                _increase = TimeSpan.Zero;
+                _validUntil = DateTimeOffset.MaxValue;
+
+                return;
+            }
+
+            if (ttl.TotalMilliseconds > 0)
                 _increase += ttl;
         }
 
@@ -105,6 +116,14 @@ namespace KeePassRDP
 
         public void DecreaseTTL(TimeSpan ttl)
         {
+            if (ttl == TimeSpan.MaxValue)
+            {
+                _increase = TimeSpan.Zero;
+                _validUntil = DateTimeOffset.MinValue;
+
+                return;
+            }
+
             if (ttl.TotalMilliseconds > 0)
                 _increase -= ttl;
         }
@@ -118,6 +137,12 @@ namespace KeePassRDP
         public void ResetTTL()
         {
             _increase = TimeSpan.Zero;
+        }
+
+        public void ResetValidUntil()
+        {
+            _validUntil = _ttl.TotalMilliseconds > 0 ? DateTimeOffset.UtcNow + _ttl : DateTimeOffset.MaxValue;
+            ResetTTL();
         }
 
         /// <summary>
@@ -135,7 +160,7 @@ namespace KeePassRDP
                     cred == null ||
                     (cred.Persist == Persist &&
                         cred.Comment == Comment &&
-                        (DateTimeOffset)cred.Attributes["ValidUntil"] < ValidUntil))
+                        (DateTimeOffset)cred.Attributes["ValidUntil"] < _validUntil))
                     NativeCredentials.CredWrite(this);
             }
             catch (Win32Exception ex)
@@ -147,9 +172,11 @@ namespace KeePassRDP
                     VtdIcon.Warning,
                     null, null, 0, null, 0);
             }
-
-            if (cred != null)
-                cred.ZeroMemory();
+            finally
+            {
+                if (cred != null)
+                    cred.ZeroMemory();
+            }
         }
 
         public void Dispose()
@@ -162,22 +189,21 @@ namespace KeePassRDP
                     cred != null &&
                     cred.Persist == Persist &&
                     cred.Comment == Comment &&
-                    (DateTimeOffset)cred.Attributes["ValidUntil"] == ValidUntil)
+                    (DateTimeOffset)cred.Attributes["ValidUntil"] == _validUntil)
                     NativeCredentials.CredDelete(TargetName, Type);
             }
-            catch (Win32Exception)
-            {
-            }
+            catch (Win32Exception) { }
 
             if (cred != null)
                 cred.ZeroMemory();
 
-            ValidUntil = DateTimeOffset.MinValue;
-            ResetTTL();
             ZeroMemory();
 
             if (CredentialBlob != null)
                 CredentialBlob.Dispose();
+
+            _validUntil = DateTimeOffset.MinValue;
+            ResetTTL();
         }
     }
 

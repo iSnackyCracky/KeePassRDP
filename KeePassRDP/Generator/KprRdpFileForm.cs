@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -20,9 +20,11 @@
 
 using KeePass.Resources;
 using KeePass.UI;
+using KeePassRDP.Extensions;
 using KeePassRDP.Utils;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.IO;
@@ -33,14 +35,16 @@ using System.Windows.Forms;
 
 namespace KeePassRDP.Generator
 {
-    public partial class KprRdpFileForm : Form
+    public partial class KprRdpFileForm : Form, IGwmWindow
     {
+        public bool CanCloseWithoutDataLoss { get { return true; } }
+        public RdpFile RdpFile { get { return _rdpFile; } }
+        public bool IsReadOnly { get; set; }
+
         private readonly Dictionary<string, Control> _cachedControls;
         private readonly bool _disposeRdpFile;
         private readonly RdpFile _rdpFile;
-
-        public RdpFile RdpFile { get { return _rdpFile; } }
-        public bool IsReadOnly { get; set; }
+        private readonly Font _font;
 
         public KprRdpFileForm(RdpFile rdpFile = null)
         {
@@ -50,6 +54,9 @@ namespace KeePassRDP.Generator
 
             SuspendLayout();
 
+            var tempFont = Font;
+            _font = new Font(tempFont.FontFamily, 7.25f, tempFont.Style, tempFont.Unit);
+
             KprResourceManager.Instance.TranslateMany(
                 this,
                 cmdImport,
@@ -58,10 +65,14 @@ namespace KeePassRDP.Generator
                 cmdCancel
             );
 
-            Util.SetDoubleBuffered(tblRdpFileForm);
-            Util.SetDoubleBuffered(tcRdpFileSettings);
+            DoubleBuffered = true;
 
-            Icon = IconUtil.ExtractIcon(KeePassRDPExt.MstscPath, 0, UIUtil.GetIconSize().Height);
+            Util.EnableDoubleBuffered(
+                tblRdpFileForm,
+                tcRdpFileSettings
+            );
+
+            Icon = IconUtil.ExtractIcon(KeePassRDPExt.MstscPath, 0, UIUtil.GetSmallIconSize().Height);
 
             _disposeRdpFile = rdpFile == null;
             _rdpFile = rdpFile ?? new RdpFile();
@@ -101,12 +112,14 @@ namespace KeePassRDP.Generator
                 VistaTaskDialog.ShowMessageBoxEx(
                     string.Format(KprResourceManager.Instance["File '{0}' not found."], fileName),
                     null,
-                    Util.KeePassRDP + " - " + KPRes.FatalError,
+                    string.Format("{0} - {1}", Util.KeePassRDP, KPRes.Error),
                     VtdIcon.Error,
                     this,
                     null, 0, null, 0);
                 return;
             }
+
+            _rdpFile.Reset();
 
             var tempCache = RdpFile.SettingsCache.Values.SelectMany(x => x).ToDictionary(x => x.Item2.Template.Split(new[] { ':' }, 2).FirstOrDefault(), x => x, StringComparer.OrdinalIgnoreCase);
             foreach (var line in File.ReadAllLines(fileName))
@@ -118,7 +131,7 @@ namespace KeePassRDP.Generator
                     _rdpFile.SetProperty(prop, template);
             }
 
-            KprRdpFileForm_Load(null, null);
+            KprRdpFileForm_Load(null, EventArgs.Empty);
         }
 
         public void cmdExport_Click(object sender, EventArgs e)
@@ -172,12 +185,18 @@ namespace KeePassRDP.Generator
                     VistaTaskDialog.ShowMessageBoxEx(
                         string.Format(KprResourceManager.Instance["Saving '{0}' failed: {1}"], fileName, ex.Message),
                         null,
-                        Util.KeePassRDP + " - " + KPRes.FatalError,
+                        string.Format("{0} - {1}", Util.KeePassRDP, KPRes.Error),
                         VtdIcon.Error,
                         this,
                         null, 0, null, 0);
                 }
             }
+        }
+
+        private void cmdReset_Click(object sender, EventArgs e)
+        {
+            _rdpFile.Reset();
+            KprRdpFileForm_Load(null, EventArgs.Empty);
         }
 
         private void cmdCancel_Click(object sender, EventArgs e)
@@ -204,59 +223,94 @@ namespace KeePassRDP.Generator
         public void KprRdpFileForm_Load(object sender, EventArgs e)
         {
             var width = (tblRdpFileForm.Width - SystemInformation.VerticalScrollBarWidth - 5) / 2;
-            tblRdpFileForm.Visible = false;
+            tcRdpFileSettings.Hide();
 
             UseWaitCursor = true;
             SuspendLayout();
 
-            if (backgroundWorker1.IsBusy && !backgroundWorker1.CancellationPending && backgroundWorker1.WorkerSupportsCancellation)
+            if (backgroundWorker1.IsBusy && backgroundWorker1.WorkerSupportsCancellation && !backgroundWorker1.CancellationPending)
                 backgroundWorker1.CancelAsync();
             backgroundWorker1.RunWorkerAsync(width);
         }
 
+        private volatile bool _isResizing = false;
+        private volatile bool _isMoving = false;
+
         private void KprRdpFileForm_ResizeBegin(object sender, EventArgs e)
         {
-            foreach (TabPage page in tcRdpFileSettings.TabPages)
+            if (_isResizing)
+                return;
+
+            _isResizing = true;
+
+            Task.Factory.FromAsync(BeginInvoke(new Action(() =>
             {
-                if (page == tcRdpFileSettings.SelectedTab)
-                    continue;
+                if (!_isResizing)
+                    return;
 
-                if (page.Controls.Count > 0)
+                var selectedTab = tcRdpFileSettings.SelectedTab;
+                foreach (TabPage page in tcRdpFileSettings.TabPages)
                 {
-                    _cachedControls[page.Name] = page.Controls[0];
-                    page.Controls.Clear();
-                }
+                    if (page == selectedTab)
+                        continue;
 
-                page.SuspendLayout();
-            }
+                    if (page.Controls.Count > 0)
+                    {
+                        _cachedControls[page.Name] = page.Controls[0];
+                        page.Controls.Clear();
+                    }
+
+                    page.SuspendLayout();
+                }
+            })), endInvoke => EndInvoke(endInvoke), TaskCreationOptions.AttachedToParent, TaskScheduler.Default);
         }
 
         private void KprRdpFileForm_ResizeEnd(object sender, EventArgs e)
         {
-            Control control;
-            foreach (TabPage page in tcRdpFileSettings.TabPages)
+            if (!_isResizing)
+                return;
+
+            _isResizing = false;
+
+            Task.Factory.FromAsync(BeginInvoke(new Action(() =>
             {
-                if (_cachedControls.TryGetValue(page.Name, out control))
-                    if (!page.Controls.Contains(control))
-                        page.Controls.Add(control);
-                if (page != tcRdpFileSettings.SelectedTab)
-                    page.ResumeLayout(false);
-            }
+                if (_isResizing)
+                    return;
+
+                Control control;
+                var selectedTab = tcRdpFileSettings.SelectedTab;
+                foreach (TabPage page in tcRdpFileSettings.TabPages)
+                {
+                    if (_cachedControls.TryGetValue(page.Name, out control))
+                        if (!page.Controls.Contains(control))
+                            page.Controls.Add(control);
+                    if (page != selectedTab)
+                        page.ResumeLayout(false);
+                }
+            })), endInvoke => EndInvoke(endInvoke), TaskCreationOptions.AttachedToParent, TaskScheduler.Default);
         }
 
         private void tcRdpFileSettings_Selected(object sender, TabControlEventArgs e)
         {
-            foreach (TabPage page in tcRdpFileSettings.TabPages)
-                if (page != tcRdpFileSettings.SelectedTab)
-                    page.SuspendLayout();
-            if (e.TabPage != null && e.TabPage == tcRdpFileSettings.SelectedTab && tcRdpFileSettings.TabPages.Contains(e.TabPage))
-                e.TabPage.ResumeLayout(true);
+            if (e.TabPage != null)
+                e.TabPage.SuspendLayout();
+            Task.Factory.FromAsync(BeginInvoke(new Action(() =>
+            {
+                var selectedTab = tcRdpFileSettings.SelectedTab;
+                foreach (TabPage page in tcRdpFileSettings.TabPages)
+                {
+                    if (!page.Created)
+                        page.CreateControl();
+                    if (page != selectedTab)
+                        page.SuspendLayout();
+                }
+                if (e.TabPage != null && e.TabPage == selectedTab && tcRdpFileSettings.TabPages.Contains(e.TabPage))
+                    e.TabPage.ResumeLayout(true);
+            })), endInvoke => EndInvoke(endInvoke), TaskCreationOptions.AttachedToParent, TaskScheduler.Default);
         }
 
-        private void backgroundWorker1_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
-            var font = new Font(Font.Name, 7.25f, Font.Style, Font.Unit);
-
             var notIsReadOnly = !IsReadOnly;
             cmdOk.Enabled = cmdImport.Enabled = notIsReadOnly;
 
@@ -276,9 +330,9 @@ namespace KeePassRDP.Generator
                     {
                         Name = g.Key,
                         BackColor = Color.White,
-                        Margin = new Padding(0)
+                        Margin = Padding.Empty
                     };
-                    Util.SetDoubleBuffered(tabPage);
+                    tabPage.SetDoubleBuffered();
                 }
 
                 var tblTabPage = tabPage.Controls.Count > 0 ? tabPage.Controls[0] as TableLayoutPanel : null;
@@ -290,19 +344,19 @@ namespace KeePassRDP.Generator
                         AutoSize = true,
                         AutoSizeMode = AutoSizeMode.GrowAndShrink,
                         AutoScroll = true,
-                        Margin = new Padding(0),
+                        Margin = Padding.Empty,
                         Padding = new Padding(0, 2, 0, 1),
                         GrowStyle = TableLayoutPanelGrowStyle.FixedSize,
                         ColumnCount = 1,
                         RowCount = g.Value.Count
                     };
-                    Util.SetDoubleBuffered(tblTabPage);
+                    tblTabPage.SetDoubleBuffered();
                 }
 
                 tabPage.SuspendLayout();
                 tabPage.Controls.Clear();
                 tblTabPage.SuspendLayout();
-                tblTabPage.Controls.Clear();
+                //tblTabPage.Controls.Clear();
 
                 var controls = g.Value.Select((x, i) =>
                 {
@@ -345,27 +399,37 @@ namespace KeePassRDP.Generator
                         {
                             FlowDirection = FlowDirection.LeftToRight,
                             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
-                            Margin = new Padding(0),
+                            Margin = Padding.Empty,
                             AutoSize = true,
                             AutoSizeMode = AutoSizeMode.GrowAndShrink,
                             Enabled = notIsReadOnly
                         };
+                        panel.SetDoubleBuffered();
                         tblTabPage.RowStyles.Add(new RowStyle(SizeType.Absolute, DpiUtil.ScaleIntY(22)));
                         tblTabPage.SetRow(panel, i);
                     }
 
-                    var label = panel.Controls.Count > 0 ? panel.Controls[0] : new Label
+                    var label = panel.Controls.Count > 0 ? panel.Controls[0] : null;
+                    if (label == null)
                     {
-                        Text = name,
-                        TextAlign = ContentAlignment.MiddleRight,
-                        Padding = new Padding(0),
-                        Margin = new Padding(0, 3, 4, 0),
-                        Anchor = AnchorStyles.Left,
-                        BorderStyle = BorderStyle.None,
-                        FlatStyle = FlatStyle.System,
-                        Width = width - 10,
-                        Height = DpiUtil.ScaleIntY(18)
-                    };
+                        label = new Label
+                        {
+                            Text = name,
+                            TextAlign = ContentAlignment.MiddleRight,
+                            Padding = Padding.Empty,
+                            Margin = new Padding(0, 3, 4, 0),
+                            Anchor = AnchorStyles.Left,
+                            BorderStyle = BorderStyle.None,
+                            FlatStyle = FlatStyle.System,
+                            Width = width - 10,
+                            Height = DpiUtil.ScaleIntY(18)
+                        };
+                        var defaultValueAttribute = property.GetCustomAttributes(typeof(DefaultValueAttribute), false).OfType<DefaultValueAttribute>().FirstOrDefault();
+                        var defaultValueString = defaultValueAttribute != null && defaultValueAttribute.Value != null ? defaultValueAttribute.Value.ToString() : string.Empty;
+                        if (string.IsNullOrEmpty(defaultValueString))
+                            defaultValueString = KprResourceManager.Instance["unset"];
+                        ttGeneral.SetToolTip(label, string.Format(KprResourceManager.Instance["Default value: {0}"], defaultValueString));
+                    }
 
                     var box = panel.Controls.Count > 1 ? panel.Controls[1] : null;
 
@@ -379,8 +443,8 @@ namespace KeePassRDP.Generator
                         {
                             box = tempBox = new ComboBox
                             {
-                                Font = font,
-                                Margin = new Padding(0),
+                                Font = _font,
+                                Margin = Padding.Empty,
                                 Anchor = AnchorStyles.Left,
                                 AutoCompleteMode = AutoCompleteMode.None,
                                 DropDownStyle = ComboBoxStyle.DropDownList,
@@ -388,7 +452,9 @@ namespace KeePassRDP.Generator
                                 Width = width - 15,
                                 FlatStyle = FlatStyle.System
                             };
+                            tempBox.BeginUpdate();
                             tempBox.Items.AddRange(Enum.GetNames(property.PropertyType));
+                            tempBox.EndUpdate();
                             label.Margin = new Padding(0, 4, 4, 0);
                         }
                         if (defaultValue != null)
@@ -403,9 +469,9 @@ namespace KeePassRDP.Generator
                         {
                             box = tempBox = new CheckBox
                             {
-                                Font = font,
-                                Padding = new Padding(0),
-                                Margin = new Padding(0),
+                                Font = _font,
+                                Padding = Padding.Empty,
+                                Margin = Padding.Empty,
                                 Anchor = AnchorStyles.Left,
                                 AutoSize = true
                             };
@@ -422,8 +488,8 @@ namespace KeePassRDP.Generator
                         {
                             box = tempBox = new NumericUpDown
                             {
-                                Font = font,
-                                Margin = new Padding(0),
+                                Font = _font,
+                                Margin = Padding.Empty,
                                 Anchor = AnchorStyles.Left,
                                 Width = width - 15,
                                 Minimum = 0,
@@ -447,8 +513,8 @@ namespace KeePassRDP.Generator
                         if (tempBox == null)
                             box = tempBox = new TextBox
                             {
-                                Font = font,
-                                Margin = new Padding(0),
+                                Font = _font,
+                                Margin = Padding.Empty,
                                 Anchor = AnchorStyles.Left,
                                 Width = width - 15,
                                 BorderStyle = BorderStyle.FixedSingle
@@ -488,11 +554,11 @@ namespace KeePassRDP.Generator
                 EndInvoke(invoke);
         }
 
-        private void backgroundWorker1_RunWorkerCompleted(object sender, System.ComponentModel.RunWorkerCompletedEventArgs e)
+        private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             if (UseWaitCursor)
             {
-                tblRdpFileForm.Visible = true;
+                tcRdpFileSettings.Show();
 
                 ResumeLayout(false);
                 UseWaitCursor = false;
@@ -503,12 +569,13 @@ namespace KeePassRDP.Generator
         {
             _cachedControls.Clear();
 
-            Icon.Dispose();
-
             base.Dispose();
+            Icon.Dispose();
 
             if (_disposeRdpFile && _rdpFile != null)
                 _rdpFile.Dispose();
+
+            _font.Dispose();
         }
 
         private void UpdateRdpFile(RdpFile rdpFile)
@@ -553,15 +620,41 @@ namespace KeePassRDP.Generator
                 {
                     var tbox = box as TextBox;
                     if (property.PropertyType == typeof(string))
-                        newValue = tbox.Text;
+                        newValue = tbox.Text.Trim();
                     else if (property.PropertyType == typeof(int))
-                        newValue = int.Parse(tbox.Text);
+                        newValue = int.Parse(tbox.Text.Trim());
                 }
                 if (newValue == null)
                     property.SetValue(rdpFile, null, null);
                 else /*if (newValue != oldValue)*/
                     property.SetValue(rdpFile, Convert.ChangeType(newValue, property.PropertyType), null);
             }
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            const int WM_MOVING = 0x0216;
+            if (m.Msg == WM_MOVING)
+            {
+                _isMoving = true;
+
+                var page = tcRdpFileSettings.SelectedTab;
+                page.SuspendLayout();
+
+                base.WndProc(ref m);
+
+                _isMoving = false;
+
+                Task.Factory.FromAsync(BeginInvoke(new Action(() =>
+                {
+                    if (_isMoving)
+                        return;
+
+                    page.ResumeLayout(false);
+                })), endInvoke => EndInvoke(endInvoke), TaskCreationOptions.AttachedToParent, TaskScheduler.Default);
+            }
+            else
+                base.WndProc(ref m);
         }
     }
 }

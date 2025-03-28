@@ -1,0 +1,47 @@
+<#@ template compilerOptions="optimize+" hostspecific="true" language="C#" #>
+<#@ output extension=".yaml" encoding="utf-8" #>
+<#@ assembly name="EnvDTE" #>
+<#@ import namespace="Microsoft.VisualStudio.TextTemplating" #>
+<#@ import namespace="System.IO" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Text.RegularExpressions" #>
+<#
+    var directory = Path.GetDirectoryName(Host.TemplateFile);
+    var parent = Path.GetDirectoryName(Path.GetDirectoryName(directory));
+
+    var informationalVersion = string.Empty;
+    var assemblyVersion = string.Empty;
+
+    var assemblyInfo = File.ReadAllText(Path.Combine(parent, @"KeePassRDP\Properties\AssemblyInfo.cs"));
+    var match = Regex.Match(assemblyInfo, "\\[assembly: AssemblyInformationalVersion\\(\"([^\"]+)\"\\)\\]");
+    if (match.Success)
+        informationalVersion = match.Groups[1].Value;
+
+    match = Regex.Match(assemblyInfo, "\\[assembly: AssemblyVersion\\(\"([^\"]+)\"\\)\\]");
+    if (match.Success)
+    {
+        assemblyVersion = match.Groups[1].Value;
+        if (string.IsNullOrEmpty(informationalVersion))
+            informationalVersion = assemblyVersion;
+    }
+#>
+PackageIdentifier: KeePassRDP.KeePassRDP
+PackageVersion: <#= informationalVersion #>
+PackageLocale: en-US
+Publisher: KeePassRDP
+PublisherUrl: https://github.com/iSnackyCracky/KeePassRDP
+PublisherSupportUrl: https://github.com/iSnackyCracky/KeePassRDP/issues
+Author: KeePassRDP
+PackageName: KeePassRDP
+PackageUrl: https://github.com/iSnackyCracky/KeePassRDP
+License: GPL-3.0
+LicenseUrl: https://github.com/iSnackyCracky/KeePassRDP/blob/master/COPYING
+Copyright: Copyright (C) 2018 - 2025
+CopyrightUrl: https://github.com/iSnackyCracky/KeePassRDP/blob/master/COPYING
+ShortDescription: KeePassRDP is a plugin for KeePass 2.x that adds useful options to connect to the URL of an entry with RDP.
+Moniker: keepassrdp
+Tags:
+- keepass
+- rdp
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -106,6 +106,55 @@ EXTERN_C DECLSPEC_EXPORT STDMETHODIMP KprDoDefaultAction(_In_ PVOID __restrict p
     return S_OK;
 }*/
 
+#pragma comment(linker, "/SECTION:.SHARED,RWS")
+#pragma data_seg(".SHARED")
+HWND g_hwnd = NULL;
+HHOOK g_hook = NULL;
+#pragma data_seg()
+
+HMODULE g_hModule = NULL;
+
+LRESULT CALLBACK WhCbtHookProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+    if (nCode < 0)
+    {
+        return CallNextHookEx(g_hook, nCode, wParam, lParam);
+    }
+
+    if (g_hwnd != NULL)
+    {
+        switch (nCode)
+        {
+        case HCBT_MINMAX:
+            SendMessage(g_hwnd, WM_USER + 1, wParam, lParam);
+            break;
+        }
+    }
+
+    return CallNextHookEx(g_hook, nCode, wParam, lParam);
+}
+
+EXTERN_C DECLSPEC_EXPORT STDMETHODIMP KprSetCbtHwnd(_In_ HWND __restrict hwnd)
+{
+    if (g_hModule == NULL)
+        return -1;
+
+    if (g_hook != NULL)
+    {
+        UnhookWindowsHookEx(g_hook);
+        g_hook = NULL;
+    }
+
+    g_hwnd = hwnd;
+
+    if (g_hwnd != NULL)
+    {
+        g_hook = SetWindowsHookEx(WH_CBT, WhCbtHookProc, g_hModule, 0);
+    }
+
+    return S_OK;
+}
+
 EXTERN_C BOOL APIENTRY DllMain(HMODULE hModule,
     DWORD  ul_reason_for_call,
     LPVOID lpReserved
@@ -114,6 +163,7 @@ EXTERN_C BOOL APIENTRY DllMain(HMODULE hModule,
     switch (ul_reason_for_call)
     {
     case DLL_PROCESS_ATTACH:
+        g_hModule = hModule;
         DisableThreadLibraryCalls(hModule);
         break;
     case DLL_THREAD_ATTACH:

@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -18,6 +18,7 @@
  *
  */
 
+using KeePass;
 using KeePass.Plugins;
 using KeePass.UI;
 using KeePassLib;
@@ -27,16 +28,20 @@ using Microsoft.Win32;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Drawing.Text;
 using System.Linq;
 using System.Management;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Text;
 using System.Windows.Forms;
+using VisualStyles = System.Windows.Forms.VisualStyles;
 
 namespace KeePassRDP.Utils
 {
@@ -54,6 +59,7 @@ namespace KeePassRDP.Utils
         public const string DefaultCredPickRegExPre = "domain|domänen|local|lokaler|windows";
         public const string DefaultCredPickRegExPost = "admin|user|administrator|benutzer|nutzer";
         public const string DefaultMstscPath = @"%SystemRoot%\System32\mstsc.exe";
+        public const string DefaultRdpScheme = "rdp";
         public const int DefaultRdpPort = 3389;
         #endregion
 
@@ -73,11 +79,10 @@ namespace KeePassRDP.Utils
 
         public static JsonSerializerSettings JsonSerializerSettings { get { return _jsonSerializerSettings.Value; } }
 
-        private static readonly PropertyInfo _doubleBufferedPropertyInfo = typeof(Control).GetProperty("DoubleBuffered", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        public static void SetDoubleBuffered(Control control, bool enabled = true)
+        public static void EnableDoubleBuffered(params Control[] controls)
         {
-            _doubleBufferedPropertyInfo.SetValue(control, enabled, null);
+            foreach (var control in controls)
+                control.SetDoubleBuffered();
         }
 
         public static bool ClickButtonOnEnter(Button button, KeyEventArgs e)
@@ -124,14 +129,20 @@ namespace KeePassRDP.Utils
         /// Check if action is a valid operation.
         /// </summary>
         /// <param name="host"><see cref="IPluginHost"/> to check.</param>
-        /// <param name="showMsg">Switch to show/hide <see cref="MessageBox"/></param>
+        /// <param name="showMsg">Switch to enable/disable showing error messages with <see cref="VistaTaskDialog"/>.</param>
         /// <returns><see langword="true"/> on sucess, <see langword="false"/> otherwise.</returns>
         public static bool IsValid(IPluginHost host, bool showMsg = true)
         {
             if (!host.Database.IsOpen)
             {
                 if (showMsg)
-                    KeePassLib.Utility.MessageService.ShowInfoEx(KeePassRDP, KprResourceManager.Instance["Please open a KeePass database first."]);
+                    VistaTaskDialog.ShowMessageBoxEx(
+                        KprResourceManager.Instance["Please open a KeePass database first."],
+                        null,
+                        KeePassRDP,
+                        VtdIcon.Information,
+                        host.MainWindow,
+                        null, 0, null, 0);
 
                 return false;
             }
@@ -139,7 +150,13 @@ namespace KeePassRDP.Utils
             if (host.MainWindow.GetSelectedEntriesCount() < 1)
             {
                 if (showMsg)
-                    KeePassLib.Utility.MessageService.ShowInfoEx(KeePassRDP, KprResourceManager.Instance["Please select an entry first."]);
+                    VistaTaskDialog.ShowMessageBoxEx(
+                        KprResourceManager.Instance["Please select an entry first."],
+                        null,
+                        KeePassRDP,
+                        VtdIcon.Information,
+                        host.MainWindow,
+                        null, 0, null, 0);
 
                 return false;
             }
@@ -153,10 +170,23 @@ namespace KeePassRDP.Utils
         /// <param name="pe"><see cref="PwEntry"/> to check.</param>
         /// <param name="groupName">Name of group to compare.</param>
         /// <returns><see langword="true"/> on sucess, <see langword="false"/> otherwise.</returns>
-        public static bool InRdpSubgroup(PwEntry pe, string groupName = DefaultTriggerGroup)
+        public static bool InRdpSubgroup(PwEntry pe, string groupName = DefaultTriggerGroup, bool recursive = true)
         {
+            if (string.IsNullOrWhiteSpace(groupName))
+                groupName = DefaultTriggerGroup;
+
             var pg = pe.ParentGroup;
-            return pg != null && string.Equals(pg.Name, string.IsNullOrWhiteSpace(groupName) ? DefaultTriggerGroup : groupName, StringComparison.Ordinal);
+            var isInGroup = string.Equals(pg.Name, groupName, StringComparison.Ordinal);
+
+            if (recursive)
+                while (pg != null)
+                {
+                    if (isInGroup = string.Equals(pg.Name, groupName, StringComparison.Ordinal))
+                        break;
+                    pg = pg.ParentGroup;
+                }
+
+            return isInGroup;
         }
 
         /// <summary>
@@ -166,6 +196,9 @@ namespace KeePassRDP.Utils
         /// <returns><see langword="true"/> if ignored, <see langword="false"/> otherwise.</returns>
         public static bool IsEntryIgnored(PwEntry pe)
         {
+            if (pe == null)
+                return false;
+
             // Does a CustomField "rdpignore" exist and is the value NOT set to "false"?
             if (pe.Strings.Exists(KprCpIgnoreField) && !string.Equals(pe.Strings.ReadSafe(KprCpIgnoreField), bool.FalseString, StringComparison.OrdinalIgnoreCase))
                 return true;
@@ -175,17 +208,71 @@ namespace KeePassRDP.Utils
         }
 
         /// <summary>
-        /// Replaces domain in username with local computer name.
+        /// Tries to parse <paramref name="url"/> as <see cref="Uri"/>.
+        /// </summary>
+        /// <param name="url">URL to parse.</param>
+        /// <returns><see cref="Uri"/> on success, <see langword="null"/> on failure.</returns>
+        public static Uri ParseURL(string url)
+        {
+            Uri uri;
+
+            // Try to parse entry URL as URI.
+            if (!Uri.IsWellFormedUriString(url, UriKind.Absolute) ||
+                !Uri.TryCreate(url, UriKind.Absolute, out uri) ||
+                (uri.HostNameType == UriHostNameType.Unknown && !UriParser.IsKnownScheme(uri.Scheme)))
+            {
+                try
+                {
+                    // Second try to parse entry URL as URI with UriBuilder and fallback scheme.
+                    uri = new UriBuilder(DefaultRdpScheme, url).Uri;
+                }
+                catch (UriFormatException)
+                {
+                    uri = null;
+                }
+
+                if (uri == null || (uri.HostNameType == UriHostNameType.Unknown && !UriParser.IsKnownScheme(uri.Scheme)))
+                {
+                    // Third try to parse entry URL as URI with fallback scheme.
+                    if (/*!Uri.IsWellFormedUriString(url, UriKind.Absolute) ||*/
+                        !Uri.TryCreate(string.Format("{0}{1}{2}", DefaultRdpScheme, Uri.SchemeDelimiter, url), UriKind.Absolute, out uri) ||
+                        uri.HostNameType == UriHostNameType.Unknown)
+                    {
+                        try
+                        {
+                            // Fourth try to parse entry URL as URI with UriBuilder.
+                            uri = new UriBuilder(url).Uri;
+                        }
+                        catch (UriFormatException)
+                        {
+                            uri = null;
+                        }
+
+                        if (uri == null || (uri.HostNameType == UriHostNameType.Unknown && !UriParser.IsKnownScheme(uri.Scheme)))
+                            uri = null;
+                    }
+                }
+            }
+
+            return uri;
+        }
+
+        /// <summary>
+        /// Replaces domain in <paramref name="username"/> with local computer name.
         /// </summary>
         /// <param name="username"><see cref="ProtectedString"/> to modify.</param>
         /// <param name="host">Hostname to replace.</param>
-        /// <returns></returns>
+        /// <returns>Modified original <see cref="ProtectedString"/>.</returns>
         public static ProtectedString ForceLocalUser(this ProtectedString username, string host = null)
         {
             if (username.IsEmpty)
                 return username;
 
             var chars = username.ReadChars();
+
+            if (chars.Length >= 2 && chars[0] == '.' && chars[1] == '\\')
+                return username;
+
             var seperatorIndex = Array.FindIndex(chars, x => x == '\\');
 
             if (seperatorIndex >= 0 &&
@@ -209,7 +296,7 @@ namespace KeePassRDP.Utils
         /// Converts from HOST.NAME\USERNAME to username@host.name
         /// </summary>
         /// <param name="username"><see cref="ProtectedString"/> to modify.</param>
-        /// <returns></returns>
+        /// <returns>Modified original <see cref="ProtectedString"/>.</returns>
         public static ProtectedString ForceUPN(this ProtectedString username)
         {
             if (username.IsEmpty)
@@ -218,18 +305,32 @@ namespace KeePassRDP.Utils
             var user = new StringBuilder(NativeMethods.CREDUI_MAX_USERNAME_LENGTH + 1);
             var domain = new StringBuilder(NativeMethods.CREDUI_MAX_DOMAIN_TARGET_LENGTH + 1);
 
-            if (NativeMethods.CredUIParseUserName(username.ReadString(), user, user.Capacity, domain, domain.Capacity) == 0 &&
+            var currentUsername = username.ReadString();
+            if (NativeMethods.CredUIParseUserName(currentUsername, user, user.Capacity, domain, domain.Capacity) == 0 &&
                 user.Length > 0 &&
                 domain.Length > 0)
             {
                 var newUser = user.ToString().TrimEnd(char.MinValue);
                 var newDomain = domain.ToString().TrimEnd(char.MinValue);
 
+                user.Clear();
+                domain.Clear();
+
                 if (!string.IsNullOrWhiteSpace(newUser) && !string.IsNullOrWhiteSpace(newDomain) && newDomain.Contains('.') && newDomain != ".")
                 {
-                    username = username.Remove(0, username.Length);
-                    username = username.Insert(0, string.Format("{0}@{1}", newUser, newDomain).ToLowerInvariant());
+                    var newUsername = string.Format("{0}@{1}", newUser, newDomain);
+                    if (!string.Equals(newUsername, currentUsername, StringComparison.OrdinalIgnoreCase))
+                    {
+                        var newUsernameLower = newUsername.ToLowerInvariant();
+                        if (newUsername != newUsernameLower)
+                            MemoryUtil.SecureZeroMemory(newUsername);
+                        username = username.Remove(0, username.Length);
+                        username = username.Insert(0, newUsernameLower);
+                    }
                 }
+
+                MemoryUtil.SecureZeroMemory(newUser);
+                MemoryUtil.SecureZeroMemory(newDomain);
             }
 
             return username;
@@ -247,58 +348,195 @@ namespace KeePassRDP.Utils
                     if (srv != null /*&& srv.GetSubKeyNames().Contains(host)*/)
                         srv.DeleteSubKey(host, false);
             }
-            catch
+            catch { }
+        }
+
+        internal static bool IsRdpScheme(this Uri uri)
+        {
+            return DefaultRdpScheme.Equals(uri.Scheme, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private class KprToolStripMenuItem : ToolStripMenuItem
+        {
+            private readonly string _text;
+
+            public KprToolStripMenuItem(string text) : base(text)
             {
+                _text = text;
+            }
+
+            protected override void OnAvailableChanged(EventArgs e)
+            {
+                base.OnAvailableChanged(e);
+                if (!Available)
+                {
+                    AutoSize = false;
+                    Text = string.Empty;
+                }
+                else
+                {
+                    Text = _text;
+                    AutoSize = true;
+                }
+            }
+
+            protected override void OnOwnerChanged(EventArgs e)
+            {
+                base.OnOwnerChanged(e);
+                if (!Available)
+                {
+                    AutoSize = false;
+                    Text = string.Empty;
+                }
+                else
+                {
+                    Text = _text;
+                    AutoSize = true;
+                }
             }
         }
 
-        /*private static readonly Regex _r1 = new Regex(@"^(?:http(?:s)?://)?(?:www(?:[0-9]+)?.)?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex _r2 = new Regex(@"^(?:(?:s)?ftp://)?(?:ftp.)?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex _r3 = new Regex(@"^(?:ssh://)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex _r4 = new Regex(@"^(?:rdp://)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex _r5 = new Regex(@"^(?:mailto:)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex _r6 = new Regex(@"^(?:callto:)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex _r7 = new Regex(@"^(?:tel:)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex _r8 = new Regex(@"(?:/.*)?", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex _r9 = new Regex(@"(?:\:[0-9]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-        /// <summary>
-        /// Removes protocol "prefix" (i.e. http:// ; https:// ; ...) and optionally a following port (i.e. :8080) from a given string.
-        /// </summary>
-        /// <param name="text"></param>
-        /// <returns><see cref="string"/></returns>
-        public static string StripUrl(string text, bool stripPort = false)
-        {
-            text = _r1.Replace(text, string.Empty);
-            text = _r2.Replace(text, string.Empty);
-            text = _r3.Replace(text, string.Empty);
-            text = _r4.Replace(text, string.Empty);
-            text = _r5.Replace(text, string.Empty);
-            text = _r6.Replace(text, string.Empty);
-            text = _r7.Replace(text, string.Empty);
-            text = _r8.Replace(text, string.Empty);
-            if (stripPort)
-                text = _r9.Replace(text, string.Empty);
-
-            return text;
-        }*/
-
         internal static ToolStripMenuItem CreateToolStripMenuItem(KprMenu.MenuItem menuItem, Keys keyCode = Keys.None)
         {
-            var tsmi = new ToolStripMenuItem
+            var tsmi = new KprToolStripMenuItem(menuItem.GetText())
             {
+                AutoToolTip = false,
                 ShowShortcutKeys = true,
-                Text = KprMenu.GetText(menuItem),
                 Name = menuItem.ToString(),
-                Visible = false
+                AutoSize = false,
+                Visible = false,
+                Available = false,
+                Enabled = false,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft,
+                ImageAlign = ContentAlignment.MiddleLeft,
+                TextImageRelation = TextImageRelation.ImageBeforeText,
+                DisplayStyle = ToolStripItemDisplayStyle.ImageAndText,
+                ImageScaling = ToolStripItemImageScaling.SizeToFit,
+                Margin = Padding.Empty,
+                Padding = new Padding(1)
             };
 
             // Silently ignore inacceptable shortcuts.
             //UIUtil.AssignShortcut(tsmi, Enum.IsDefined(typeof(Shortcut), (int)keyCode) ? keyCode : Keys.None);
-            keyCode = ToolStripManager.IsValidShortcut(keyCode) ? keyCode : Keys.None;
-            UIUtil.AssignShortcut(tsmi, keyCode);
+            UIUtil.AssignShortcut(tsmi, ToolStripManager.IsValidShortcut(keyCode) ? keyCode : Keys.None);
 
             return tsmi;
+        }
+
+        internal static string FormatException(Exception ex)
+        {
+            var message = ex.Message;
+
+            if (ex is AggregateException)
+                (ex as AggregateException).Flatten().Handle(x =>
+                {
+                    message = string.Format("{0} {1}", message, x.Message).Trim();
+                    return true;
+                });
+
+            ex = ex.GetBaseException();
+
+            return string.Format("{0}{1}{2}",
+                !string.IsNullOrWhiteSpace(message) ?
+                    string.Format(KprResourceManager.Instance["{0}: '{1}' at {2}"], ex.GetType().Name, message, ex.TargetSite) :
+                        string.Format(KprResourceManager.Instance["{0} at {1}"], ex.GetType().Name, ex.TargetSite),
+                Environment.NewLine,
+                string.Join(
+                    Environment.NewLine,
+                    Environment.StackTrace.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                    .SkipWhile(x => !x.Contains("KeePassRDP"))
+                    .Skip(1)
+                    .TakeWhile(x => x.Contains("KeePassRDP")))).Trim();
+        }
+
+        private static int MulDiv(int number, int numerator, int denominator)
+        {
+            return (int)(((long)number * numerator + (denominator >> 1)) / denominator);
+        }
+
+        internal static int ShowErrorDialog(string strContent, string strMainInstruction, string strWindowTitle, VtdIcon vtdIcon, Form fParent, string strButton1, int iResult1, string strButton2, int iResult2)
+        {
+            var vistaTaskDialog = new VistaTaskDialog
+            {
+                CommandLinks = false
+            };
+
+            if (strContent != null)
+            {
+                vistaTaskDialog.Content = strContent;
+            }
+
+            if (strMainInstruction != null)
+            {
+                vistaTaskDialog.MainInstruction = strMainInstruction;
+            }
+
+            if (strWindowTitle != null)
+            {
+                vistaTaskDialog.WindowTitle = strWindowTitle;
+            }
+
+            vistaTaskDialog.SetIcon(vtdIcon);
+            var flag = false;
+
+            if (!string.IsNullOrEmpty(strButton1))
+            {
+                vistaTaskDialog.AddButton(iResult1, strButton1, null);
+                flag = true;
+            }
+
+            if (!string.IsNullOrEmpty(strButton2))
+            {
+                vistaTaskDialog.AddButton(iResult2, strButton2, null);
+                flag = true;
+            }
+
+            try
+            {
+                var mCfgField = vistaTaskDialog.GetType().GetField("m_cfg", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var mCfg = mCfgField.GetValue(vistaTaskDialog);
+
+                /*var dwFlags = mCfg.GetType().GetField("dwFlags", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+                dwFlags.SetValue(mCfg, ((int)dwFlags.GetValue(mCfg)) | 0x01000000); // TDF_SIZE_TO_CONTENT;*/
+
+                var baseUnitsX = 0;
+                var width = 450;
+                using (var g = Graphics.FromHwnd((fParent ?? Program.MainForm).Handle))
+                {
+                    var renderer = new VisualStyles.VisualStyleRenderer(VisualStyles.VisualStyleElement.Window.Dialog.Normal);
+                    var metrics = renderer.GetTextMetrics(g);
+                    baseUnitsX = metrics.AverageCharWidth;
+
+                    using (var sf = new StringFormat(StringFormat.GenericTypographic)
+                    {
+                        Alignment = StringAlignment.Near,
+                        LineAlignment = StringAlignment.Near,
+                        FormatFlags = StringFormatFlags.NoWrap,
+                        Trimming = StringTrimming.None,
+                        HotkeyPrefix = HotkeyPrefix.None
+                    })
+                        width = Math.Min(900, Math.Max(width, Size.Ceiling(g.MeasureString(strContent, SystemFonts.DialogFont, SizeF.Empty, sf)).Width + 32));
+                }
+
+                var cxWidth = mCfg.GetType().GetField("cxWidth", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+                cxWidth.SetValue(mCfg, Convert.ToUInt32(MulDiv(width, 4, baseUnitsX)));
+
+                mCfgField.SetValue(vistaTaskDialog, mCfg);
+            }
+            catch { }
+
+            if (!vistaTaskDialog.ShowDialog(fParent))
+            {
+                return -1;
+            }
+
+            if (!flag)
+            {
+                return 0;
+            }
+
+            return vistaTaskDialog.Result;
         }
 
         internal static bool CheckCredentialGuard()
@@ -319,11 +557,40 @@ namespace KeePassRDP.Utils
                 if (result != null)
                     return Array.Exists((uint[])result, x => x == 1);
             }
-            catch
-            {
-            }
+            catch { }
 
             return false;
+        }
+
+        internal static void ProtectProcessWithDacl(Process process = null)
+        {
+            var dispose = false;
+            if (process == null)
+            {
+                process = Process.GetCurrentProcess();
+                dispose = true;
+            }
+
+            try
+            {
+                var hProcess = process.Handle;
+                var dacl = NativeMethods.GetProcessSecurityDescriptor(hProcess);
+                for (var i = dacl.DiscretionaryAcl.Count - 1; i > 0; i--)
+                    dacl.DiscretionaryAcl.RemoveAce(i);
+                //dacl.DiscretionaryAcl.InsertAce(0, new CommonAce(AceFlags.None, AceQualifier.AccessDenied, (int)NativeMethods.ProcessAccessRights.PROCESS_ALL_ACCESS, new SecurityIdentifier(WellKnownSidType.WorldSid, null), false, null));
+                dacl.DiscretionaryAcl.InsertAce(0, new CommonAce(
+                    AceFlags.None,
+                    AceQualifier.AccessAllowed,
+                    (int)(NativeMethods.ProcessAccessRights.SYNCHRONIZE | NativeMethods.ProcessAccessRights.PROCESS_QUERY_LIMITED_INFORMATION | NativeMethods.ProcessAccessRights.PROCESS_TERMINATE),
+                    WindowsIdentity.GetCurrent(TokenAccessLevels.Query).User,
+                    false, null));
+                NativeMethods.SetProcessSecurityDescriptor(hProcess, dacl);
+            }
+            finally
+            {
+                if (dispose)
+                    process.Dispose();
+            }
         }
 
         /*internal enum OidGroup
@@ -473,7 +740,7 @@ namespace KeePassRDP.Utils
         private static extern int SHDefExtractIcon([MarshalAs(UnmanagedType.LPWStr)] string pszIconFile, int iIndex, int uFlags, out IntPtr phiconLarge, out IntPtr phiconSmall, uint nIconSize);
 
         [DllImport("User32.dll", EntryPoint = "DestroyIcon", SetLastError = false)]
-        private static extern int DestroyIcon(IntPtr hIcon);
+        internal static extern int DestroyIcon(IntPtr hIcon);
 
         /*[DllImport("Shell32.dll", EntryPoint = "SHCreateFileExtractIconW")]
         private static extern int SHCreateFileExtractIcon([In][MarshalAs(UnmanagedType.LPWStr)] string pszFile, [In] int dwFileAttributes, [In] Guid riid, [MarshalAs(UnmanagedType.IUnknown)] out object ppv);
@@ -528,7 +795,7 @@ namespace KeePassRDP.Utils
             IntPtr hLrgIcon;
             IntPtr hSmlIcon;
 
-            if (SHDefExtractIcon(filename, index, GIL_DONTCACHE, out hLrgIcon, out hSmlIcon, largeAndSmallSize) == -1)
+            if (SHDefExtractIcon(filename, index, GIL_DONTCACHE, out hLrgIcon, out hSmlIcon, largeAndSmallSize) != 0)
                 return null;
 
             /*object extractIcon;
@@ -544,22 +811,27 @@ namespace KeePassRDP.Utils
             if (handle == hSmlIcon && hLrgIcon != IntPtr.Zero)
                 DestroyIcon(hLrgIcon);
 
-            return Icon.FromHandle(handle);
+            Icon icon = null;
+            using (var tempIcon = Icon.FromHandle(handle))
+                icon = tempIcon.Clone() as Icon;
+            DestroyIcon(handle);
+
+            return icon;
         }
     }
 
     public static class ScrollbarUtil
     {
-        [DllImport("User32.dll", EntryPoint = "GetWindowLongW", SetLastError = false)]
-        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
-
-        private const int GWL_STYLE = -16;
         private const int WS_VSCROLL = 0x00200000;
         private const int WS_HSCROLL = 0x00100000;
 
         public static ScrollBars GetVisibleScrollbars(Control ctl)
         {
-            var wndStyle = GetWindowLong(ctl.Handle, GWL_STYLE);
+            if (!ctl.IsHandleCreated)
+                return ScrollBars.None;
+
+            var wndStylePtr = NativeMethods.GetWindowLongPtr(ctl.Handle, NativeMethods.GWL_STYLE);
+            var wndStyle = IntPtr.Size == 4 ? wndStylePtr.ToInt32() : wndStylePtr.ToInt64();
 
             if ((wndStyle & WS_HSCROLL) != 0)
                 return (wndStyle & WS_VSCROLL) != 0 ? ScrollBars.Both : ScrollBars.Horizontal;
@@ -578,9 +850,6 @@ namespace KeePassRDP.Utils
 
         [DllImport("User32.dll", EntryPoint = "CopyIcon", SetLastError = true)]
         private static extern IntPtr CopyIcon(IntPtr hIcon);
-
-        [DllImport("User32.dll", EntryPoint = "DestroyIcon", SetLastError = false)]
-        private static extern int DestroyIcon(IntPtr hIcon);
 
         [DllImport("Gdi32.dll", EntryPoint = "DeleteObject", SetLastError = false)]
         private static extern int DeleteObject(IntPtr hObject);
@@ -692,7 +961,7 @@ namespace KeePassRDP.Utils
                     }
 
                     if (hicon != IntPtr.Zero)
-                        DestroyIcon(hicon);
+                        IconUtil.DestroyIcon(hicon);
                     if (icInfo.hbmColor != IntPtr.Zero)
                         DeleteObject(icInfo.hbmColor);
                     if (icInfo.hbmMask != IntPtr.Zero)
@@ -705,7 +974,7 @@ namespace KeePassRDP.Utils
                 }
 
                 if (hicon != IntPtr.Zero)
-                    DestroyIcon(hicon);
+                    IconUtil.DestroyIcon(hicon);
                 if (icInfo.hbmColor != IntPtr.Zero)
                     DeleteObject(icInfo.hbmColor);
                 if (icInfo.hbmMask != IntPtr.Zero)

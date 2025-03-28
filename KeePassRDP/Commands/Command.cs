@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -40,12 +40,54 @@ namespace KeePassRDP.Commands
         private static readonly ConcurrentDictionary<string, bool> _fileExistsCache = new ConcurrentDictionary<string, bool>(2, 0);
         private static readonly ConcurrentDictionary<Type, ReadOnlyCollection<Tuple<PropertyInfo, CommandArgumentAttribute>>> _propertyCache = new ConcurrentDictionary<Type, ReadOnlyCollection<Tuple<PropertyInfo, CommandArgumentAttribute>>>(2, 0);
 
-        private readonly string _executable;
-        public string Executable { get { return _executable; } }
-
-        public Command(string executable)
+        internal static ICommand CreateInstance(string inputString)
         {
-            if (!_fileExistsCache.AddOrUpdate(executable, x => File.Exists(x), (x, y) => y ? y : File.Exists(x)))
+            var commandString = inputString.Split(new[] { ':' }, 2);
+            var typeName = commandString.FirstOrDefault();
+
+            if (IsKnownCommand(typeName))
+            {
+                var commandType = Type.GetType(string.Format("{0}.{1}", typeof(Command).Namespace, typeName));
+                var icommand = Activator.CreateInstance(commandType, new[] { commandString.Skip(1).FirstOrDefault() }) as ICommand;
+
+                if (icommand is CustomCommand)
+                    icommand = (icommand as CustomCommand).Command;
+
+                return icommand;
+            }
+
+            return null;
+        }
+
+        protected static bool IsKnownCommand(string typeName)
+        {
+            switch (typeName)
+            {
+                case "MstscCommand":
+                case "FreeRdpCommand":
+                case "CustomCommand":
+                    return true;
+            }
+
+            return false;
+        }
+
+        public virtual string Executable { get { return _executable; } }
+
+        protected readonly string _executable;
+
+        protected Command(string executable)
+        {
+            if (string.IsNullOrWhiteSpace(executable))
+                throw new ArgumentNullException("Command");
+
+            if (IsKnownCommand(executable))
+            {
+                _executable = string.Empty;
+                return;
+            }
+
+            if (!_fileExistsCache.AddOrUpdate(Path.GetFullPath(Environment.ExpandEnvironmentVariables(executable)), x => File.Exists(x), (x, y) => y ? y : File.Exists(x)))
                 throw new FileNotFoundException(executable);
 
             _executable = executable;
@@ -111,21 +153,8 @@ namespace KeePassRDP.Commands
 
     internal abstract class Command<T> : Command where T : new()
     {
-        public Command(string executable) : base(executable)
+        protected Command(string executable) : base(executable)
         {
         }
-
-        /*public T Extend(T input)
-        {
-            var extended = new T();
-            foreach (var prop in typeof(T)
-                .GetProperties(BindingFlags.Instance | BindingFlags.Public))
-            {
-                var value = prop.GetValue(input, null) ?? prop.GetValue(this, null);
-                if (value != null && (!(value is bool) || (bool)value == true))
-                    prop.SetValue(extended, value, null);
-            }
-            return extended;
-        }*/
     }
 }

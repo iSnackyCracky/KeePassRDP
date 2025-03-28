@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -24,6 +24,8 @@ namespace KeePassRDP.Generator
 {
     public partial class RdpFile
     {
+        private const string EmptyString = "";
+
         public enum KeyboardHooks
         {
             Local = 0,
@@ -184,10 +186,12 @@ namespace KeePassRDP.Generator
         [RdpSetting("allow font smoothing:i:0", Category = RdpSettingAttribute.SettingCategory.Display)]
         public bool AllowFontSmoothing { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("alternate full address:s:")]
         [RdpSignscope("Alternate Full Address")]
         public string AlternateFullAddress { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("alternate shell:s:")]
         [RdpSignscope("Alternate Shell")]
         public string AlternateShell { get; set; }
@@ -231,6 +235,7 @@ namespace KeePassRDP.Generator
         [RdpSetting("bitmapcachesize:i:1500", Category = RdpSettingAttribute.SettingCategory.Display)]
         public int Bitmapcachesize { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("camerastoredirect:s:", Category = RdpSettingAttribute.SettingCategory.Redirect)]
         public string Camerastoredirect { get; set; }
 
@@ -249,6 +254,7 @@ namespace KeePassRDP.Generator
         [RdpSetting("desktopheight:i:600", Category = RdpSettingAttribute.SettingCategory.Display)]
         public int Desktopheight { get; set; }
 
+        [DefaultValue(DesktopSizes.Size_640_480)]
         [RdpSetting("desktop size id:i:0", Category = RdpSettingAttribute.SettingCategory.Display)]
         public DesktopSizes DesktopSizeId { get; set; }
 
@@ -291,6 +297,7 @@ namespace KeePassRDP.Generator
         [RdpSetting("displayconnectionbar:i:1", Category = RdpSettingAttribute.SettingCategory.Display)]
         public bool Displayconnectionbar { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("domain:s:")]
         public string Domain { get; set; }
 
@@ -311,6 +318,7 @@ namespace KeePassRDP.Generator
         [RdpSetting("encode redirected video capture:i:1", Category = RdpSettingAttribute.SettingCategory.AudioVideo)]
         public bool EncodeRedirectedVideoCapture { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("full address:s:")]
         [RdpSignscope("Full Address")]
         public string FullAddress { get; set; }
@@ -320,6 +328,7 @@ namespace KeePassRDP.Generator
         [RdpSignscope("GatewayCredentialsSource")]
         public GatewayCredentialSources Gatewaycredentialssource { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("gatewayhostname:s:", Category = RdpSettingAttribute.SettingCategory.Network)]
         [RdpSignscope("GatewayHostname")]
         public string Gatewayhostname { get; set; }
@@ -347,6 +356,7 @@ namespace KeePassRDP.Generator
         [RdpSetting("networkautodetect:i:1", Category = RdpSettingAttribute.SettingCategory.Network)]
         public bool Networkautodetect { get; set; }
 
+        [DefaultValue(null)]
         [RdpSetting("password 51:b:")]
         public byte[] Password51 { get; set; }
 
@@ -414,6 +424,7 @@ namespace KeePassRDP.Generator
         [RdpSignscope("RedirectWebAuthn")]
         public bool Redirectwebauthn { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("remoteapplicationcmdline:s:", Category = RdpSettingAttribute.SettingCategory.RemoteApp)]
         [RdpSignscope("RemoteApplicationCmdLine")]
         public string Remoteapplicationcmdline { get; set; }
@@ -428,18 +439,22 @@ namespace KeePassRDP.Generator
         [RdpSignscope("RemoteApplicationExpandWorkingdir")]
         public bool Remoteapplicationexpandworkingdir { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("remoteapplicationfile:s:", Category = RdpSettingAttribute.SettingCategory.RemoteApp)]
         [RdpSignscope("RemoteApplicationFile")]
         public string Remoteapplicationfile { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("remoteapplicationfileextensions:s:", Category = RdpSettingAttribute.SettingCategory.RemoteApp)]
         [RdpSignscope("RemoteApplicationFileExtensions")]
         public string Remoteapplicationfileextensions { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("remoteapplicationguid:s:", Category = RdpSettingAttribute.SettingCategory.RemoteApp)]
         [RdpSignscope("RemoteApplicationGuid")]
         public string Remoteapplicationguid { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("remoteapplicationicon:s:", Category = RdpSettingAttribute.SettingCategory.RemoteApp)]
         [RdpSignscope("RemoteApplicationIcon")]
         public string Remoteapplicationicon { get; set; }
@@ -449,10 +464,12 @@ namespace KeePassRDP.Generator
         [RdpSignscope("RemoteApplicationMode")]
         public RemoteApplicationModes Remoteapplicationmode { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("remoteapplicationname:s:", Category = RdpSettingAttribute.SettingCategory.RemoteApp)]
         [RdpSignscope("RemoteApplicationName")]
         public string Remoteapplicationname { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("remoteapplicationprogram:s:", Category = RdpSettingAttribute.SettingCategory.RemoteApp)]
         [RdpSignscope("RemoteApplicationProgram")]
         public string Remoteapplicationprogram { get; set; }
@@ -461,6 +478,7 @@ namespace KeePassRDP.Generator
         [RdpSetting("screen mode id:i:2", Category = RdpSettingAttribute.SettingCategory.Display)]
         public ScreenModes ScreenModeId { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("selectedmonitors:s:", Category = RdpSettingAttribute.SettingCategory.Display)]
         public string Selectedmonitors { get; set; }
 
@@ -473,13 +491,16 @@ namespace KeePassRDP.Generator
         [RdpSetting("session bpp:i:32", Category = RdpSettingAttribute.SettingCategory.Display)]
         public SessionBpps SessionBpp { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("shell working directory:s:")]
         [RdpSignscope("Shell Working Directory")]
         public string ShellWorkingDirectory { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("signature:s:")]
         public string Signature { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("signscope:s:")]
         public string Signscope { get; set; }
 
@@ -501,6 +522,7 @@ namespace KeePassRDP.Generator
         [RdpSetting("use multimon:i:1", Category = RdpSettingAttribute.SettingCategory.Display)]
         public bool UseMultimon { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("username:s:")]
         public string Username { get; set; }
 
@@ -512,6 +534,7 @@ namespace KeePassRDP.Generator
         [RdpSetting("winposstr:s:0,3,0,0,800,600", Category = RdpSettingAttribute.SettingCategory.Display)]
         public string Winposstr { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("workspaceid:s:")]
         public string Workspaceid { get; set; }
 
@@ -541,6 +564,7 @@ namespace KeePassRDP.Generator
         [RdpSignscope("Use Redirection Server Name")]
         public bool UseRedirectionServerName { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("loadbalanceinfo:s:", Category = RdpSettingAttribute.SettingCategory.Network)]
         [RdpSignscope("LoadBalanceInfo")]
         public string Loadbalanceinfo { get; set; }
@@ -549,14 +573,17 @@ namespace KeePassRDP.Generator
         [RdpSignscope("RDGIsKDCProxy")]
         public bool Rdgiskdcproxy { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("kdcproxyname:s:", Category = RdpSettingAttribute.SettingCategory.Network)]
         [RdpSignscope("KDCProxyName")]
         public string Kdcproxyname { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("pcb:s:")]
         [RdpSignscope("PCB")]
         public string Pcb { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("support url:s:")]
         [RdpSignscope("Support URL")]
         public string SupportUrl { get; set; }
@@ -565,10 +592,12 @@ namespace KeePassRDP.Generator
         [RdpSignscope("Require pre-authentication")]
         public bool RequirePreAuthentication { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("pre-authentication server address:s:", Category = RdpSettingAttribute.SettingCategory.Authentication)]
         [RdpSignscope("Pre-authentication server address")]
         public string PreAuthenticationServerAddress { get; set; }
 
+        [DefaultValue(EmptyString)]
         [RdpSetting("eventloguploadaddress:s:")]
         [RdpSignscope("EventLogUploadAddress")]
         public string Eventloguploadaddress { get; set; }

@@ -1,0 +1,6 @@
+﻿<WixLocalization Culture="de-de" xmlns="http://wixtoolset.org/schemas/v4/wxl">
+	<String Id="InstallScopeDlgPerUser" Value="{\WixUI_Font_Emphasized}In &amp;benutzerdefinierten Ordner installieren."/>
+	<String Id="InstallScopeDlgPerUserDescription" Value="" />
+	<String Id="InstallScopeDlgPerMachine" Value="{\WixUI_Font_Emphasized}In KeePass &amp;Plugins Ordner installieren."/>
+	<String Id="InstallScopeDlgPerMachineDescription" Value="[INSTALLDIR]" />
+</WixLocalization>

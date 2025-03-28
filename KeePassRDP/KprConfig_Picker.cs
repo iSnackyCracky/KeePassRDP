@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -24,31 +24,45 @@ namespace KeePassRDP
 {
     public partial class KprConfig
     {
+        private bool _cachedCredPickerSecureDesktop = false;
+        private bool _cachedCredPickerSecureDesktopValue = Default.CredPickerSecureDesktop;
+        public bool CredPickerSecureDesktop
+        {
+            get
+            {
+                return BoolGetter(Key.CredPickerSecureDesktop, ref _cachedCredPickerSecureDesktop, ref _cachedCredPickerSecureDesktopValue, Default.CredPickerSecureDesktop);
+            }
+            set
+            {
+                BoolSetter(Key.CredPickerSecureDesktop, value, ref _cachedCredPickerSecureDesktop, ref _cachedCredPickerSecureDesktopValue, Default.CredPickerSecureDesktop);
+            }
+        }
+
         private bool _cachedCredPickerRememberSize = false;
-        private bool _cachedCredPickerRememberSizeValue = true;
+        private bool _cachedCredPickerRememberSizeValue = Default.CredPickerRememberSize;
         public bool CredPickerRememberSize
         {
             get
             {
-                return BoolGetter(CredPickerRememberSizeKey, ref _cachedCredPickerRememberSize, ref _cachedCredPickerRememberSizeValue, true);
+                return BoolGetter(Key.CredPickerRememberSize, ref _cachedCredPickerRememberSize, ref _cachedCredPickerRememberSizeValue, Default.CredPickerRememberSize);
             }
             set
             {
-                BoolSetter(CredPickerRememberSizeKey, value, ref _cachedCredPickerRememberSize, ref _cachedCredPickerRememberSizeValue, true);
+                BoolSetter(Key.CredPickerRememberSize, value, ref _cachedCredPickerRememberSize, ref _cachedCredPickerRememberSizeValue, Default.CredPickerRememberSize);
             }
         }
 
         private bool _cachedCredPickerRememberSortOrder = false;
-        private bool _cachedCredPickerRememberSortOrderValue = false;
+        private bool _cachedCredPickerRememberSortOrderValue = Default.CredPickerRememberSortOrder;
         public bool CredPickerRememberSortOrder
         {
             get
             {
-                return BoolGetter(CredPickerRememberSortOrderKey, ref _cachedCredPickerRememberSortOrder, ref _cachedCredPickerRememberSortOrderValue);
+                return BoolGetter(Key.CredPickerRememberSortOrder, ref _cachedCredPickerRememberSortOrder, ref _cachedCredPickerRememberSortOrderValue, Default.CredPickerRememberSortOrder);
             }
             set
             {
-                BoolSetter(CredPickerRememberSortOrderKey, value, ref _cachedCredPickerRememberSortOrder, ref _cachedCredPickerRememberSortOrderValue);
+                BoolSetter(Key.CredPickerRememberSortOrder, value, ref _cachedCredPickerRememberSortOrder, ref _cachedCredPickerRememberSortOrderValue, Default.CredPickerRememberSortOrder);
                 if (value == false)
                     CredPickerSortOrder = null;
             }
@@ -56,7 +70,7 @@ namespace KeePassRDP
 
         private bool _cachedCredPickerSortOrder = false;
         private KprListSorter _cachedCredPickerSortOrderValue = null;
-        private KprListSorter _defaultCredPickerSortOrderValue = null;
+        private KprListSorter _defaultCredPickerSortOrderValue = Default.CredPickerSortOrder;
         public KprListSorter CredPickerSortOrder
         {
             get
@@ -67,7 +81,7 @@ namespace KeePassRDP
                 if (!CredPickerRememberSortOrder)
                     return CredPickerSortOrder = null;
 
-                var serialized = _config.GetString(CredPickerSortOrderKey, string.Empty);
+                var serialized = _config.GetString(Key.CredPickerSortOrder, string.Empty);
                 if (string.IsNullOrEmpty(serialized))
                 {
                     _cachedCredPickerSortOrder = true;
@@ -89,8 +103,8 @@ namespace KeePassRDP
 
                 if (!CredPickerRememberSortOrder)
                 {
-                    if (_config.GetString(CredPickerSortOrderKey) != null)
-                        _config.SetString(CredPickerSortOrderKey, null);
+                    if (_config.GetString(Key.CredPickerSortOrder) != null)
+                        _config.SetString(Key.CredPickerSortOrder, null);
                     _cachedCredPickerSortOrder = true;
                     _defaultCredPickerSortOrderValue = _cachedCredPickerSortOrderValue = null;
                     return;
@@ -101,8 +115,8 @@ namespace KeePassRDP
 
                 if (value == null || (/*value.Column == "Title" &&*/ value.SortOrder == System.Windows.Forms.SortOrder.None))
                 {
-                    if (_config.GetString(CredPickerSortOrderKey) != null)
-                        _config.SetString(CredPickerSortOrderKey, null);
+                    if (_config.GetString(Key.CredPickerSortOrder) != null)
+                        _config.SetString(Key.CredPickerSortOrder, null);
                     _defaultCredPickerSortOrderValue = _cachedCredPickerSortOrderValue = null;
                     return;
                 }
@@ -118,79 +132,93 @@ namespace KeePassRDP
 
                 var serialized = value.Serialize();
                 if (!string.IsNullOrEmpty(serialized))
-                    _config.SetString(CredPickerSortOrderKey, serialized);
-                else if (_config.GetString(CredPickerSortOrderKey) != null)
-                    _config.SetString(CredPickerSortOrderKey, null);
+                    _config.SetString(Key.CredPickerSortOrder, serialized);
+                else if (_config.GetString(Key.CredPickerSortOrder) != null)
+                    _config.SetString(Key.CredPickerSortOrder, null);
             }
         }
 
         private bool _cachedCredPickerWidth = false;
-        private ulong _cachedCredPickerWidthValue = 1150UL;
+        private ulong _cachedCredPickerWidthValue = Default.CredPickerWidth;
         public int CredPickerWidth
         {
             get
             {
-                return (int)UlongGetter(CredPickerWidthKey, ref _cachedCredPickerWidth, ref _cachedCredPickerWidthValue, 1150UL);
+                return (int)UlongGetter(Key.CredPickerWidth, ref _cachedCredPickerWidth, ref _cachedCredPickerWidthValue, Default.CredPickerWidth);
             }
             set
             {
-                UlongSetter(CredPickerWidthKey, (ulong)value, ref _cachedCredPickerWidth, ref _cachedCredPickerWidthValue, 1150UL);
+                UlongSetter(Key.CredPickerWidth, (ulong)value, ref _cachedCredPickerWidth, ref _cachedCredPickerWidthValue, Default.CredPickerWidth);
             }
         }
 
         private bool _cachedCredPickerHeight = false;
-        private ulong _cachedCredPickerHeightValue = 500UL;
+        private ulong _cachedCredPickerHeightValue = Default.CredPickerHeight;
         public int CredPickerHeight
         {
             get
             {
-                return (int)UlongGetter(CredPickerHeightKey, ref _cachedCredPickerHeight, ref _cachedCredPickerHeightValue, 500UL);
+                return (int)UlongGetter(Key.CredPickerHeight, ref _cachedCredPickerHeight, ref _cachedCredPickerHeightValue, Default.CredPickerHeight);
             }
             set
             {
-                UlongSetter(CredPickerHeightKey, (ulong)value, ref _cachedCredPickerHeight, ref _cachedCredPickerHeightValue, 500UL);
+                UlongSetter(Key.CredPickerHeight, (ulong)value, ref _cachedCredPickerHeight, ref _cachedCredPickerHeightValue, Default.CredPickerHeight);
             }
         }
 
         private bool _cachedCredPickerCustomGroup = false;
-        private string _cachedCredPickerCustomGroupValue = Util.DefaultTriggerGroup;
+        private string _cachedCredPickerCustomGroupValue = Default.CredPickerCustomGroup;
         public string CredPickerCustomGroup
         {
             get
             {
-                return StringGetter(CredPickerCustomGroupKey, ref _cachedCredPickerCustomGroup, ref _cachedCredPickerCustomGroupValue, Util.DefaultTriggerGroup);
+                return StringGetter(Key.CredPickerCustomGroup, ref _cachedCredPickerCustomGroup, ref _cachedCredPickerCustomGroupValue, Default.CredPickerCustomGroup);
             }
             set
             {
-                StringSetter(CredPickerCustomGroupKey, value, ref _cachedCredPickerCustomGroup, ref _cachedCredPickerCustomGroupValue, string.IsNullOrWhiteSpace(value) ? value : Util.DefaultTriggerGroup);
+                StringSetter(Key.CredPickerCustomGroup, !string.IsNullOrWhiteSpace(value) ? value : Default.CredPickerCustomGroup, ref _cachedCredPickerCustomGroup, ref _cachedCredPickerCustomGroupValue, Default.CredPickerCustomGroup);
+            }
+        }
+
+        private bool _cachedCredPickerTriggerRecursive = false;
+        private bool _cachedCredPickerTriggerRecursiveValue = Default.CredPickerTriggerRecursive;
+        public bool CredPickerTriggerRecursive
+        {
+            get
+            {
+                return BoolGetter(Key.CredPickerTriggerRecursive, ref _cachedCredPickerTriggerRecursive, ref _cachedCredPickerTriggerRecursiveValue, Default.CredPickerTriggerRecursive);
+            }
+            set
+            {
+                BoolSetter(Key.CredPickerTriggerRecursive, value, ref _cachedCredPickerTriggerRecursive, ref _cachedCredPickerTriggerRecursiveValue, Default.CredPickerTriggerRecursive);
             }
         }
 
         private bool _cachedKeePassShowResolvedReferences = false;
-        private bool _cachedKeePassShowResolvedReferencesValue = true;
+        private bool _cachedKeePassShowResolvedReferencesValue = Default.KeePassShowResolvedReferences;
         public bool KeePassShowResolvedReferences
         {
             get
             {
-                return BoolGetter(KeePassShowResolvedReferencesKey, ref _cachedKeePassShowResolvedReferences, ref _cachedKeePassShowResolvedReferencesValue, true);
+                return BoolGetter(Key.KeePassShowResolvedReferences, ref _cachedKeePassShowResolvedReferences, ref _cachedKeePassShowResolvedReferencesValue, Default.KeePassShowResolvedReferences);
             }
             set
             {
-                BoolSetter(KeePassShowResolvedReferencesKey, value, ref _cachedKeePassShowResolvedReferences, ref _cachedKeePassShowResolvedReferencesValue, true);
+                BoolSetter(Key.KeePassShowResolvedReferences, value, ref _cachedKeePassShowResolvedReferences, ref _cachedKeePassShowResolvedReferencesValue, Default.KeePassShowResolvedReferences);
             }
         }
 
         private bool _cachedCredPickerShowInGroups = false;
-        private bool _cachedCredPickerShowInGroupsValue = true;
+        private bool _cachedCredPickerShowInGroupsValue = Default.CredPickerShowInGroups;
         public bool CredPickerShowInGroups
         {
             get
             {
-                return BoolGetter(CredPickerShowInGroupsKey, ref _cachedCredPickerShowInGroups, ref _cachedCredPickerShowInGroupsValue, true);
+                return BoolGetter(Key.CredPickerShowInGroups, ref _cachedCredPickerShowInGroups, ref _cachedCredPickerShowInGroupsValue, Default.CredPickerShowInGroups);
             }
             set
             {
-                BoolSetter(CredPickerShowInGroupsKey, value, ref _cachedCredPickerShowInGroups, ref _cachedCredPickerShowInGroupsValue, true);
+                BoolSetter(Key.CredPickerShowInGroups, value, ref _cachedCredPickerShowInGroups, ref _cachedCredPickerShowInGroupsValue, Default.CredPickerShowInGroups);
                 // Reset sort order when columns change.
                 if (!value &&
                     CredPickerRememberSortOrder &&
@@ -201,58 +229,58 @@ namespace KeePassRDP
         }
 
         private bool _cachedCredPickerIncludeSelected = false;
-        private bool _cachedCredPickerIncludeSelectedValue = false;
+        private bool _cachedCredPickerIncludeSelectedValue = Default.CredPickerIncludeSelected;
         public bool CredPickerIncludeSelected
         {
             get
             {
-                return BoolGetter(CredPickerIncludeSelectedKey, ref _cachedCredPickerIncludeSelected, ref _cachedCredPickerIncludeSelectedValue);
+                return BoolGetter(Key.CredPickerIncludeSelected, ref _cachedCredPickerIncludeSelected, ref _cachedCredPickerIncludeSelectedValue, Default.CredPickerIncludeSelected);
             }
             set
             {
-                BoolSetter(CredPickerIncludeSelectedKey, value, ref _cachedCredPickerIncludeSelected, ref _cachedCredPickerIncludeSelectedValue);
+                BoolSetter(Key.CredPickerIncludeSelected, value, ref _cachedCredPickerIncludeSelected, ref _cachedCredPickerIncludeSelectedValue, Default.CredPickerIncludeSelected);
             }
         }
 
         private bool _cachedCredPickerLargeRows = false;
-        private bool _cachedCredPickerLargeRowsValue = false;
+        private bool _cachedCredPickerLargeRowsValue = Default.CredPickerLargeRows;
         public bool CredPickerLargeRows
         {
             get
             {
-                return BoolGetter(CredPickerLargeRowsKey, ref _cachedCredPickerLargeRows, ref _cachedCredPickerLargeRowsValue);
+                return BoolGetter(Key.CredPickerLargeRows, ref _cachedCredPickerLargeRows, ref _cachedCredPickerLargeRowsValue, Default.CredPickerLargeRows);
             }
             set
             {
-                BoolSetter(CredPickerLargeRowsKey, value, ref _cachedCredPickerLargeRows, ref _cachedCredPickerLargeRowsValue);
+                BoolSetter(Key.CredPickerLargeRows, value, ref _cachedCredPickerLargeRows, ref _cachedCredPickerLargeRowsValue, Default.CredPickerLargeRows);
             }
         }
 
         private bool _cachedCredPickerRegExPre = false;
-        private string _cachedCredPickerRegExPreValue = Util.DefaultCredPickRegExPre;
+        private string _cachedCredPickerRegExPreValue = Default.CredPickerRegExPre;
         public string CredPickerRegExPre
         {
             get
             {
-                return StringGetter(CredPickerRegExPreKey, ref _cachedCredPickerRegExPre, ref _cachedCredPickerRegExPreValue, Util.DefaultCredPickRegExPre);
+                return StringGetter(Key.CredPickerRegExPre, ref _cachedCredPickerRegExPre, ref _cachedCredPickerRegExPreValue, Default.CredPickerRegExPre);
             }
             set
             {
-                StringSetter(CredPickerRegExPreKey, value, ref _cachedCredPickerRegExPre, ref _cachedCredPickerRegExPreValue, Util.DefaultCredPickRegExPre);
+                StringSetter(Key.CredPickerRegExPre, value, ref _cachedCredPickerRegExPre, ref _cachedCredPickerRegExPreValue, Default.CredPickerRegExPre);
             }
         }
 
         private bool _cachedCredPickerRegExPost = false;
-        private string _cachedCredPickerRegExPostValue = Util.DefaultCredPickRegExPre;
+        private string _cachedCredPickerRegExPostValue = Default.CredPickerRegExPost;
         public string CredPickerRegExPost
         {
             get
             {
-                return StringGetter(CredPickerRegExPostKey, ref _cachedCredPickerRegExPost, ref _cachedCredPickerRegExPostValue, Util.DefaultCredPickRegExPost);
+                return StringGetter(Key.CredPickerRegExPost, ref _cachedCredPickerRegExPost, ref _cachedCredPickerRegExPostValue, Default.CredPickerRegExPost);
             }
             set
             {
-                StringSetter(CredPickerRegExPostKey, value, ref _cachedCredPickerRegExPost, ref _cachedCredPickerRegExPostValue, Util.DefaultCredPickRegExPost);
+                StringSetter(Key.CredPickerRegExPost, value, ref _cachedCredPickerRegExPost, ref _cachedCredPickerRegExPostValue, Default.CredPickerRegExPost);
             }
         }
     }

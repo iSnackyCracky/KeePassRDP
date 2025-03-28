@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -41,14 +41,10 @@ using System.Xml;
 
 namespace KeePassRDP
 {
-    public partial class KprCredentialPickerForm : Form
+    public partial class KprCredentialPickerForm : Form, IGwmWindow
     {
         private static readonly Lazy<IComparer<string>> _comparer = new Lazy<IComparer<string>>(
             () => new StrCmpLogicalWComparer(),
-            LazyThreadSafetyMode.ExecutionAndPublication);
-
-        private static readonly Lazy<Icon> _icon = new Lazy<Icon>(
-            () => IconUtil.ExtractIcon(KeePassRDPExt.MstscPath, 0, UIUtil.GetIconSize().Height),
             LazyThreadSafetyMode.ExecutionAndPublication);
 
         private class StrCmpLogicalWComparer : IComparer<string>
@@ -65,13 +61,7 @@ namespace KeePassRDP
             Large
         }
 
-        private readonly KprConfig _config;
-        private readonly IPluginHost _host;
-        private readonly string _defaultTitle;
-
-        private Font _font;
-        private RowHeight _currentRowHeight;
-        private Dictionary<PwUuid, int> _iconCache;
+        public bool CanCloseWithoutDataLoss { get { return true; } }
 
         /// <summary>
         /// <see cref="IEnumerable{T}"/> with selectable entries.
@@ -81,23 +71,32 @@ namespace KeePassRDP
         /// <summary>
         /// <see cref="PwEntry"/> that contains the URL for the connection.
         /// </summary>
-        public PwEntry ConnPE { private get; set; }
+        public PwEntry ConnPwEntry { private get; set; }
 
         /// <summary>
-        /// <see cref="PwEntry"/> created for the connection (URL from <see cref="ConnPE"/>, username and password from selected <see cref="RdpAccountEntries"/>).
+        /// <see cref="PwUuid"/> from the selected entry of <see cref="RdpAccountEntries"/>.
         /// </summary>
-        public PwEntry ReturnPE { get; private set; }
+        public PwUuid ReturnUuid { get; private set; }
+
+        private readonly KprConfig _config;
+        private readonly IPluginHost _host;
+        private readonly string _defaultTitle;
+
+        private Font _font;
+        private Font _lastFont;
+        private RowHeight _currentRowHeight;
+        private Dictionary<PwUuid, int> _iconCache;
 
         public KprCredentialPickerForm(KprConfig config, IPluginHost host)
         {
             _config = config;
             _host = host;
 
-            InitializeComponent();
-
             RdpAccountEntries = null;
-            ConnPE = ReturnPE = null;
+            ConnPwEntry = null;
+            ReturnUuid = null;
 
+            InitializeComponent();
             SuspendLayout();
 
             KprResourceManager.Instance.TranslateMany(
@@ -117,20 +116,25 @@ namespace KeePassRDP
             columnUserName.Text = KprResourceManager.Instance[columnUserName.Text];
             columnNotes.Text = KprResourceManager.Instance[columnNotes.Text];
 
-            Util.SetDoubleBuffered(tblCredentialPickerForm);
-            Util.SetDoubleBuffered(lvEntries);
+            Util.EnableDoubleBuffered(
+                tblCredentialPickerForm,
+                lvEntries
+            );
 
-            Icon = _icon.Value;
+            lvEntries.HandleCreated += lvEntries_HandleCreated;
 
             _iconCache = _host.Database != null && _host.Database.CustomIcons != null && _host.Database.CustomIcons.Count > 0 ?
                 _host.Database.CustomIcons.ToDictionary(x => x.Uuid, x => _host.Database.CustomIcons.IndexOf(x)) :
                 new Dictionary<PwUuid, int>();
 
-            var m_lvEntries = host.MainWindow.Controls.Find("m_lvEntries", true)[0] as CustomListViewEx;
-            var lastFont = m_lvEntries.Font;
+            var m_lvEntries = host.MainWindow.Controls.Find("m_lvEntries", true).FirstOrDefault() as CustomListViewEx;
 
-            lvEntries.Font = (Font)lastFont.Clone();
-            lvEntries.SmallImageList = m_lvEntries.SmallImageList;
+            if (m_lvEntries != null)
+            {
+                _lastFont = m_lvEntries.Font;
+                lvEntries.Font = (Font)_lastFont.Clone();
+                lvEntries.SmallImageList = m_lvEntries.SmallImageList;
+            }
 
             _font = lvEntries.Font;
             _currentRowHeight = RowHeight.Default;
@@ -140,39 +144,46 @@ namespace KeePassRDP
 
             // Keep font in sync with KeePass main form.
             // Keep image list in sync with KeePass main form.
-            host.MainWindow.UIStateUpdated += (s, e) =>
-            {
-                if (m_lvEntries.Font != lastFont)
-                {
-                    var oldFont = lvEntries.Font;
-                    lvEntries.Font = (Font)(lastFont = m_lvEntries.Font).Clone();
-
-                    if (oldFont != _font)
-                        oldFont.Dispose();
-                    _font.Dispose();
-
-                    _font = lvEntries.Font;
-                    SetRowHeight(_currentRowHeight, true);
-                }
-
-                if (m_lvEntries.SmallImageList != lvEntries.SmallImageList)
-                {
-                    lvEntries.SmallImageList = m_lvEntries.SmallImageList;
-                    _iconCache = _host.Database != null && _host.Database.CustomIcons != null && _host.Database.CustomIcons.Count > 0 ?
-                        _host.Database.CustomIcons.ToDictionary(x => x.Uuid, x => _host.Database.CustomIcons.IndexOf(x)) :
-                        new Dictionary<PwUuid, int>();
-                }
-            };
+            host.MainWindow.UIStateUpdated += KprCredentialPickerForm_UIStateUpdated;
 
             ResumeLayout(false);
         }
 
-        public new void Dispose()
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
         {
-            if (lvEntries.Font != _font)
-                _font.Dispose();
-            lvEntries.SmallImageList = null;
-            base.Dispose();
+            if (disposing)
+            {
+                if (components != null)
+                {
+                    components.Dispose();
+                    components = null;
+                }
+
+                _host.MainWindow.UIStateUpdated -= KprCredentialPickerForm_UIStateUpdated;
+
+                if (lvEntries.Font != _font)
+                    _font.Dispose();
+                lvEntries.SmallImageList = null;
+                lvEntries.HandleCreated -= lvEntries_HandleCreated;
+            }
+
+            base.Dispose(disposing);
+        }
+
+        public new DialogResult ShowDialog(IWin32Window owner)
+        {
+            var control = owner as Control;
+            if (control != null && control.InvokeRequired)
+                ToolStripManager.Renderer = (ToolStripRenderer)control.Invoke(new Func<object>(() =>
+                {
+                    return ToolStripManager.Renderer;
+                }));
+
+            return base.ShowDialog(owner);
         }
 
         /// <summary>
@@ -185,7 +196,8 @@ namespace KeePassRDP
             var col = lvEntries.Columns.ContainsKey("UserName") ? lvEntries.Columns["UserName"].Index : -1;
             if (col >= 0)
                 foreach (ListViewItem item in lvEntries.Items)
-                    MemoryUtil.SecureZeroMemory(item.SubItems[col].Text);
+                    if (item.SubItems.Count >= col && !string.IsNullOrEmpty(item.SubItems[col].Text))
+                        MemoryUtil.SecureZeroMemory(item.SubItems[col].Text);
             lvEntries.Items.Clear();
             lvEntries.Groups.Clear();
             lvEntries.EndUpdate();
@@ -198,7 +210,13 @@ namespace KeePassRDP
         {
             Clear();
             RdpAccountEntries = null;
-            ConnPE = ReturnPE = null;
+            ConnPwEntry = null;
+            ReturnUuid = null;
+            Icon = null;
+            Hide();
+            DestroyHandle();
+            if (Container != null)
+                Container.Remove(this);
         }
 
         /// <summary>
@@ -232,7 +250,27 @@ namespace KeePassRDP
                     }
                     break;
             }
-            lvEntries.Invalidate();
+
+            if (Visible)
+                lvEntries.Invalidate();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+
+            if (_config.CredPickerSecureDesktop)
+                NativeMethods.SetWindowDisplayAffinity(Handle, NativeMethods.WDA_EXCLUDEFROMCAPTURE);
+        }
+
+        private void lvEntries_HandleCreated(object sender, EventArgs e)
+        {
+            try
+            {
+                if (UIUtil.VistaStyleListsSupported)
+                    UIUtil.SetExplorerTheme(lvEntries.Handle);
+            }
+            catch { }
         }
 
         private void KprCredentialPickerForm_Load(object sender, EventArgs e)
@@ -244,24 +282,72 @@ namespace KeePassRDP
             UseWaitCursor = true;
             SuspendLayout();
 
-            // Add path of current proccessed group to window title.
-            Text += (Util.InRdpSubgroup(ConnPE) ? ConnPE.ParentGroup.ParentGroup : ConnPE.ParentGroup).GetFullPath(Util.GroupSeperator, false);
+            var pwEntry = ConnPwEntry;
+            if (pwEntry != null)
+            {
+                var kprCpcg = _config.CredPickerCustomGroup;
+                var kprCptr = _config.CredPickerTriggerRecursive;
+                var titleGroup = pwEntry.ParentGroup;
+                if (Util.InRdpSubgroup(pwEntry, kprCpcg, kprCptr))
+                {
+                    var rdpGroup = titleGroup;
+                    var triggerGroup = !string.IsNullOrWhiteSpace(kprCpcg) ? kprCpcg : Util.DefaultTriggerGroup;
+                    while (rdpGroup != null && !string.Equals(rdpGroup.Name, triggerGroup, StringComparison.Ordinal))
+                        rdpGroup = rdpGroup.ParentGroup;
+                    if (rdpGroup != null)
+                        titleGroup = rdpGroup.ParentGroup;
+                }
+
+                // Add path of parent group to window title.
+                var title = titleGroup != null ? titleGroup.GetFullPath(Util.GroupSeperator, false) : string.Empty;
+
+                // Add title of current entry to window title.
+                var connPwEntryTitle = pwEntry.Strings.ReadSafe(PwDefs.TitleField);
+                if (string.IsNullOrWhiteSpace(connPwEntryTitle))
+                    connPwEntryTitle = pwEntry.Strings.ReadSafe(PwDefs.UrlField);
+                if (!string.IsNullOrWhiteSpace(connPwEntryTitle))
+                {
+                    connPwEntryTitle = SprEngine.Compile(connPwEntryTitle, new SprContext(pwEntry, _host.Database, SprCompileFlags.Deref)
+                    {
+                        ForcePlainTextPasswords = false
+                    });
+                    if (!string.IsNullOrWhiteSpace(connPwEntryTitle))
+                        title += string.Format("{0}{1}", Util.GroupSeperator, connPwEntryTitle.Trim());
+                }
+
+                Text += title;
+            }
 
             GlobalWindowManager.AddWindow(this);
 
-            if (UIUtil.VistaStyleListsSupported)
-                UIUtil.SetExplorerTheme(lvEntries.Handle);
-            UIUtil.SetFocus(lvEntries, this);
+            UIUtil.SetFocus(lvEntries, this, true);
 
             lvEntries.SuspendLayout();
             lvEntries.ShowGroups = _config.CredPickerShowInGroups;
             lvEntries.ListViewItemSorter = _config.CredPickerSortOrder;
             lvEntries.ResumeLayout(false);
 
-            CenterToParent();
+            if (_config.CredPickerSecureDesktop)
+                CenterToScreen();
+            else
+                CenterToParent();
             LoadListEntries();
 
             MessageFilter.ListViewGroupHeaderClickHandler.Enable(true);
+        }
+
+        private void KprCredentialPickerForm_Shown(object sender, EventArgs e)
+        {
+            Activate();
+            KprCredentialPickerForm_Activated(null, EventArgs.Empty);
+        }
+
+        private void KprCredentialPickerForm_Activated(object sender, EventArgs e)
+        {
+            BringToFront();
+
+            UIUtil.SetFocus(lvEntries, this, true);
+            UIUtil.SetFocusedItem(lvEntries, lvEntries.SelectedItems.OfType<ListViewItem>().LastOrDefault() ?? lvEntries.Items.OfType<ListViewItem>().FirstOrDefault(), true);
         }
 
         private void KprCredentialPickerForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -276,6 +362,35 @@ namespace KeePassRDP
         {
             GlobalWindowManager.RemoveWindow(this);
             Text = _defaultTitle;
+        }
+
+        private void KprCredentialPickerForm_UIStateUpdated(object sender, EventArgs e)
+        {
+            var m_lvEntries = _host.MainWindow.Controls.Find("m_lvEntries", true).FirstOrDefault() as CustomListViewEx;
+
+            if (m_lvEntries == null)
+                return;
+
+            if (m_lvEntries.Font != _lastFont)
+            {
+                var oldFont = lvEntries.Font;
+                lvEntries.Font = (Font)(_lastFont = m_lvEntries.Font).Clone();
+
+                if (oldFont != _font)
+                    oldFont.Dispose();
+                _font.Dispose();
+
+                _font = lvEntries.Font;
+                SetRowHeight(_currentRowHeight, true);
+            }
+
+            if (m_lvEntries.SmallImageList != lvEntries.SmallImageList)
+            {
+                lvEntries.SmallImageList = m_lvEntries.SmallImageList;
+                _iconCache = _host.Database != null && _host.Database.CustomIcons != null && _host.Database.CustomIcons.Count > 0 ?
+                    _host.Database.CustomIcons.ToDictionary(x => x.Uuid, x => _host.Database.CustomIcons.IndexOf(x)) :
+                    new Dictionary<PwUuid, int>();
+            }
         }
 
         private void LoadListEntries()
@@ -297,17 +412,12 @@ namespace KeePassRDP
             if (_config.CredPickerRememberSortOrder)
                 _config.CredPickerSortOrder = lvEntries.ListViewItemSorter as KprListSorter;
 
-            try
-            {
-                ReturnPE = RdpAccountEntries.First(account =>
-                {
-                    return account.Uuid == (PwUuid)lvEntries.SelectedItems[0].Tag;
-                });
-            }
-            catch
+            if (lvEntries.SelectedItems.Count != 1)
             {
                 VistaTaskDialog.ShowMessageBoxEx(
-                    KprResourceManager.Instance["Please select a credential from the list."],
+                    lvEntries.SelectedItems.Count > 1 ?
+                        KprResourceManager.Instance["Please select exactly one credential from the list."] :
+                        KprResourceManager.Instance["Please select a credential from the list."],
                     null,
                     Util.KeePassRDP,
                     VtdIcon.Information,
@@ -315,6 +425,8 @@ namespace KeePassRDP
                     null, 0, null, 0);
                 return false;
             }
+
+            ReturnUuid = (PwUuid)lvEntries.SelectedItems[0].Tag;
 
             return true;
         }
@@ -364,8 +476,11 @@ namespace KeePassRDP
             listSorter.Column = sortOrder != SortOrder.None ? lvEntries.Columns[e.Column].Name : lvEntries.Columns[0].Name;
             listSorter.SortOrder = sortOrder;
 
-            lvEntries.Sort();
-            UIUtil.SetSortIcon(lvEntries, lvEntries.Columns[listSorter.Column].Index, listSorter.SortOrder);
+            Task.Factory.FromAsync(BeginInvoke(new Action(() =>
+            {
+                lvEntries.Sort();
+                UIUtil.SetSortIcon(lvEntries, lvEntries.Columns[listSorter.Column].Index, listSorter.SortOrder);
+            })), endInvoke => EndInvoke(endInvoke), TaskCreationOptions.AttachedToParent, TaskScheduler.Default);
         }
 
         private void lvEntries_KeyDown(object sender, KeyEventArgs e)
@@ -373,13 +488,14 @@ namespace KeePassRDP
             if (lvEntries.UseWaitCursor)
                 return;
 
-            var lvi = lvEntries.FocusedItem ?? lvEntries.SelectedItems[0];
+            var lvi = lvEntries.FocusedItem ?? lvEntries.SelectedItems.OfType<ListViewItem>().FirstOrDefault();
 
             if (lvi == null)
                 return;
 
             int nextIndex;
 
+            lvEntries.BeginUpdate();
             switch (e.KeyCode)
             {
                 case Keys.Down:
@@ -387,7 +503,7 @@ namespace KeePassRDP
                     if (nextIndex >= lvEntries.Items.Count)
                         nextIndex = 0;
                     lvi.Focused = lvi.Selected = false;
-                    lvi = lvEntries.Items.Cast<ListViewItem>().Single(x => x.Index == nextIndex);
+                    lvi = lvEntries.Items.OfType<ListViewItem>().Single(x => x.Index == nextIndex);
                     lvi.Focused = lvi.Selected = true;
                     lvEntries.EnsureVisible(nextIndex);
                     e.Handled = e.SuppressKeyPress = true;
@@ -397,12 +513,13 @@ namespace KeePassRDP
                     if (nextIndex < 0)
                         nextIndex = lvEntries.Items.Count - 1;
                     lvi.Focused = lvi.Selected = false;
-                    lvi = lvEntries.Items.Cast<ListViewItem>().Single(x => x.Index == nextIndex);
+                    lvi = lvEntries.Items.OfType<ListViewItem>().Single(x => x.Index == nextIndex);
                     lvi.Focused = lvi.Selected = true;
                     lvEntries.EnsureVisible(nextIndex);
                     e.Handled = e.SuppressKeyPress = true;
                     break;
             }
+            lvEntries.EndUpdate();
         }
 
         private void lvEntries_DrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
@@ -416,11 +533,10 @@ namespace KeePassRDP
                 return;
             }
 
-            e.DrawBackground();
-
             TextRenderer.DrawText(
                 e.Graphics,
-                e.Header.Text, _font ?? SystemFonts.DefaultFont,
+                e.Header.Text,
+                _font ?? SystemFonts.DefaultFont,
                 new Rectangle(new Point(e.Bounds.X + 6, e.Bounds.Y + 3), new Size(e.Bounds.Width - 12, e.Bounds.Height - 6)),
                 Color.Black,
                 TextFormatFlags.EndEllipsis |
@@ -446,6 +562,107 @@ namespace KeePassRDP
                 return;
 
             e.DrawDefault = true;
+        }
+
+        private volatile bool _lvEntriesResizing = false;
+        private void lvEntries_SizeChanged(object sender, EventArgs e)
+        {
+            if (_lvEntriesResizing || (lvEntries.UseWaitCursor && sender != null))
+                return;
+
+            _lvEntriesResizing = true;
+
+            var columnsCount = lvEntries.Columns.Count - 1;
+
+            if (columnsCount >= 0)
+            {
+                var wasActiveControl = ActiveControl == lvEntries;
+                lvEntries.Visible = false;
+                lvEntries.SuspendLayout();
+                lvEntries.BeginUpdate();
+
+                var oldFont = lvEntries.Font;
+                if (_currentRowHeight == RowHeight.Large)
+                    lvEntries.Font = _font;
+
+                if (sender == null)
+                {
+                    if (lvEntries.Items.Count > 0)
+                    {
+                        lvEntries.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
+                        var minWidths = lvEntries.Columns.OfType<ColumnHeader>().Select(x => x.Width).ToArray();
+
+                        lvEntries.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
+
+                        for (var i = columnsCount; i >= 0; i--)
+                        {
+                            var width = lvEntries.Columns[i].Width;
+                            if (width > 0 && width < minWidths[i])
+                                lvEntries.Columns[i].Width = minWidths[i];
+                        }
+                    }
+                    else
+                        lvEntries.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
+
+                    lvEntries.Columns[columnsCount].Width = -2;
+                }
+
+                var emptyNotes = lvEntries.Items.OfType<ListViewItem>().All(x => string.IsNullOrEmpty(x.SubItems[columnNotes.Index].Text));
+
+                lvEntries.Columns.Add(string.Empty, 0);
+
+                var column = lvEntries.Columns[columnsCount];
+                column.AutoResize(ColumnHeaderAutoResizeStyle.HeaderSize);
+                var minWidth = column.Width;
+                column.AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                column.Width = Math.Max(minWidth, column.Width);
+
+                lvEntries.Columns.RemoveAt(lvEntries.Columns.Count - 1);
+
+                if (emptyNotes)
+                    lvEntries.Columns[columnsCount].Width = 0;
+
+                column = lvEntries.Columns[1];
+                column.AutoResize(ColumnHeaderAutoResizeStyle.HeaderSize);
+                minWidth = column.Width;
+                column.AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                var oldWidth = Math.Max(minWidth, column.Width);
+                var allWidth = lvEntries.Columns.OfType<ColumnHeader>().Sum(x => x.Width);
+                column.Width = Math.Max(oldWidth, lvEntries.Width - (allWidth - column.Width));
+
+                if (!emptyNotes)
+                    lvEntries.Columns[columnsCount].Width = -2;
+
+                if (lvEntries.Items.Count == 0)
+                {
+                    allWidth = lvEntries.Columns.OfType<ColumnHeader>().Sum(x => x.Width);
+                    if (allWidth > lvEntries.Width)
+                        column.Width -= Math.Min(allWidth - lvEntries.Width, column.Width);
+                }
+
+                if (_currentRowHeight == RowHeight.Large)
+                    lvEntries.Font = oldFont;
+
+                if (ScrollbarUtil.GetVisibleScrollbars(lvEntries) >= ScrollBars.Vertical)
+                    column.Width = Math.Max(oldWidth, column.Width - UIUtil.GetVScrollBarWidth());
+
+                lvEntries.EndUpdate();
+                lvEntries.ResumeLayout(false);
+                lvEntries.Visible = true;
+                if (wasActiveControl)
+                    ActiveControl = lvEntries;
+            }
+
+            _lvEntriesResizing = false;
+        }
+
+        private void lvEntries_ColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
+        {
+            if (_lvEntriesResizing || lvEntries.UseWaitCursor)
+                return;
+
+            lvEntries_SizeChanged(sender, EventArgs.Empty);
+            lvEntries.Invalidate();
         }
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
@@ -556,12 +773,13 @@ namespace KeePassRDP
                         var clrAlt = UIUtil.GetAlternateColorEx(lvEntries.BackColor);
                         UIUtil.SetAlternatingBgColors(lvEntries, clrAlt, Program.Config.MainWindow.EntryListAlternatingBgColors);
                     }
+
+                    UIUtil.SetFocus(lvEntries, this, true);
                     UIUtil.SetFocusedItem(lvEntries, lvEntries.Items[0], true);
-                    lvEntries.Select();
                 }
 
-                lvEntries.EndUpdate();
                 lvEntries.UseWaitCursor = false;
+                lvEntries.EndUpdate();
             }));
 
             if (!invoke.IsCompleted)
@@ -581,23 +799,14 @@ namespace KeePassRDP
                 ResumeLayout(false);
                 UseWaitCursor = false;
 
-                lvEntries.SuspendLayout();
-
-                var oldFont = lvEntries.Font;
-                if (_currentRowHeight == RowHeight.Large)
-                    lvEntries.Font = _font;
-
-                if (lvEntries.Items.Count > 0)
-                    lvEntries.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
-                else
-                    lvEntries.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
-
-                lvEntries.Columns[lvEntries.Columns.Count - 1].Width = -2;
-
-                if (_currentRowHeight == RowHeight.Large)
-                    lvEntries.Font = oldFont;
-
-                lvEntries.ResumeLayout(false);
+                Task.Factory.FromAsync(BeginInvoke(new Action(() =>
+                {
+                    try
+                    {
+                        lvEntries_SizeChanged(null, EventArgs.Empty);
+                    }
+                    catch { }
+                })), endInvoke => EndInvoke(endInvoke), TaskCreationOptions.AttachedToParent, TaskScheduler.Default);
             }
         }
     }

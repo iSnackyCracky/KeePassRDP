@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -23,7 +23,9 @@ using KeePass.Resources;
 using KeePass.UI;
 using KeePass.Util.Spr;
 using KeePassLib;
+using KeePassLib.Cryptography;
 using KeePassLib.Security;
+using KeePassLib.Utility;
 using KeePassRDP.Commands;
 using KeePassRDP.Extensions;
 using KeePassRDP.Generator;
@@ -32,6 +34,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -50,7 +53,6 @@ namespace KeePassRDP
     {
         private class TaskWithCancellationToken : Task
         {
-            public CancellationToken CancellationToken { get {  return _cancellationTokenSource.Token; } }
             public bool IsCancellationRequested { get { return _cancellationTokenSource.IsCancellationRequested; } }
 
             private readonly CancellationTokenSource _cancellationTokenSource;
@@ -59,9 +61,7 @@ namespace KeePassRDP
                 action,
                 state,
                 cancellationTokenSource.Token,
-                TaskCreationOptions.AttachedToParent |
-                TaskCreationOptions.PreferFairness |
-                TaskCreationOptions.LongRunning)
+                TaskCreationOptions.AttachedToParent | TaskCreationOptions.PreferFairness | TaskCreationOptions.LongRunning)
             {
                 _cancellationTokenSource = cancellationTokenSource;
                 Start();
@@ -80,29 +80,38 @@ namespace KeePassRDP
 
             public new Task ContinueWith(Action<Task> action)
             {
-                return ContinueWith(action, CancellationToken.None, TaskContinuationOptions.PreferFairness, TaskScheduler.Default);
+                return ContinueWith(
+                    action,
+                    _cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested ? _cancellationTokenSource.Token : CancellationToken.None,
+                    TaskContinuationOptions.PreferFairness,
+                    TaskScheduler.Default);
             }
 
-            public new void Dispose()
+            protected override void Dispose(bool disposing)
             {
-                if (!IsCompleted)
+                if (disposing)
                 {
-                    if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
-                        _cancellationTokenSource.Cancel();
-                    try
+                    if (!IsCompleted)
                     {
-                        Wait(TimeSpan.FromSeconds(10));
+                        if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
+                            _cancellationTokenSource.Cancel();
+                        try
+                        {
+                            Wait(TimeSpan.FromSeconds(10));
+                        }
+                        catch
+                        {
+                        }
                     }
-                    catch
-                    {
-                    }
+
+                    if (_cancellationTokenSource != null)
+                        _cancellationTokenSource.Dispose();
+
+                    if (IsCompleted)
+                        base.Dispose(disposing);
                 }
-
-                if (_cancellationTokenSource != null)
-                    _cancellationTokenSource.Dispose();
-
-                if (IsCompleted)
-                    base.Dispose();
+                else
+                    base.Dispose(disposing);
             }
         }
 
@@ -112,17 +121,24 @@ namespace KeePassRDP
         {
             get
             {
-                return !_tasks.Values.Any(x =>
+                try
                 {
-                    try
+                    return _tasks.Values.All(x =>
                     {
-                        return !x.IsCompleted;
-                    }
-                    catch
-                    {
-                        return true;
-                    }
-                });
+                        try
+                        {
+                            return x.IsCompleted;
+                        }
+                        catch
+                        {
+                            return true;
+                        }
+                    });
+                }
+                catch
+                {
+                    return true;
+                }
             }
         }
 
@@ -165,769 +181,761 @@ namespace KeePassRDP
             }
         }
 
-        public void Cancel()
+        public void Cancel(bool killTasks = true)
         {
-            foreach (var task in _tasks.Values.Where(x =>
-            {
-                try
+            if (killTasks)
+                foreach (var task in _tasks.Values.Where(x =>
                 {
-                    return !x.IsCompleted && !x.IsCancellationRequested;
-                }
-                catch
-                {
-                    return false;
-                }
-            }))
-                try
-                {
-                    task.Cancel();
-                }
-                catch
-                {
-                }
+                    try
+                    {
+                        return !x.IsCompleted && !x.IsCancellationRequested;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                }))
+                    try
+                    {
+                        task.Cancel();
+                    }
+                    catch { }
+
+            if (SecureDesktop.IsValueCreated)
+                SecureDesktop.Instance.Cancel();
         }
 
         public void Dispose()
         {
+            Cancel();
+            Wait(5);
+
             _tasks.Clear();
 
             if (_credentialPicker.IsValueCreated)
                 _credentialPicker.Value.Dispose();
+
+            if (SecureDesktop.IsValueCreated)
+            {
+                try
+                {
+                    var hOldDesktop = NativeMethods.GetThreadDesktop(NativeMethods.GetCurrentThreadId());
+                    if (!SecureDesktop.IsInput(hOldDesktop))
+                        NativeMethods.SwitchDesktop(hOldDesktop);
+                }
+                catch { }
+            }
         }
 
-        public void ConnectRDPtoKeePassEntry(bool tmpMstscUseAdmin = false, bool tmpUseCreds = false)
+        public void ConnectRDPtoKeePassEntry(bool tmpMstscUseAdmin = false, bool tmpUseCreds = false, bool shadowSession = false)
         {
-            if (Util.IsValid(_host))
+            if (!Util.IsValid(_host))
+                return;
+
+            var mainForm = _host.MainWindow;
+            var selectedEntries = mainForm.GetSelectedEntries();
+
+            var parentGroups = selectedEntries
+                .Where(entry => !entry.Strings.GetSafe(PwDefs.UrlField).IsEmpty)
+                .GroupBy(entry => entry.ParentGroup.Uuid, EqualityComparer<PwUuid>.Default);
+
+            var kpCta = _config.KeePassConnectToAll;
+            if (!kpCta)
+                parentGroups = parentGroups.Skip(parentGroups.Count() - 1);
+
+            var totalCount = parentGroups.Aggregate(0, (a, b) => a + b.Count());
+
+            var postfix = string.Format(KprResourceManager.Instance["{0} entr" + (totalCount == 1 ? "y" : "ies") + " of {1} selected."], totalCount, selectedEntries.Length);
+            var connectingTo = string.Format(" {0} ", KprResourceManager.Instance["connecting to"]);
+            var skipped = string.Format(" {0}", KprResourceManager.Instance["skipped"]);
+
+            mainForm.SetStatusEx(string.Format("{0}{1}{2}", Util.KeePassRDP, connectingTo, postfix));
+
+            var kprCpcg = _config.CredPickerCustomGroup;
+            var kprCptr = _config.CredPickerTriggerRecursive;
+            var kprCpis = _config.CredPickerIncludeSelected;
+            var kpSrr = _config.KeePassShowResolvedReferences;
+            var kpScf = _config.KeePassSprCompileFlags;
+            var mstscSd = _config.MstscSecureDesktop;
+
+            foreach (var parentGroup in parentGroups)
             {
-                var mainForm = _host.MainWindow;
-                var selectedEntries = mainForm.GetSelectedEntries();
+                var entries = parentGroup.AsEnumerable();
+                var count = entries.Count();
 
-                var parentGroups = selectedEntries
-                    .Where(entry => !entry.Strings.GetSafe(PwDefs.UrlField).IsEmpty)
-                    .GroupBy(entry => entry.ParentGroup.Uuid, EqualityComparer<PwUuid>.Default);
+                if (count == 0)
+                    continue;
 
-                if (!_config.KeePassConnectToAll)
-                    parentGroups = parentGroups.Skip(parentGroups.Count() - 1);
-
-                var totalCount = parentGroups.Aggregate(0, (a, b) => a + b.Count());
-
-                var postfix = string.Format(KprResourceManager.Instance["{0} entr" + (totalCount == 1 ? "y" : "ies") + " of {1} selected."], totalCount, selectedEntries.Length);
-                var connectingTo = string.Format(" {0} ", KprResourceManager.Instance["connecting to"]);
-                var skipped = string.Format(" {0}", KprResourceManager.Instance["skipped"]);
-
-                mainForm.SetStatusEx(string.Format("{0}{1}{2}", Util.KeePassRDP, connectingTo, postfix));
-
-                foreach (var parentGroup in parentGroups)
+                if (!kpCta && count > 1)
                 {
-                    var entries = parentGroup.AsEnumerable();
-                    var count = entries.Count();
+                    entries = entries.Skip(count - 1);
+                    count = 1;
+                }
 
-                    if (count == 0)
-                        continue;
+                if (totalCount > 1)
+                    mainForm.SetStatusEx(string.Format("{0}{1}{2} / {3}", Util.KeePassRDP, connectingTo, count, postfix));
 
-                    if (!_config.KeePassConnectToAll && count > 1)
-                    {
-                        entries = entries.Skip(count - 1);
-                        count = 1;
-                    }
+                PwEntry credEntry = null;
+                PwEntry unresolvedCredEntry = null;
 
-                    if (totalCount > 1)
-                        mainForm.SetStatusEx(string.Format("{0}{1}{2} / {3}", Util.KeePassRDP, connectingTo, count, postfix));
+                var skippedEntries = new List<PwEntry>();
 
-                    PwEntry credEntry = null;
-                    PwEntry unresolvedCredEntry = null;
+                // Connect to RDP using credentials from KeePass, skipping entries with no credentials.
+                if (tmpUseCreds)
+                {
+                    var credPick = _credentialPicker.Value;
+                    var usedCount = 0;
 
-                    var skippedEntries = new List<PwEntry>();
-
-                    // Connect to RDP using credentials from KeePass, skipping entries with no credentials.
-                    if (tmpUseCreds)
-                    {
-                        var credPick = _credentialPicker.Value;
-                        var usedCount = 0;
-
-                        // Fill KprCredentialPicker with selected entries.
-                        foreach (var entry in entries)
-                            using (var entrySettings = entry.GetKprSettings(true) ?? KprEntrySettings.Empty)
-                                if (entrySettings.UseCredpicker && (Util.InRdpSubgroup(entry, _config.CredPickerCustomGroup) || entrySettings.CpGroupUUIDs.Any()))
-                                {
-                                    credPick.AddEntry(entry, entrySettings, _config.CredPickerCustomGroup);
-                                    usedCount++;
-                                }
-                                else
-                                    skippedEntries.Add(entry);
-
-                        if (usedCount > 0)
-                        {
-                            if (totalCount > 1 && usedCount != count)
-                                mainForm.SetStatusEx(string.Format("{0}{1}{2} ({3}{4}) / {5}", Util.KeePassRDP, connectingTo, usedCount, count - usedCount, skipped, postfix));
-
-                            // Get result from KprCredentialPickerForm.
-                            try
+                    // Fill KprCredentialPicker with selected entries.
+                    foreach (var entry in entries)
+                        using (var entrySettings = entry.GetKprSettings(true) ?? KprEntrySettings.Empty)
+                            if (entrySettings.UseCredpicker && (Util.InRdpSubgroup(entry, kprCpcg, kprCptr) || entrySettings.CpGroupUUIDs.Any()))
                             {
-                                credEntry = credPick.GetCredentialEntry(_config.CredPickerIncludeSelected, _config.KeePassShowResolvedReferences);
+                                credPick.AddEntry(entry, entrySettings, kprCpcg, kprCptr);
+                                usedCount++;
                             }
-                            catch (OperationCanceledException)
-                            {
-                                continue;
-                            }
-                            finally
-                            {
-                                credPick.Reset();
-                            }
-
-                            if (credEntry == null)
-                            {
-                                // Skip group if no credential entries where found and no selected entry has at least a username.
-                                if (!entries.Any(entry => !entry.Strings.GetSafe(PwDefs.UserNameField).IsEmpty))
-                                    continue;
-                            }
-                            else if (Util.IsEntryIgnored(credEntry))
-                                credEntry = null;
                             else
+                                skippedEntries.Add(entry);
+
+                    if (usedCount > 0)
+                    {
+                        if (totalCount > 1 && usedCount != count)
+                            mainForm.SetStatusEx(string.Format("{0}{1}{2} ({3}{4}) / {5}", Util.KeePassRDP, connectingTo, usedCount, count - usedCount, skipped, postfix));
+
+                        // Get result from KprCredentialPickerForm.
+                        try
+                        {
+                            credEntry = credPick.GetCredentialEntry(kprCpis, kpSrr);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            continue;
+                        }
+                        finally
+                        {
+                            if (_config.CredPickerSecureDesktop && SecureDesktop.IsInput())
+                                SecureDesktop.Instance.SwitchDesktop(true);
+                            credPick.Reset();
+                        }
+
+                        if (credEntry == null)
+                        {
+                            // Skip group if no credential entries where found and no selected entry has at least a username.
+                            if (!entries.Any(entry => !entry.Strings.GetSafe(PwDefs.UserNameField).IsEmpty))
+                                continue;
+                        }
+                        else if (Util.IsEntryIgnored(credEntry))
+                            credEntry = null;
+                        else
+                        {
+                            unresolvedCredEntry = credEntry;
+                            credEntry = credEntry.GetResolvedReferencesEntry(new SprContext(credEntry, mainForm.ActiveDatabase, kpScf)
                             {
-                                unresolvedCredEntry = credEntry;
-                                credEntry = credEntry.GetResolvedReferencesEntry(new SprContext(credEntry, mainForm.ActiveDatabase, _config.KeePassSprCompileFlags)
-                                {
-                                    ForcePlainTextPasswords = true // true is default, PwDefs.PasswordField is replaced with PwDefs.HiddenPassword during SprEngine.Compile otherwise.
-                                });
-                            }
+                                ForcePlainTextPasswords = true // true is default, PwDefs.PasswordField is replaced with PwDefs.HiddenPassword during SprEngine.Compile otherwise.
+                            });
                         }
                     }
+                }
 
-                    using (var credEntrySettings = unresolvedCredEntry == null ? KprEntrySettings.Empty : unresolvedCredEntry.GetKprSettings(true) ?? KprEntrySettings.Empty)
-                        foreach (var connPwEntry in entries)
+                using (var credEntrySettings = unresolvedCredEntry == null ? KprEntrySettings.Empty : unresolvedCredEntry.GetKprSettings(true) ?? KprEntrySettings.Empty)
+                    foreach (var connPwEntry in entries)
+                    {
+                        var ctx = new SprContext(connPwEntry, mainForm.ActiveDatabase, kpScf)
                         {
-                            var ctx = new SprContext(connPwEntry, mainForm.ActiveDatabase, _config.KeePassSprCompileFlags)
+                            ForcePlainTextPasswords = true
+                        };
+
+                        var hostname = SprEngine.Compile(connPwEntry.Strings.ReadSafe(PwDefs.UrlField), ctx);
+
+                        if (string.IsNullOrWhiteSpace(hostname))
+                            continue;
+
+                        hostname = hostname.Trim();
+
+                        var port = string.Empty;
+                        var uri = Util.ParseURL(hostname);
+
+                        if (uri != null && uri.HostNameType != UriHostNameType.Unknown)
+                        {
+                            hostname = uri.Host;
+                            if (!uri.IsDefaultPort && uri.Port != Util.DefaultRdpPort)
+                                port = string.Format(":{0}", uri.Port);
+                        }
+                        else
+                        {
+                            VistaTaskDialog.ShowMessageBoxEx(
+                                string.Format(KprResourceManager.Instance["The URL/target '{0}' of the selected entry could not be parsed."], hostname),
+                                null,
+                                string.Format("{0} - {1}", Util.KeePassRDP, KPRes.Error),
+                                VtdIcon.Error,
+                                _host.MainWindow,
+                                null, 0, null, 0);
+                            continue;
+                        }
+
+                        var taskUuid = connPwEntry.Uuid.ToHexString();
+
+                        using (var connEntrySettings = connPwEntry.GetKprSettings(true) ?? KprEntrySettings.Empty)
+                        using (var entrySettings = connEntrySettings.Inherit(credEntrySettings))
+                        {
+                            KprCredential cred = null;
+                            KprCredential gatewayCred = null;
+
+                            PwEntry retryCredEntry = null;
+                            ProtectedString retryUsername = null;
+                            SecureString retryPassword = null;
+
+                            if (string.IsNullOrWhiteSpace(hostname))
                             {
-                                ForcePlainTextPasswords = true
-                            };
-
-                            var host = SprEngine.Compile(connPwEntry.Strings.ReadSafe(PwDefs.UrlField), ctx);
-
-                            if (string.IsNullOrEmpty(host))
-                                continue;
-
-                            var port = string.Empty;
-                            Uri uri = null;
-
-                            // Try to parse entry URL as URI.
-                            if (!Uri.TryCreate(host, UriKind.Absolute, out uri) ||
-                                (uri.HostNameType == UriHostNameType.Unknown && !UriParser.IsKnownScheme(uri.Scheme)))
-                            {
-                                try
+                                if (entrySettings.RdpFile == null || string.IsNullOrWhiteSpace(entrySettings.RdpFile.FullAddress))
                                 {
-                                    // Second try to parse entry URL as URI with UriBuilder.
-                                    uri = new UriBuilder(host).Uri;
-                                    if (uri.HostNameType == UriHostNameType.Unknown && !UriParser.IsKnownScheme(uri.Scheme))
-                                        // Third try to parse entry URL as URI with fallback scheme.
-                                        if (!Uri.TryCreate(string.Format("rdp://{0}", host), UriKind.Absolute, out uri) || uri.HostNameType == UriHostNameType.Unknown)
-                                            uri = null;
+                                    if (totalCount == 1)
+                                        VistaTaskDialog.ShowMessageBoxEx(
+                                            KprResourceManager.Instance["Cannot connect to empty hostname."],
+                                            null,
+                                            Util.KeePassRDP,
+                                            VtdIcon.Information,
+                                            _host.MainWindow,
+                                            null, 0, null, 0);
+                                    continue;
                                 }
-                                catch (UriFormatException)
+                                else
                                 {
-                                    uri = null;
+                                    hostname = entrySettings.RdpFile.FullAddress;
+                                    if (string.IsNullOrWhiteSpace(port) && entrySettings.RdpFile.ServerPort > 0)
+                                        port = string.Format(":{0}", entrySettings.RdpFile.ServerPort);
                                 }
                             }
 
-                            if (uri != null && uri.HostNameType != UriHostNameType.Unknown)
+                            var retryOnce = entrySettings.RetryOnce;
+                            var forceLocalUser = entrySettings.ForceLocalUser;
+                            var forceUpn = entrySettings.ForceUpn;
+                            KprSessionListForm.KprSessionListResult sessionListResult = null;
+
+                            // Connect to RDP using credentials from KeePass, skipping entries with no credentials.
+                            if (tmpUseCreds)
                             {
-                                host = uri.Host;
-                                if (!uri.IsDefaultPort && uri.Port != Util.DefaultRdpPort)
-                                    port = string.Format(":{0}", uri.Port);
-                            }
-                            else
-                            {
-                                VistaTaskDialog.ShowMessageBoxEx(
-                                    string.Format(KprResourceManager.Instance["The URL/target '{0}' of the selected entry could not be parsed."], host),
-                                    null,
-                                    string.Format("{0} - {1}", Util.KeePassRDP, KPRes.Error),
-                                    VtdIcon.Error,
-                                    _host.MainWindow,
-                                    null, 0, null, 0);
-                                continue;
-                            }
+                                // Use result from KprCredentialPicker or fallback to credentials from selected entry.
+                                var shownInPicker = entrySettings.UseCredpicker &&
+                                    (Util.InRdpSubgroup(connPwEntry, kprCpcg, kprCptr) || entrySettings.CpGroupUUIDs.Any());
+                                var tmpEntry = credEntry != null && shownInPicker ?
+                                    credEntry :
+                                    entrySettings.Ignore || (credEntry != null && !shownInPicker) ?
+                                        null :
+                                            skippedEntries.Contains(connPwEntry) ?
+                                                connPwEntry.GetResolvedReferencesEntry(ctx) :
+                                                null;
 
-                            var taskUuid = connPwEntry.Uuid.ToHexString();
+                                if (tmpEntry == null)
+                                    continue;
 
-                            using (var connEntrySettings = connPwEntry.GetKprSettings(true) ?? KprEntrySettings.Empty)
-                            using (var entrySettings = connEntrySettings.Inherit(credEntrySettings))
-                            {
-                                KprCredential cred = null;
-                                KprCredential gatewayCred = null;
+                                taskUuid = string.Format("{0}-{1}", taskUuid, tmpEntry.Uuid.ToHexString());
 
-                                PwEntry retryCredEntry = null;
-                                ProtectedString retryUsername = null;
-                                SecureString retryPassword = null;
-
-                                if (string.IsNullOrWhiteSpace(host))
+                                var username = tmpEntry.Strings.GetSafe(PwDefs.UserNameField);
+                                // Do not connect to entry if username is empty.
+                                if (username.IsEmpty)
                                 {
-                                    if (entrySettings.RdpFile == null || string.IsNullOrWhiteSpace(entrySettings.RdpFile.FullAddress))
-                                    {
-                                        if (totalCount == 1)
-                                            VistaTaskDialog.ShowMessageBoxEx(
-                                                KprResourceManager.Instance["Cannot connect to empty hostname."],
-                                                null,
-                                                Util.KeePassRDP,
-                                                VtdIcon.Information,
-                                                _host.MainWindow,
-                                                null, 0, null, 0);
-                                        continue;
-                                    }
-                                    else
-                                    {
-                                        host = entrySettings.RdpFile.FullAddress;
-                                        if (string.IsNullOrWhiteSpace(port) && entrySettings.RdpFile.ServerPort > 0)
-                                            port = string.Format(":{0}", entrySettings.RdpFile.ServerPort);
-                                    }
+                                    if (totalCount == 1)
+                                        VistaTaskDialog.ShowMessageBoxEx(
+                                            KprResourceManager.Instance["Username is required when connecting with credentials."],
+                                            null,
+                                            Util.KeePassRDP,
+                                            VtdIcon.Information,
+                                            _host.MainWindow,
+                                            null, 0, null, 0);
+                                    continue;
                                 }
 
-                                var retryOnce = entrySettings.RetryOnce;
-                                var forceLocalUser = entrySettings.ForceLocalUser;
-                                var forceUpn = entrySettings.ForceUpn;
+                                if (forceLocalUser)
+                                    username = username.ForceLocalUser(hostname);
 
-                                // Connect to RDP using credentials from KeePass, skipping entries with no credentials.
-                                if (tmpUseCreds)
+                                if (forceUpn)
+                                    username = username.ForceUPN();
+
+                                var password = tmpEntry.Strings.GetSafe(PwDefs.PasswordField);
+                                // Do not connect to entry if password is empty.
+                                /*if (password.IsEmpty)
+                                    continue;*/
+
+                                var securePassword = password.AsSecureString();
+
+                                if (shadowSession)
                                 {
-                                    // Use result from KprCredentialPicker or fallback to credentials from selected entry.
-                                    var shownInPicker = entrySettings.UseCredpicker &&
-                                        (Util.InRdpSubgroup(connPwEntry, _config.CredPickerCustomGroup) || entrySettings.CpGroupUUIDs.Any());
-                                    var tmpEntry = credEntry != null && shownInPicker ?
-                                        credEntry :
-                                        entrySettings.Ignore || (credEntry != null && !shownInPicker) ?
-                                            null :
-                                                skippedEntries.Contains(connPwEntry) ?
-                                                    connPwEntry.GetResolvedReferencesEntry(ctx) :
-                                                    null;
+                                    var tempTitle = SprEngine.Compile(connPwEntry.Strings.ReadSafe(PwDefs.TitleField), ctx);
+                                    if (string.IsNullOrWhiteSpace(tempTitle))
+                                        tempTitle = hostname;
 
-                                    if (tmpEntry == null)
-                                        continue;
-
-                                    taskUuid = string.Format("{0}-{1}", taskUuid, tmpEntry.Uuid.ToHexString());
-
-                                    var username = tmpEntry.Strings.GetSafe(PwDefs.UserNameField);
-                                    // Do not connect to entry if username is empty.
-                                    if (username.IsEmpty)
+                                    using (var sessionListForm = new KprSessionListForm(_config)
                                     {
-                                        if (totalCount == 1)
-                                            VistaTaskDialog.ShowMessageBoxEx(
-                                                KprResourceManager.Instance["Username is required when connecting with credentials."],
-                                                null,
-                                                Util.KeePassRDP,
-                                                VtdIcon.Information,
-                                                _host.MainWindow,
-                                                null, 0, null, 0);
-                                        continue;
-                                    }
-
-                                    if (forceLocalUser)
-                                        username = username.ForceLocalUser(host);
-
-                                    if (forceUpn)
-                                        username = username.ForceUPN();
-
-                                    var password = tmpEntry.Strings.GetSafe(PwDefs.PasswordField);
-                                    // Do not connect to entry if password is empty.
-                                    /*if (password.IsEmpty)
-                                        continue;*/
-
-                                    var securePassword = password.AsSecureString();
-
-                                    if (entrySettings.RdpFile != null &&
-                                        !string.IsNullOrWhiteSpace(entrySettings.RdpFile.Gatewayhostname) &&
-                                        entrySettings.RdpFile.Promptcredentialonce)
-                                        gatewayCred = new KprCredential(
+                                        Text = string.Format("{0} | {1}", Util.KeePassRDP, tempTitle.Trim())
+                                    })
+                                    {
+                                        sessionListForm.Computers.Add(hostname);
+                                        using (var tempCred = new KprCredential(
                                             username,
                                             securePassword,
-                                            entrySettings.RdpFile.Gatewayhostname,
-                                            _config.CredVaultUseWindows ?
-                                                NativeCredentials.CRED_TYPE.DOMAIN_PASSWORD :
-                                                NativeCredentials.CRED_TYPE.GENERIC,
-                                            _config.CredVaultTtl);
+                                            hostname,
+                                            NativeCredentials.CRED_TYPE.DOMAIN_PASSWORD))
+                                        {
+                                            _credManager.Value.Add(tempCred);
 
-                                    // Create new KprCredential.
-                                    cred = new KprCredential(
+                                            var result = DialogResult.None;
+
+                                            sessionListForm.StartPosition = FormStartPosition.CenterParent;
+                                            sessionListForm.Location = Point.Empty;
+
+                                            if (_config.CredPickerSecureDesktop)
+                                            {
+                                                using (var mrs = new ManualResetEventSlim(false))
+                                                {
+                                                    Task.Factory.StartNew(() =>
+                                                    {
+                                                        //SecureDesktop.Instance.Prepare();
+
+                                                        var primaryScreen = Screen.FromControl(_host.MainWindow);
+                                                        sessionListForm.StartPosition = FormStartPosition.CenterScreen;
+                                                        sessionListForm.Location = primaryScreen.Bounds.Location;
+
+                                                        SecureDesktop.Instance.Run(_ =>
+                                                        {
+                                                            try
+                                                            {
+                                                                result = sessionListForm.ShowDialog();
+                                                            }
+                                                            catch
+                                                            {
+                                                                result = DialogResult.None;
+                                                                throw;
+                                                            }
+                                                            finally
+                                                            {
+                                                                mrs.Set();
+                                                            }
+
+                                                            return SecureDesktop.CompletedTask;
+                                                        });
+                                                    }, CancellationToken.None, TaskCreationOptions.AttachedToParent, TaskScheduler.Default);
+
+                                                    try
+                                                    {
+                                                        if (!mrs.Wait(TimeSpan.FromSeconds(900)))
+                                                            throw new TimeoutException();
+
+                                                        SecureDesktop.Instance.Wait(30); // Maybe wait forever?
+                                                    }
+                                                    catch (TimeoutException)
+                                                    {
+                                                        sessionListForm.Close();
+                                                        result = DialogResult.None;
+                                                    }
+                                                    catch
+                                                    {
+                                                        result = DialogResult.None;
+                                                        throw;
+                                                    }
+                                                    finally
+                                                    {
+                                                        if (SecureDesktop.IsInput())
+                                                            SecureDesktop.Instance.SwitchDesktop(true);
+                                                    }
+                                                }
+                                            }
+                                            else
+                                                result = sessionListForm.ShowDialog(_host.MainWindow);
+
+                                            if (result != DialogResult.OK)
+                                                continue;
+
+                                            sessionListResult = sessionListForm.Results.LastOrDefault();
+                                        }
+                                    }
+
+                                    if (sessionListResult == null || string.IsNullOrEmpty(sessionListResult.Shadow))
+                                    {
+                                        VistaTaskDialog.ShowMessageBoxEx(
+                                            KprResourceManager.Instance["No session to shadow selected from the list."],
+                                            null,
+                                            string.Format("{0} - {1}", Util.KeePassRDP, KPRes.Error),
+                                            VtdIcon.Error,
+                                            _host.MainWindow,
+                                            null, 0, null, 0);
+                                        continue;
+                                    }
+
+                                    taskUuid = string.Format("{0}-{1}", taskUuid, sessionListResult.Shadow);
+                                }
+
+                                if (entrySettings.RdpFile != null &&
+                                    !string.IsNullOrWhiteSpace(entrySettings.RdpFile.Gatewayhostname) &&
+                                    entrySettings.RdpFile.Promptcredentialonce)
+                                    gatewayCred = new KprCredential(
                                         username,
                                         securePassword,
-                                        string.Format("TERMSRV/{0}", host.ToUpperInvariant()),
+                                        entrySettings.RdpFile.Gatewayhostname,
                                         _config.CredVaultUseWindows ?
                                             NativeCredentials.CRED_TYPE.DOMAIN_PASSWORD :
                                             NativeCredentials.CRED_TYPE.GENERIC,
                                         _config.CredVaultTtl);
 
-                                    //username = username.Remove(0, username.Length);
-                                    //password = password.Remove(0, password.Length);
+                                // Create new KprCredential.
+                                cred = new KprCredential(
+                                    username,
+                                    securePassword,
+                                    string.Format("TERMSRV/{0}", hostname.ToUpperInvariant()),
+                                    _config.CredVaultUseWindows ?
+                                        NativeCredentials.CRED_TYPE.DOMAIN_PASSWORD :
+                                        NativeCredentials.CRED_TYPE.GENERIC,
+                                    _config.CredVaultTtl);
 
-                                    // Add KprCredential to KprCredentialManager.
-                                    //_credManager.Value.Add(cred);
-
-                                    if (retryOnce)
+                                if (retryOnce)
+                                {
+                                    var tmpUnresolvedCredEntry = unresolvedCredEntry ?? connPwEntry;
+                                    if (tmpUnresolvedCredEntry != null)
                                     {
-                                        var tmpUnresolvedCredEntry = unresolvedCredEntry ?? connPwEntry;
-                                        if (tmpUnresolvedCredEntry != null)
+                                        var uncompiledUsername = tmpUnresolvedCredEntry.Strings.GetSafe(PwDefs.UserNameField);
+                                        var uncompiledChars = uncompiledUsername.ReadChars();
+                                        var uncompiledString = new string(uncompiledChars);
+                                        if (uncompiledString.IndexOf("{TIMEOTP}", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                            uncompiledString.IndexOf("{HMACOTP}", StringComparison.OrdinalIgnoreCase) >= 0)
                                         {
-                                            var uncompiledUsername = tmpUnresolvedCredEntry.Strings.GetSafe(PwDefs.UserNameField);
-                                            var uncompiledChars = uncompiledUsername.ReadChars();
-                                            var uncompiledString = new string(uncompiledChars);
-                                            if (uncompiledString.IndexOf("{TIMEOTP}", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                                uncompiledString.IndexOf("{HMACOTP}", StringComparison.OrdinalIgnoreCase) >= 0)
+                                            var tmpCredEntry = new PwEntry(false, false)
                                             {
-                                                var tmpCredEntry = new PwEntry(false, false)
-                                                {
-                                                    Uuid = credEntry.Uuid
-                                                };
-                                                tmpCredEntry.Strings.Set(PwDefs.UserNameField, uncompiledUsername.WithProtection(true));
-                                                foreach (var kv in tmpUnresolvedCredEntry.Strings.Where(x => !x.Value.IsEmpty && (x.Key.StartsWith("TimeOtp-") || x.Key.StartsWith("HmacOtp-"))))
-                                                    tmpCredEntry.Strings.Set(kv.Key, kv.Value.WithProtection(true));
-                                                retryCredEntry = tmpCredEntry;
-                                            }
-                                            MemoryUtil.SecureZeroMemory(uncompiledString);
-                                            MemoryUtil.SecureZeroMemory(uncompiledChars);
+                                                Uuid = credEntry.Uuid
+                                            };
+                                            tmpCredEntry.Strings.Set(PwDefs.UserNameField, uncompiledUsername.WithProtection(true));
+                                            foreach (var kv in tmpUnresolvedCredEntry.Strings.Where(x => !x.Value.IsEmpty && (x.Key.StartsWith("TimeOtp-") || x.Key.StartsWith("HmacOtp-"))))
+                                                tmpCredEntry.Strings.Set(kv.Key, kv.Value.WithProtection(true));
+                                            retryCredEntry = tmpCredEntry;
                                         }
-                                        retryUsername = username;
-                                        retryPassword = securePassword;
+                                        MemoryUtil.SecureZeroMemory(uncompiledString);
+                                        MemoryUtil.SecureZeroMemory(uncompiledChars);
                                     }
-                                    else
-                                        securePassword.Dispose();
+                                    retryUsername = username;
+                                    retryPassword = securePassword;
                                 }
                                 else
-                                    retryOnce = false;
+                                    securePassword.Dispose();
+                            }
+                            else
+                            {
+                                if (shadowSession)
+                                {
 
-                                TaskWithCancellationToken oldTask = null;
+                                }
+
+                                retryOnce = false;
+                            }
+
+                            taskUuid = MemUtil.ByteArrayToHexString(CryptoUtil.HashSha256(Encoding.Unicode.GetBytes(taskUuid)));
+
+                            TaskWithCancellationToken oldTask = null;
+                            try
+                            {
+                                if ((tmpUseCreds || _config.KeePassAlwaysConfirm) && _tasks.TryGetValue(taskUuid, out oldTask) && !oldTask.IsCompleted)
+                                {
+                                    if (_config.CredVaultTtl > 0)
+                                    {
+                                        if (cred != null)
+                                            cred.IncreaseTTL(TimeSpan.MaxValue);
+                                        if (gatewayCred != null)
+                                            gatewayCred.IncreaseTTL(TimeSpan.MaxValue);
+                                    }
+
+                                    if (VistaTaskDialog.ShowMessageBoxEx(
+                                        tmpUseCreds ?
+                                            string.Format(KprResourceManager.Instance["Already connected with the same credentials to URL/target '{0}'."], hostname) :
+                                            string.Format(KprResourceManager.Instance["Already connected to URL/target '{0}'."], hostname),
+                                        KprResourceManager.Instance[KPRes.AskContinue],
+                                        Util.KeePassRDP,
+                                        VtdIcon.Information,
+                                        _host.MainWindow,
+                                        KprResourceManager.Instance[KPRes.YesCmd], 0,
+                                        KprResourceManager.Instance[KPRes.NoCmd], 1) == 1)
+                                    {
+                                        if (cred != null)
+                                        {
+                                            cred.Dispose();
+                                            cred = null;
+                                        }
+                                        if (gatewayCred != null)
+                                        {
+                                            gatewayCred.Dispose();
+                                            gatewayCred = null;
+                                        }
+
+                                        continue;
+                                    }
+
+                                    if (_config.CredVaultTtl > 0)
+                                    {
+                                        if (cred != null)
+                                            cred.ResetValidUntil();
+                                        if (gatewayCred != null)
+                                            gatewayCred.ResetValidUntil();
+                                    }
+                                }
+                            }
+                            catch (NullReferenceException) { }
+                            catch (ObjectDisposedException) { }
+
+                            var title = _config.MstscReplaceTitle ? SprEngine.Compile(connPwEntry.Strings.ReadSafe(PwDefs.TitleField), ctx) : string.Empty;
+
+                            var cts = new CancellationTokenSource();
+                            TaskWithCancellationToken newTask = null;
+                            _tasks[taskUuid] = newTask = new TaskWithCancellationToken(thisTaskUuid =>
+                            {
+                                var localTaskUuid = (string)thisTaskUuid;
+                                RdpFile rdpFile = null;
+
                                 try
                                 {
-                                    if ((tmpUseCreds || _config.KeePassAlwaysConfirm) && _tasks.TryGetValue(taskUuid, out oldTask) && !oldTask.IsCompleted)
-                                        if (VistaTaskDialog.ShowMessageBoxEx(
-                                            tmpUseCreds ?
-                                                string.Format(KprResourceManager.Instance["Already connected with the same credentials to URL/target '{0}'."], host) :
-                                                string.Format(KprResourceManager.Instance["Already connected to URL/target '{0}'."], host),
-                                            KprResourceManager.Instance[KPRes.AskContinue],
-                                            Util.KeePassRDP,
-                                            VtdIcon.Information,
-                                            _host.MainWindow,
-                                            KprResourceManager.Instance[KPRes.YesCmd], 0,
-                                            KprResourceManager.Instance[KPRes.NoCmd], 1) == 1)
-                                        {
-                                            if (cred != null)
-                                            {
-                                                cred.Dispose();
-                                                cred = null;
-                                            }
-                                            if (gatewayCred != null)
-                                            {
-                                                gatewayCred.Dispose();
-                                                gatewayCred = null;
-                                            }
+                                    var icommand = Command.CreateInstance(!string.IsNullOrWhiteSpace(_config.MstscExecutable) ? _config.MstscExecutable : typeof(MstscCommand).Name);
 
-                                            continue;
-                                        }
-                                }
-                                catch (ObjectDisposedException)
-                                {
-                                }
+                                    if (icommand == null)
+                                        throw new NullReferenceException("Command");
 
-                                var title = string.Empty;
-                                if (_config.MstscReplaceTitle)
-                                    title = SprEngine.Compile(connPwEntry.Strings.ReadSafe(PwDefs.TitleField), ctx);
+                                    var waitForRdpFile = false;
 
-                                TaskWithCancellationToken newTask = null;
-                                _tasks[taskUuid] = newTask = new TaskWithCancellationToken(thisTaskUuid =>
-                                {
-                                    RdpFile rdpFile = null;
-
-                                    try
+                                    if (icommand is IMstscCommand)
                                     {
-                                        var waitForRdpFile = false;
+                                        var command = icommand as IMstscCommand;
 
-                                        var commandString = (!string.IsNullOrWhiteSpace(_config.MstscExecutable) ? _config.MstscExecutable : typeof(MstscCommand).Name).Split(new[] { ':' }, 2);
-                                        var commandType = Type.GetType(string.Format("{0}.{1}", typeof(Command).Namespace, commandString.FirstOrDefault()));
-                                        var icommand = Activator.CreateInstance(commandType, new[] { commandString.Skip(1).FirstOrDefault() }) as ICommand;
+                                        command.HostPort = hostname + port;
 
-                                        if (icommand == null)
-                                            throw new NullReferenceException("Command");
-
-                                        if (icommand is IMstscCommand)
+                                        if (entrySettings.IncludeDefaultParameters)
                                         {
-                                            var command = icommand as IMstscCommand;
-
-                                            command.HostPort = host + port;
-
-                                            if (entrySettings.IncludeDefaultParameters)
+                                            if (tmpMstscUseAdmin || _config.MstscUseAdmin)
                                             {
-                                                if (tmpMstscUseAdmin || _config.MstscUseAdmin)
-                                                {
-                                                    command.Admin = true;
-                                                    if (_config.MstscUseRestrictedAdmin)
-                                                        command.RestrictedAdmin = true;
-                                                }
-                                                if (_config.MstscUsePublic)
-                                                    command.Public = true;
-                                                if (_config.MstscUseRemoteGuard)
-                                                    command.RemoteGuard = true;
-                                                if (_config.MstscUseFullscreen)
-                                                    command.Fullscreen = true;
-                                                if (_config.MstscUseSpan)
-                                                    command.Span = true;
-                                                if (_config.MstscUseMultimon)
-                                                    command.Multimon = true;
-                                                if (_config.MstscWidth > 0)
-                                                    command.Width = _config.MstscWidth;
-                                                if (_config.MstscHeight > 0)
-                                                    command.Height = _config.MstscHeight;
-                                            }
-                                            else if (tmpMstscUseAdmin)
                                                 command.Admin = true;
-
-                                            if (entrySettings.RdpFile != null)
-                                            {
-                                                rdpFile = new RdpFile(entrySettings.RdpFile);
-                                                if (!string.IsNullOrWhiteSpace(host))
-                                                    rdpFile.FullAddress = host;
-                                                if (!string.IsNullOrWhiteSpace(port))
-                                                    rdpFile.ServerPort = int.Parse(port.Substring(1));
-
-                                                var thumbprint = _config.MstscSignRdpFiles;
-                                                if (!string.IsNullOrWhiteSpace(thumbprint))
-                                                {
-                                                    var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
-
-                                                    try
-                                                    {
-                                                        store.Open(OpenFlags.ReadOnly);
-
-                                                        var cert = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, false).OfType<X509Certificate2>().FirstOrDefault();
-
-                                                        if (cert != null)
-                                                            rdpFile.Sign(cert);
-
-                                                        command.HostPort = null;
-                                                    }
-                                                    catch (CryptographicException)
-                                                    {
-                                                    }
-                                                    finally
-                                                    {
-                                                        store.Close();
-                                                    }
-                                                }
-
-                                                command.Filename = rdpFile.ToString();
-                                                waitForRdpFile = !string.IsNullOrWhiteSpace(command.Filename);
+                                                if (_config.MstscUseRestrictedAdmin)
+                                                    command.RestrictedAdmin = true;
                                             }
+                                            if (_config.MstscUsePublic)
+                                                command.Public = true;
+                                            if (_config.MstscUseRemoteGuard)
+                                                command.RemoteGuard = true;
+                                            if (_config.MstscUseFullscreen)
+                                                command.Fullscreen = true;
+                                            if (_config.MstscUseSpan)
+                                                command.Span = true;
+                                            if (_config.MstscUseMultimon)
+                                                command.Multimon = true;
+                                            if (_config.MstscWidth > 0)
+                                                command.Width = _config.MstscWidth;
+                                            if (_config.MstscHeight > 0)
+                                                command.Height = _config.MstscHeight;
+                                        }
+                                        else if (tmpMstscUseAdmin)
+                                            command.Admin = true;
+
+                                        if (entrySettings.RdpFile != null)
+                                        {
+                                            rdpFile = new RdpFile(entrySettings.RdpFile);
+                                            if (!string.IsNullOrWhiteSpace(hostname))
+                                                rdpFile.FullAddress = hostname;
+                                            if (!string.IsNullOrWhiteSpace(port))
+                                                rdpFile.ServerPort = int.Parse(port.Substring(1));
+
+                                            var thumbprint = _config.MstscSignRdpFiles;
+                                            if (!string.IsNullOrWhiteSpace(thumbprint))
+                                            {
+                                                var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+
+                                                try
+                                                {
+                                                    store.Open(OpenFlags.ReadOnly);
+
+                                                    var cert = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, false).OfType<X509Certificate2>().FirstOrDefault();
+
+                                                    if (cert != null)
+                                                        rdpFile.Sign(cert);
+
+                                                    command.HostPort = null;
+                                                }
+                                                catch (CryptographicException)
+                                                {
+                                                }
+                                                finally
+                                                {
+                                                    store.Close();
+                                                }
+                                            }
+
+                                            command.Filename = rdpFile.ToString();
+                                            waitForRdpFile = !string.IsNullOrWhiteSpace(command.Filename);
                                         }
 
-                                        var argumentsBuilder = new StringBuilder(icommand.ToString());
-
-                                        foreach (var argument in entrySettings.MstscParameters)
+                                        if (sessionListResult != null)
                                         {
-                                            argumentsBuilder.Append(SprEngine.Compile(argument, ctx));
-                                            argumentsBuilder.Append(' ');
+                                            command.Shadow = sessionListResult.Shadow;
+                                            command.Control = sessionListResult.Control;
+                                            command.NoConsentPrompt = sessionListResult.NoConsentPrompt;
+                                        }
+                                    }
+
+                                    var argumentsBuilder = new StringBuilder(icommand.ToString());
+
+                                    foreach (var argument in entrySettings.MstscParameters
+                                        .Select(x => SprEngine.Compile(x, ctx))
+                                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                                        .Distinct(StringComparer.OrdinalIgnoreCase))
+                                    {
+                                        argumentsBuilder.Append(argument.Trim());
+                                        argumentsBuilder.Append(' ');
+                                    }
+
+                                    if (argumentsBuilder.Length == 0)
+                                    {
+                                        if (cred != null)
+                                        {
+                                            cred.Dispose();
+                                            cred = null;
+                                        }
+                                        if (gatewayCred != null)
+                                        {
+                                            gatewayCred.Dispose();
+                                            gatewayCred = null;
                                         }
 
-                                        if (argumentsBuilder.Length == 0)
+                                        throw new ArgumentOutOfRangeException("Command");
+                                    }
+
+                                    if (tmpUseCreds)
+                                    {
+                                        if (_config.MstscCleanupRegistry)
+                                            Util.RemoveHintFromRegistry(hostname);
+                                    }
+
+                                    var rdpProcess = new ProcessStartInfo
+                                    {
+                                        UseShellExecute = false,
+                                        WindowStyle = ProcessWindowStyle.Normal,
+                                        FileName = icommand.Executable,
+                                        Arguments = argumentsBuilder.ToString().TrimEnd(),
+                                        ErrorDialog = true,
+                                        ErrorDialogParentHandle = _host.MainWindow.Handle,
+                                        LoadUserProfile = false,
+                                        WorkingDirectory = Path.GetTempPath() // Environment.ExpandEnvironmentVariables("%TEMP%")
+                                    };
+
+                                    if (_config.MstscReplaceTitle)
+                                        title = string.Format("{0} - {1}", string.IsNullOrWhiteSpace(title) ? hostname : title.Trim(), Util.KeePassRDP);
+
+                                    // Add KprCredential to KprCredentialManager.
+                                    if (cred != null)
+                                        _credManager.Value.Add(cred);
+                                    if (gatewayCred != null)
+                                        _credManager.Value.Add(gatewayCred);
+
+                                    // Start RDP / mstsc.exe.
+                                    using (var process = new SecureProcess
+                                    {
+                                        StartInfo = rdpProcess
+                                    })
+                                    {
+                                        if (!process.Start(_config))
+                                            throw new InvalidOperationException("Process.Start");
+
+                                        var tcs = new TaskCompletionSource<object>();
+
+                                        cts.Token.Register(() =>
                                         {
+                                            try
+                                            {
+                                                if (!process.HasExited)
+                                                    process.Kill();
+                                            }
+                                            catch { }
+
                                             if (cred != null)
                                             {
-                                                cred.Dispose();
-                                                cred = null;
+                                                try
+                                                {
+                                                    cred.Dispose();
+                                                    cred = null;
+                                                }
+                                                catch { }
                                             }
                                             if (gatewayCred != null)
                                             {
-                                                gatewayCred.Dispose();
-                                                gatewayCred = null;
+                                                try
+                                                {
+                                                    gatewayCred.Dispose();
+                                                    gatewayCred = null;
+                                                }
+                                                catch { }
                                             }
 
-                                            throw new ArgumentOutOfRangeException("Command");
-                                        }
+                                            tcs.TrySetResult(null);
 
-                                        if (tmpUseCreds)
-                                        {
-                                            if (_config.MstscCleanupRegistry)
-                                                Util.RemoveHintFromRegistry(host);
-                                        }
+                                            try
+                                            {
+                                                TaskWithCancellationToken localOldTask = null;
+                                                if (_tasks.TryRemove(localTaskUuid, out localOldTask) && localOldTask != newTask && !localOldTask.IsCompleted)
+                                                    _tasks.TryAdd(localTaskUuid, localOldTask);
+                                            }
+                                            catch { }
 
-                                        // Start RDP / mstsc.exe.
-                                        var rdpProcess = new ProcessStartInfo
-                                        {
-                                            WindowStyle = ProcessWindowStyle.Normal,
-                                            FileName = icommand.Executable,
-                                            Arguments = argumentsBuilder.ToString().TrimEnd(),
-                                            ErrorDialog = true,
-                                            ErrorDialogParentHandle = Form.ActiveForm.Handle,
-                                            LoadUserProfile = false,
-                                            WorkingDirectory = Path.GetTempPath() // Environment.ExpandEnvironmentVariables("%TEMP%")
-                                        };
-
-                                        if (_config.MstscReplaceTitle)
-                                            title = string.Format("{0} - {1}", string.IsNullOrWhiteSpace(title) ? host : title, Util.KeePassRDP);
-
-                                        // Add KprCredential to KprCredentialManager.
-                                        if (cred != null)
-                                            _credManager.Value.Add(cred);
-                                        if (gatewayCred != null)
-                                            _credManager.Value.Add(gatewayCred);
-
-                                        using (var process = Process.Start(rdpProcess))
-                                        {
-                                            var inc = _config.CredVaultTtl > 0 && _config.CredVaultAdaptiveTtl && cred != null ?
-                                                TimeSpan.FromSeconds(Math.Ceiling(Math.Max(1, _config.CredVaultTtl / 2f))) : TimeSpan.Zero;
-
-                                            var ttl = (int)Math.Max(1000, inc.TotalMilliseconds);
-
-                                            if (process.WaitForInputIdle(ttl) && !process.HasExited)
-                                                // Wait a limited time for mstsc.exe window, otherwise assume something went wrong.
-                                                for (var spins = ttl / 250; spins > 0; spins--)
+                                            try
+                                            {
+                                                if (oldTask != null && !oldTask.IsCompleted)
                                                 {
-                                                    process.Refresh();
-                                                    if (process.HasExited)
-                                                        break;
+                                                    if (cts.IsCancellationRequested)
+                                                        oldTask.Cancel();
+                                                    else if (!_tasks.ContainsKey(localTaskUuid))
+                                                    {
+                                                        if (_tasks.TryAdd(localTaskUuid, oldTask))
+                                                            oldTask = null;
+                                                    }
+                                                }
+                                            }
+                                            catch { }
+                                        });
 
-                                                    if (process.MainWindowHandle != IntPtr.Zero || !process.WaitForExit(200))
+                                        var isMstscCommand = icommand is MstscCommand;
+
+                                        SecureDesktop.Runner runner = _ => new Task(() =>
+                                        {
+                                            try
+                                            {
+                                                var inc = _config.CredVaultTtl > 0 && _config.CredVaultAdaptiveTtl && cred != null ?
+                                                    TimeSpan.FromSeconds(Math.Ceiling(Math.Max(1, _config.CredVaultTtl / 2f))) : TimeSpan.Zero;
+
+                                                var ttl = (int)Math.Max(1500, inc.TotalMilliseconds);
+
+                                                // Wait a limited time for mstsc.exe window to appear, otherwise assume something went wrong.
+                                                if (!process.WaitForExit(250) &&
+                                                    !process.HasExited && (process.WaitForInputIdle(ttl) ||
+                                                    (!process.HasExited && process.WaitForInputIdle(ttl))) &&
+                                                    !process.HasExited)
+                                                    for (var spins = ttl / 250; spins > 0; spins--)
                                                     {
                                                         process.Refresh();
                                                         if (process.HasExited)
                                                             break;
 
-                                                        if (process.MainWindowHandle == IntPtr.Zero &&
-                                                            !SpinWait.SpinUntil(() =>
-                                                            {
-                                                                process.Refresh();
-                                                                return process.MainWindowHandle != IntPtr.Zero;
-                                                            }, 50))
-                                                        {
-                                                            // Keep incrementing TTL as necessary.
-                                                            if (spins % 2 == 0)
-                                                            {
-                                                                if (cred != null)
-                                                                    cred.IncreaseTTL(inc);
-                                                                if (gatewayCred != null)
-                                                                    gatewayCred.IncreaseTTL(inc);
-                                                            }
-
-                                                            continue;
-                                                        }
-
-                                                        if (!string.IsNullOrEmpty(title))
-                                                        {
-                                                            var oldTitle = new char[NativeMethods.GetWindowTextLength(process.MainWindowHandle) + 1];
-                                                            NativeMethods.GetWindowText(process.MainWindowHandle, oldTitle, oldTitle.Length);
-                                                            if (!new string(oldTitle).TrimEnd(char.MinValue).Equals(title, StringComparison.OrdinalIgnoreCase))
-                                                                NativeMethods.SetWindowText(process.MainWindowHandle, title);
-                                                        }
-
-                                                        // Find progress bar.
-                                                        var pbHandle = process.MainWindowHandle == IntPtr.Zero ?
-                                                            IntPtr.Zero :
-                                                            NativeMethods.FindWindowEx(process.MainWindowHandle, IntPtr.Zero, "msctls_progress32", null);
-
-                                                        if (waitForRdpFile)
-                                                        {
-                                                            // Check for (un-)signed .rdp file dialog.
-                                                            var ms = (int)TimeSpan.FromMilliseconds(750).TotalMilliseconds;
-                                                            if (!process.HasExited && !process.WaitForExit(ms))
-                                                            {
-                                                                process.Refresh();
-                                                                if (process.HasExited)
-                                                                    break;
-
-                                                                if (process.MainWindowHandle != IntPtr.Zero)
-                                                                {
-                                                                    var lastPopup = NativeMethods.GetLastActivePopup(process.MainWindowHandle);
-
-                                                                    // Continue when popup is open.
-                                                                    if (lastPopup != process.MainWindowHandle)
-                                                                    {
-                                                                        var element = AutomationElement.FromHandle(lastPopup);
-
-                                                                        // Confirm connection box.
-                                                                        var button = element.FindFirst(
-                                                                            TreeScope.Children,
-                                                                            new PropertyCondition(AutomationElement.AutomationIdProperty, "13498"));
-
-                                                                        if (button != null && button.Current.ControlType == ControlType.Image)
-                                                                        {
-                                                                            if (_config.MstscConfirmCertificate)
-                                                                            {
-                                                                                button = element.FindFirst(
-                                                                                    TreeScope.Children,
-                                                                                    new PropertyCondition(AutomationElement.AutomationIdProperty, "1"));
-
-                                                                                if (button != null && button.Current.ControlType == ControlType.Button)
-                                                                                {
-                                                                                    var buttonHandle = new IntPtr(button.Current.NativeWindowHandle);
-
-                                                                                    // Try LegacyIAccessible.DoDefaultAction() first, fallback to emulating click on button.
-                                                                                    try
-                                                                                    {
-                                                                                        if (KprDoDefaultAction(buttonHandle) != 0)
-                                                                                            throw new Exception();
-                                                                                    }
-                                                                                    catch
-                                                                                    {
-                                                                                        NativeMethods.SendMessage(buttonHandle, NativeMethods.WM_LBUTTONDOWN, 0, 0);
-                                                                                        NativeMethods.SendMessage(buttonHandle, NativeMethods.WM_LBUTTONUP, 0, 0);
-                                                                                        NativeMethods.SendMessage(buttonHandle, NativeMethods.BM_CLICK, 0, 0);
-                                                                                    }
-
-                                                                                    waitForRdpFile = false;
-                                                                                }
-                                                                            }
-
-                                                                            continue;
-                                                                        }
-                                                                        else
-                                                                            waitForRdpFile = false;
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-
-                                                        if (pbHandle != IntPtr.Zero)
-                                                        {
-                                                            var ms = (int)TimeSpan.FromMilliseconds(750).TotalMilliseconds;
-                                                            do
-                                                            {
-                                                                if (process.HasExited || process.WaitForExit(ms))
-                                                                    break;
-
-                                                                process.Refresh();
-
-                                                                if (process.HasExited || process.MainWindowHandle == IntPtr.Zero)
-                                                                    break;
-
-                                                                var lastPopup = NativeMethods.GetLastActivePopup(process.MainWindowHandle);
-
-                                                                // Continue when popup is open.
-                                                                if (lastPopup != process.MainWindowHandle)
-                                                                {
-                                                                    var element = AutomationElement.FromHandle(lastPopup);
-
-                                                                    // Connection failed error box.
-                                                                    var button = element.FindFirst(
-                                                                        TreeScope.Children,
-                                                                        new PropertyCondition(AutomationElement.AutomationIdProperty, "CommandButton_1"));
-
-                                                                    if (button != null && button.Current.ControlType == ControlType.Button)
-                                                                        break;
-
-                                                                    if (_config.MstscConfirmCertificate)
-                                                                    {
-                                                                        // Confirm certificate error box.
-                                                                        button = element.FindFirst(
-                                                                            TreeScope.Children,
-                                                                            new PropertyCondition(AutomationElement.AutomationIdProperty, "14004"));
-
-                                                                        if (button != null && button.Current.ControlType == ControlType.Button)
-                                                                        {
-                                                                            var buttonHandle = new IntPtr(button.Current.NativeWindowHandle);
-
-                                                                            // Try LegacyIAccessible.DoDefaultAction() first, fallback to emulating click on button.
-                                                                            try
-                                                                            {
-                                                                                if (KprDoDefaultAction(buttonHandle) != 0)
-                                                                                    throw new Exception();
-                                                                            }
-                                                                            catch
-                                                                            {
-                                                                                NativeMethods.SendMessage(buttonHandle, NativeMethods.WM_LBUTTONDOWN, 0, 0);
-                                                                                NativeMethods.SendMessage(buttonHandle, NativeMethods.WM_LBUTTONUP, 0, 0);
-                                                                                NativeMethods.SendMessage(buttonHandle, NativeMethods.BM_CLICK, 0, 0);
-                                                                            }
-
-                                                                            continue;
-                                                                        }
-                                                                        else
-                                                                            break;
-                                                                    }
-                                                                }
-                                                                else //if (NativeMethods.FindWindowEx(process.MainWindowHandle, IntPtr.Zero, "BBarWindowClass", "BBar") != IntPtr.Zero)
-                                                                {
-                                                                    // Break when progress bar is gone.
-                                                                    pbHandle = process.MainWindowHandle == IntPtr.Zero ?
-                                                                        IntPtr.Zero :
-                                                                        NativeMethods.FindWindowEx(process.MainWindowHandle, IntPtr.Zero, "msctls_progress32", null);
-                                                                    if (pbHandle == IntPtr.Zero)
-                                                                        break;
-                                                                }
-
-                                                                // Keep incrementing TTL as necessary.
-                                                                if (cred != null)
-                                                                    cred.IncreaseTTL(inc);
-                                                                if (gatewayCred != null)
-                                                                    gatewayCred.IncreaseTTL(inc);
-                                                            } while (!process.HasExited);
-                                                        }
-                                                        else if (spins == 1)
+                                                        if (process.MainWindowHandle != IntPtr.Zero || !process.WaitForExit(200))
                                                         {
                                                             process.Refresh();
+                                                            if (process.HasExited)
+                                                                break;
 
-                                                            if ((process.HasExited && _config.CredVaultRemoveOnExit) ||
-                                                                (process.MainWindowHandle != IntPtr.Zero && _config.CredVaultTtl > 0 && _config.CredVaultAdaptiveTtl))
-                                                            {
-                                                                if (cred != null)
+                                                            if (process.MainWindowHandle == IntPtr.Zero &&
+                                                                !SpinWait.SpinUntil(() =>
                                                                 {
-                                                                    cred.Dispose();
-                                                                    cred = null;
-                                                                }
-                                                                if (gatewayCred != null)
-                                                                {
-                                                                    gatewayCred.Dispose();
-                                                                    gatewayCred = null;
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                    else
-                                                        break;
-                                                }
-
-                                            process.Refresh();
-
-                                            if ((process.HasExited || process.MainWindowHandle != IntPtr.Zero) && _config.CredVaultTtl > 0 && _config.CredVaultAdaptiveTtl)
-                                            {
-                                                if (cred != null)
-                                                {
-                                                    cred.Dispose();
-                                                    cred = null;
-                                                }
-                                                if (gatewayCred != null)
-                                                {
-                                                    gatewayCred.Dispose();
-                                                    gatewayCred = null;
-                                                }
-                                            }
-
-                                            if (!process.HasExited && !process.WaitForExit(250))
-                                            {
-                                                process.Refresh();
-                                                if (!string.IsNullOrEmpty(title) && process.MainWindowHandle != IntPtr.Zero)
-                                                    NativeMethods.SetWindowText(process.MainWindowHandle, title);
-
-                                                if (!process.HasExited && !process.WaitForExit(250))
-                                                {
-                                                    process.Refresh();
-                                                    if (!process.HasExited)
-                                                    {
-                                                        // Set title twice to try to make sure to catch the correct window handle.
-                                                        if (!string.IsNullOrEmpty(title) && process.MainWindowHandle != IntPtr.Zero)
-                                                            NativeMethods.SetWindowText(process.MainWindowHandle, title);
-
-                                                        // Find progress bar.
-                                                        var pbHandle = process.MainWindowHandle == IntPtr.Zero ?
-                                                            IntPtr.Zero :
-                                                            NativeMethods.FindWindowEx(process.MainWindowHandle, IntPtr.Zero, "msctls_progress32", null);
-
-                                                        var maxTimeout = Math.Max(10000, ttl * 3);
-                                                        var timeoutInc = Math.Max(250, Math.Min(1000, process.MainWindowHandle == IntPtr.Zero || pbHandle != IntPtr.Zero ? ttl / 4 : ttl / 2));
-                                                        var timeout = timeoutInc;
-                                                        var nextTimeout = timeout;
-
-                                                        // Check if the window is still alive from time to time.
-                                                        while (!process.HasExited) // !process.WaitForExit(timeout))
-                                                        {
-                                                            if (!process.WaitForInputIdle(timeout))
+                                                                    process.Refresh();
+                                                                    return process.HasExited || process.MainWindowHandle != IntPtr.Zero;
+                                                                }, 50))
                                                             {
-                                                                nextTimeout = Math.Min(maxTimeout, timeout + timeoutInc);
-                                                                timeout = nextTimeout;
+                                                                // Keep incrementing TTL as necessary.
+                                                                if (spins % 2 == 0)
+                                                                {
+                                                                    if (cred != null)
+                                                                        cred.IncreaseTTL(inc);
+                                                                    if (gatewayCred != null)
+                                                                        gatewayCred.IncreaseTTL(inc);
+                                                                }
+
                                                                 continue;
                                                             }
 
@@ -935,333 +943,763 @@ namespace KeePassRDP
                                                             if (process.HasExited)
                                                                 break;
 
-                                                            if (process.MainWindowHandle != IntPtr.Zero)
+                                                            if (!string.IsNullOrEmpty(title) && process.MainWindowHandle != IntPtr.Zero)
                                                             {
-                                                                if (_config.CredVaultTtl > 0 && _config.CredVaultAdaptiveTtl)
+                                                                var oldTitle = new char[NativeMethods.GetWindowTextLength(process.MainWindowHandle) + 1];
+                                                                if (NativeMethods.GetWindowText(process.MainWindowHandle, oldTitle, oldTitle.Length) == 0 ||
+                                                                    !string.Equals(new string(oldTitle).TrimEnd(char.MinValue), title, StringComparison.OrdinalIgnoreCase))
+                                                                    NativeMethods.SetWindowText(process.MainWindowHandle, title);
+                                                            }
+
+                                                            if (isMstscCommand)
+                                                            {
+                                                                // Find progress bar.
+                                                                var pbHandle = process.MainWindowHandle == IntPtr.Zero ?
+                                                                    IntPtr.Zero :
+                                                                    NativeMethods.FindWindowEx(process.MainWindowHandle, IntPtr.Zero, "msctls_progress32", null);
+
+                                                                if (waitForRdpFile)
                                                                 {
-                                                                    if (cred != null)
+                                                                    // Check for (un-)signed .rdp file dialog.
+                                                                    var ms = (int)TimeSpan.FromMilliseconds(750).TotalMilliseconds;
+                                                                    if (!process.HasExited && !process.WaitForExit(ms))
                                                                     {
-                                                                        cred.Dispose();
-                                                                        cred = null;
-                                                                    }
-                                                                    if (gatewayCred != null)
-                                                                    {
-                                                                        gatewayCred.Dispose();
-                                                                        gatewayCred = null;
+                                                                        process.Refresh();
+                                                                        if (process.HasExited)
+                                                                            break;
+
+                                                                        if (process.MainWindowHandle != IntPtr.Zero)
+                                                                        {
+                                                                            var lastPopup = NativeMethods.GetLastActivePopup(process.MainWindowHandle);
+
+                                                                            // Continue when popup is open.
+                                                                            if (lastPopup != process.MainWindowHandle)
+                                                                            {
+                                                                                try
+                                                                                {
+                                                                                    var element = lastPopup == IntPtr.Zero ? null : AutomationElement.FromHandle(lastPopup);
+
+                                                                                    if (element != null)
+                                                                                    {
+                                                                                        // Break on enter credentials dialog.
+                                                                                        if (element.Current.ControlType == ControlType.Window &&
+                                                                                            element.Current.ClassName == "Credential Dialog Xaml Host")
+                                                                                            break;
+
+                                                                                        // Confirm connection box.
+                                                                                        var button = element.FindFirst(
+                                                                                        TreeScope.Children,
+                                                                                        new PropertyCondition(AutomationElement.AutomationIdProperty, "13498"));
+
+                                                                                        if (button != null && button.Current.ControlType == ControlType.Image)
+                                                                                        {
+                                                                                            if (_config.MstscConfirmCertificate)
+                                                                                            {
+                                                                                                button = element.FindFirst(
+                                                                                                    TreeScope.Children,
+                                                                                                    new PropertyCondition(AutomationElement.AutomationIdProperty, "1"));
+
+                                                                                                if (button != null && button.Current.ControlType == ControlType.Button)
+                                                                                                {
+                                                                                                    var buttonHandle = new IntPtr(button.Current.NativeWindowHandle);
+
+                                                                                                    // Try LegacyIAccessible.DoDefaultAction() first, fallback to emulating click on button.
+                                                                                                    try
+                                                                                                    {
+                                                                                                        if (KprDoDefaultAction(buttonHandle) != 0)
+                                                                                                            throw new Exception();
+                                                                                                    }
+                                                                                                    catch
+                                                                                                    {
+                                                                                                        NativeMethods.SendMessage(buttonHandle, NativeMethods.WM_LBUTTONDOWN, 0, 0);
+                                                                                                        NativeMethods.SendMessage(buttonHandle, NativeMethods.WM_LBUTTONUP, 0, 0);
+                                                                                                        NativeMethods.SendMessage(buttonHandle, NativeMethods.BM_CLICK, 0, 0);
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+
+                                                                                            waitForRdpFile = false;
+                                                                                            continue;
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                                catch (ElementNotAvailableException) { }
+                                                                            }
+                                                                        }
                                                                     }
                                                                 }
 
-                                                                timeout = nextTimeout;
-                                                                nextTimeout = Math.Min(maxTimeout, timeout + timeoutInc);
-                                                            }
-                                                            else
-                                                            {
-                                                                timeout = timeoutInc;
-                                                                nextTimeout = timeout;
-                                                            }
-
-                                                            var lastPopup = NativeMethods.GetLastActivePopup(process.MainWindowHandle);
-                                                            if (lastPopup != process.MainWindowHandle)
-                                                            {
-                                                                if (tmpUseCreds)
+                                                                if (pbHandle != IntPtr.Zero)
                                                                 {
-                                                                    var element = AutomationElement.FromHandle(lastPopup);
-
-                                                                    // Enter credentials dialog.
-                                                                    if (element.Current.ControlType == ControlType.Window &&
-                                                                        element.Current.ClassName == "Credential Dialog Xaml Host")
+                                                                    var ms = (int)TimeSpan.FromMilliseconds(750).TotalMilliseconds;
+                                                                    do
                                                                     {
-                                                                        timeout = timeoutInc;
-                                                                        nextTimeout = timeout;
+                                                                        if (waitForRdpFile)
+                                                                            waitForRdpFile = false;
+                                                                        else if (process.HasExited || process.WaitForExit(ms))
+                                                                            break;
 
-                                                                        var textBox = element.FindFirst(
-                                                                            TreeScope.Subtree,
-                                                                            new PropertyCondition(AutomationElement.AutomationIdProperty, "StaticTextField_0"));
+                                                                        process.Refresh();
 
-                                                                        if (textBox != null)
+                                                                        if (process.HasExited || process.MainWindowHandle == IntPtr.Zero)
+                                                                            break;
+
+                                                                        var lastPopup = NativeMethods.GetLastActivePopup(process.MainWindowHandle);
+
+                                                                        // Continue when popup is open.
+                                                                        if (lastPopup != process.MainWindowHandle)
                                                                         {
-                                                                            var options = element.FindFirst(
-                                                                                TreeScope.Subtree,
-                                                                                new PropertyCondition(AutomationElement.AutomationIdProperty, "ChooseAnotherOption"));
-
-                                                                            if (options != null)
+                                                                            try
                                                                             {
-                                                                                var ip = (InvokePattern)options.GetCurrentPattern(InvokePattern.Pattern);
+                                                                                var element = lastPopup == IntPtr.Zero ? null : AutomationElement.FromHandle(lastPopup);
 
-                                                                                var list = element.FindFirst(
-                                                                                    TreeScope.Subtree,
-                                                                                    new PropertyCondition(AutomationElement.ClassNameProperty, "ListView"));
-
-                                                                                if (list == null)
+                                                                                if (element != null)
                                                                                 {
-                                                                                    ip.Invoke();
-                                                                                    if (process.HasExited || process.WaitForExit(25))
-                                                                                        continue;
+                                                                                    // Break on enter credentials dialog.
+                                                                                    if (element.Current.ControlType == ControlType.Window &&
+                                                                                        element.Current.ClassName == "Credential Dialog Xaml Host")
+                                                                                        break;
 
-                                                                                    list = element.FindFirst(
-                                                                                        TreeScope.Subtree,
-                                                                                        new PropertyCondition(AutomationElement.ClassNameProperty, "ListView"));
+                                                                                    // Connection failed error box.
+                                                                                    var button = element.FindFirst(
+                                                                                        TreeScope.Children,
+                                                                                        new PropertyCondition(AutomationElement.AutomationIdProperty, "CommandButton_1"));
 
-                                                                                    if (list == null && (process.HasExited || process.WaitForExit(25)))
-                                                                                        continue;
-                                                                                }
+                                                                                    if (button != null && button.Current.ControlType == ControlType.Button)
+                                                                                        break;
 
-                                                                                if (list == null)
-                                                                                    list = element.FindFirst(
-                                                                                        TreeScope.Subtree,
-                                                                                        new PropertyCondition(AutomationElement.ClassNameProperty, "ListView"));
-
-                                                                                if (list != null)
-                                                                                {
-                                                                                    var items = list.FindAll(
-                                                                                        TreeScope.Subtree,
-                                                                                        new PropertyCondition(AutomationElement.ClassNameProperty, "ListViewItem"));
-
-                                                                                    if (items != null)
+                                                                                    if (_config.MstscConfirmCertificate)
                                                                                     {
-                                                                                        var last = items.OfType<AutomationElement>().LastOrDefault();
+                                                                                        // Confirm certificate error box.
+                                                                                        button = element.FindFirst(
+                                                                                            TreeScope.Children,
+                                                                                            new PropertyCondition(AutomationElement.AutomationIdProperty, "14004"));
 
-                                                                                        if (last != null)
+                                                                                        if (button != null && button.Current.ControlType == ControlType.Button)
                                                                                         {
-                                                                                            var sp = (SelectionItemPattern)last.GetCurrentPattern(SelectionItemPattern.Pattern);
-                                                                                            sp.Select();
-                                                                                        }
-                                                                                    }
-                                                                                }
+                                                                                            var buttonHandle = new IntPtr(button.Current.NativeWindowHandle);
 
-                                                                                ip.Invoke();
-
-                                                                                if (process.HasExited || process.WaitForExit(25))
-                                                                                    continue;
-
-                                                                                textBox = element.FindFirst(
-                                                                                    TreeScope.Subtree,
-                                                                                    new PropertyCondition(AutomationElement.AutomationIdProperty, "EditField_1"));
-
-                                                                                if (textBox == null && (process.HasExited || process.WaitForExit(25)))
-                                                                                    continue;
-                                                                            }
-                                                                        }
-
-                                                                        var checkbox = element.FindFirst(
-                                                                            TreeScope.Subtree,
-                                                                            new PropertyCondition(AutomationElement.ClassNameProperty, "CheckBox"));
-
-                                                                        if (checkbox != null)
-                                                                        {
-                                                                            var tp = (TogglePattern)checkbox.GetCurrentPattern(TogglePattern.Pattern);
-                                                                            if (tp.Current.ToggleState == ToggleState.On)
-                                                                                tp.Toggle();
-                                                                        }
-
-                                                                        if (retryOnce)
-                                                                        {
-                                                                            retryOnce = false;
-
-                                                                            if (retryUsername != null)
-                                                                            {
-                                                                                if (textBox == null)
-                                                                                    textBox = element.FindFirst(
-                                                                                        TreeScope.Subtree,
-                                                                                        new PropertyCondition(AutomationElement.AutomationIdProperty, "EditField_1"));
-
-                                                                                if (textBox != null)
-                                                                                {
-                                                                                    var vp = (ValuePattern)textBox.GetCurrentPattern(ValuePattern.Pattern);
-                                                                                    if (string.IsNullOrEmpty(vp.Current.Value))
-                                                                                    {
-                                                                                        if (retryCredEntry != null)
-                                                                                        {
-                                                                                            // KeePass.Util.EntryUtil.FillPlaceholders
-                                                                                            var tmpEntry = retryCredEntry.GetResolvedReferencesEntry(new SprContext(retryCredEntry, mainForm.ActiveDatabase, _config.KeePassSprCompileFlags)
+                                                                                            // Try LegacyIAccessible.DoDefaultAction() first, fallback to emulating click on button.
+                                                                                            try
                                                                                             {
-                                                                                                ForcePlainTextPasswords = true
-                                                                                            });
-                                                                                            retryUsername = tmpEntry.Strings.GetSafe(PwDefs.UserNameField);
-                                                                                            if (forceLocalUser)
-                                                                                                retryUsername = retryUsername.ForceLocalUser(host);
-                                                                                            if (forceUpn)
-                                                                                                retryUsername = retryUsername.ForceUPN();
-                                                                                        }
-                                                                                        var usernameChars = retryUsername.ReadChars();
-                                                                                        var usernameString = new string(usernameChars);
-                                                                                        vp.SetValue(usernameString);
-                                                                                        MemoryUtil.SecureZeroMemory(usernameString);
-                                                                                        MemoryUtil.SecureZeroMemory(usernameChars);
-                                                                                    }
-                                                                                }
-                                                                            }
-
-                                                                            if (retryPassword != null)
-                                                                            {
-                                                                                var pwBox = element.FindFirst(
-                                                                                    TreeScope.Subtree,
-                                                                                    new PropertyCondition(AutomationElement.AutomationIdProperty, "PasswordField_2"));
-
-                                                                                if (pwBox != null)
-                                                                                {
-                                                                                    var vp = (ValuePattern)pwBox.GetCurrentPattern(ValuePattern.Pattern);
-                                                                                    if (string.IsNullOrEmpty(vp.Current.Value))
-                                                                                    {
-                                                                                        IntPtr valuePtr = IntPtr.Zero;
-                                                                                        try
-                                                                                        {
-                                                                                            valuePtr = Marshal.SecureStringToGlobalAllocUnicode(retryPassword);
-                                                                                            if (valuePtr != IntPtr.Zero)
-                                                                                            {
-                                                                                                var value = Marshal.PtrToStringUni(valuePtr);
-                                                                                                vp.SetValue(value);
-                                                                                                MemoryUtil.SecureZeroMemory(value);
+                                                                                                if (KprDoDefaultAction(buttonHandle) != 0)
+                                                                                                    throw new Exception();
                                                                                             }
-                                                                                        }
-                                                                                        finally
-                                                                                        {
-                                                                                            if (valuePtr != IntPtr.Zero)
+                                                                                            catch
                                                                                             {
-                                                                                                MemoryUtil.SafeSecureZeroMemory(valuePtr, retryPassword.Length * 2);
-                                                                                                Marshal.ZeroFreeGlobalAllocUnicode(valuePtr);
+                                                                                                NativeMethods.SendMessage(buttonHandle, NativeMethods.WM_LBUTTONDOWN, 0, 0);
+                                                                                                NativeMethods.SendMessage(buttonHandle, NativeMethods.WM_LBUTTONUP, 0, 0);
+                                                                                                NativeMethods.SendMessage(buttonHandle, NativeMethods.BM_CLICK, 0, 0);
                                                                                             }
+
+                                                                                            continue;
                                                                                         }
+                                                                                        else
+                                                                                            break;
                                                                                     }
-                                                                                }
-
-                                                                                var button = element.FindFirst(
-                                                                                    TreeScope.Children,
-                                                                                    new PropertyCondition(AutomationElement.AutomationIdProperty, "OkButton"));
-
-                                                                                if (button != null)
-                                                                                {
-                                                                                    var ip = (InvokePattern)button.GetCurrentPattern(InvokePattern.Pattern);
-                                                                                    ip.Invoke();
-
-                                                                                    if (retryPassword.Length > 0)
-                                                                                    {
-                                                                                        retryPassword.Dispose();
-                                                                                        retryPassword = null;
-                                                                                    }
-
-                                                                                    if (retryCredEntry != null)
-                                                                                        retryCredEntry = null;
                                                                                 }
                                                                             }
+                                                                            catch (ElementNotAvailableException) { }
                                                                         }
-                                                                    }
-                                                                    else
-                                                                        retryOnce = retryUsername != null;
+                                                                        else //if (NativeMethods.FindWindowEx(process.MainWindowHandle, IntPtr.Zero, "BBarWindowClass", "BBar") != IntPtr.Zero)
+                                                                        {
+                                                                            // Break when progress bar is gone.
+                                                                            pbHandle = process.MainWindowHandle == IntPtr.Zero ?
+                                                                                IntPtr.Zero :
+                                                                                NativeMethods.FindWindowEx(process.MainWindowHandle, IntPtr.Zero, "msctls_progress32", null);
+                                                                            if (pbHandle == IntPtr.Zero)
+                                                                                break;
+                                                                        }
+
+                                                                        process.Refresh();
+                                                                        if (!process.HasExited)
+                                                                        {
+                                                                            // Keep incrementing TTL as necessary.
+                                                                            if (cred != null)
+                                                                                cred.IncreaseTTL(inc);
+                                                                            if (gatewayCred != null)
+                                                                                gatewayCred.IncreaseTTL(inc);
+                                                                        }
+                                                                    } while (!process.HasExited);
                                                                 }
-                                                            }
-                                                            else
-                                                                retryOnce = retryUsername != null;
-
-                                                            if (process.HasExited || process.WaitForExit(timeout))
-                                                                continue;
-
-                                                            process.Refresh();
-
-                                                            // Assume something went wrong when threads get stuck.
-                                                            /*var allThreads = process.Threads.Cast<ProcessThread>();
-                                                            if (!allThreads.Any(thread => thread.ThreadState != System.Diagnostics.ThreadState.Wait) &&
-                                                                 allThreads.Any(thread => thread.WaitReason != ThreadWaitReason.Suspended))
-                                                            {
-                                                                if (!process.HasExited)
-                                                                    process.Kill();
-                                                                break;
-                                                            }*/
-
-                                                            // Assume something went wrong when there is no window anymore.
-                                                            if (process.HasExited || process.MainWindowHandle == IntPtr.Zero)
-                                                            {
-                                                                if (!process.HasExited && !process.WaitForExit(timeout) && !process.HasExited)
+                                                                else if (spins == 1)
                                                                 {
                                                                     process.Refresh();
-                                                                    if (process.MainWindowHandle == IntPtr.Zero)
+
+                                                                    if ((process.HasExited && _config.CredVaultRemoveOnExit) ||
+                                                                        (!process.HasExited && process.MainWindowHandle != IntPtr.Zero && _config.CredVaultTtl > 0 && _config.CredVaultAdaptiveTtl))
                                                                     {
-                                                                        if (!process.HasExited)
-                                                                            process.Kill();
-                                                                        break;
+                                                                        // Last try to find progress bar.
+                                                                        if (!process.HasExited && !process.WaitForExit(250))
+                                                                        {
+                                                                            process.Refresh();
+                                                                            pbHandle = process.MainWindowHandle == IntPtr.Zero ?
+                                                                                IntPtr.Zero :
+                                                                                NativeMethods.FindWindowEx(process.MainWindowHandle, IntPtr.Zero, "msctls_progress32", null);
+                                                                            if (pbHandle != IntPtr.Zero)
+                                                                            {
+                                                                                spins++;
+                                                                                continue;
+                                                                            }
+                                                                        }
+
+                                                                        if (cred != null)
+                                                                        {
+                                                                            cred.Dispose();
+                                                                            cred = null;
+                                                                        }
+                                                                        if (gatewayCred != null)
+                                                                        {
+                                                                            gatewayCred.Dispose();
+                                                                            gatewayCred = null;
+                                                                        }
                                                                     }
                                                                 }
                                                             }
                                                         }
+                                                        else
+                                                        {
+                                                            process.Refresh();
+                                                            if (process.HasExited || process.WaitForExit(250))
+                                                                break;
+                                                        }
+                                                    }
+
+                                                process.Refresh();
+
+                                                if ((process.HasExited || process.MainWindowHandle != IntPtr.Zero) && _config.CredVaultTtl > 0 && _config.CredVaultAdaptiveTtl)
+                                                {
+                                                    if (cred != null)
+                                                    {
+                                                        cred.Dispose();
+                                                        cred = null;
+                                                    }
+                                                    if (gatewayCred != null)
+                                                    {
+                                                        gatewayCred.Dispose();
+                                                        gatewayCred = null;
                                                     }
                                                 }
-                                            }
-                                        }
-                                    }
-                                    finally
-                                    {
-                                        if (cred != null)
-                                        {
-                                            if (_config.CredVaultTtl > 0 && _config.CredVaultAdaptiveTtl)
-                                                cred.ResetTTL();
-                                            if (_config.CredVaultRemoveOnExit)
-                                                cred.Dispose();
-                                        }
 
-                                        if (gatewayCred != null)
-                                        {
-                                            if (_config.CredVaultTtl > 0 && _config.CredVaultAdaptiveTtl)
-                                                gatewayCred.ResetTTL();
-                                            if (_config.CredVaultRemoveOnExit)
-                                                gatewayCred.Dispose();
-                                        }
+                                                if (!process.HasExited && !process.WaitForExit(250))
+                                                {
+                                                    process.Refresh();
+                                                    if (!string.IsNullOrEmpty(title) && process.MainWindowHandle != IntPtr.Zero)
+                                                        NativeMethods.SetWindowText(process.MainWindowHandle, title);
 
-                                        if (retryPassword != null)
-                                            retryPassword.Dispose();
+                                                    if (!process.HasExited && !process.WaitForExit(250))
+                                                    {
+                                                        process.Refresh();
+                                                        if (!process.HasExited)
+                                                        {
+                                                            // Set title twice to try to make sure to catch the correct window handle.
+                                                            if (!string.IsNullOrEmpty(title) && process.MainWindowHandle != IntPtr.Zero)
+                                                                NativeMethods.SetWindowText(process.MainWindowHandle, title);
 
-                                        if (rdpFile != null)
-                                            rdpFile.Dispose();
+                                                            // Find progress bar.
+                                                            var pbHandle = process.MainWindowHandle == IntPtr.Zero ?
+                                                                IntPtr.Zero :
+                                                                NativeMethods.FindWindowEx(process.MainWindowHandle, IntPtr.Zero, "msctls_progress32", null);
 
-                                        if (tmpUseCreds)
-                                        {
-                                            if (_config.MstscCleanupRegistry)
-                                                Util.RemoveHintFromRegistry(host);
-                                        }
+                                                            var maxTimeout = Math.Max(10000, ttl * 3);
+                                                            var timeoutInc = Math.Max(250, Math.Min(1000, process.MainWindowHandle == IntPtr.Zero || pbHandle != IntPtr.Zero ? ttl / 4 : ttl / 2));
+                                                            var timeout = timeoutInc;
+                                                            var nextTimeout = timeout;
+                                                            var setTitle = false;
 
-                                        var localTaskUuid = (string)thisTaskUuid;
-                                        TaskWithCancellationToken localOldTask = null;
-                                        if (_tasks.TryRemove(localTaskUuid, out localOldTask) && localOldTask != newTask && !localOldTask.IsCompleted)
-                                            _tasks.TryAdd(localTaskUuid, localOldTask);
+                                                            // Check if the window is still alive from time to time.
+                                                            while (!process.HasExited) // !process.WaitForExit(timeout))
+                                                            {
+                                                                process.Refresh();
+                                                                if (process.HasExited)
+                                                                    break;
 
-                                        newTask.ContinueWith(t =>
-                                        {
-                                            try
-                                            {
-                                                t.Wait();
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                VistaTaskDialog.ShowMessageBoxEx(
-                                                    string.Format(
-                                                        "{0}{1}{2}",
-                                                        host,
-                                                        Environment.NewLine,
-                                                        ex.InnerException != null && !string.IsNullOrWhiteSpace(ex.InnerException.Message) ?
-                                                            ex.InnerException.Message :
-                                                            !string.IsNullOrWhiteSpace(ex.Message) ?
-                                                                ex.Message :
-                                                                ex.InnerException != null ?
-                                                                    ex.InnerException.GetType().Name :
-                                                                    ex.GetType().Name),
-                                                    null,
-                                                    string.Format("{0} - {1}", Util.KeePassRDP, KPRes.Error),
-                                                    VtdIcon.Error,
-                                                    _host.MainWindow,
-                                                    null, 0, null, 0);
+                                                                // Allow setting the title at later points.
+                                                                if (setTitle)
+                                                                {
+                                                                    setTitle = false;
+                                                                    if (!string.IsNullOrEmpty(title) && process.MainWindowHandle != IntPtr.Zero)
+                                                                    {
+                                                                        var oldTitle = new char[NativeMethods.GetWindowTextLength(process.MainWindowHandle) + 1];
+                                                                        if (NativeMethods.GetWindowText(process.MainWindowHandle, oldTitle, oldTitle.Length) == 0 ||
+                                                                            !string.Equals(new string(oldTitle).TrimEnd(char.MinValue), title, StringComparison.OrdinalIgnoreCase))
+                                                                            NativeMethods.SetWindowText(process.MainWindowHandle, title);
+                                                                    }
+                                                                }
+
+                                                                if (!process.WaitForInputIdle(timeout))
+                                                                {
+                                                                    nextTimeout = Math.Min(maxTimeout, timeout + timeoutInc);
+                                                                    timeout = nextTimeout;
+                                                                    continue;
+                                                                }
+
+                                                                process.Refresh();
+                                                                if (process.HasExited)
+                                                                    break;
+
+                                                                if (process.MainWindowHandle != IntPtr.Zero)
+                                                                {
+                                                                    if (_config.CredVaultTtl > 0 && _config.CredVaultAdaptiveTtl)
+                                                                    {
+                                                                        if (cred != null)
+                                                                        {
+                                                                            cred.Dispose();
+                                                                            cred = null;
+                                                                        }
+                                                                        if (gatewayCred != null)
+                                                                        {
+                                                                            gatewayCred.Dispose();
+                                                                            gatewayCred = null;
+                                                                        }
+                                                                    }
+
+                                                                    timeout = nextTimeout;
+                                                                    nextTimeout = Math.Min(maxTimeout, timeout + timeoutInc);
+                                                                }
+                                                                else
+                                                                {
+                                                                    timeout = timeoutInc;
+                                                                    nextTimeout = timeout;
+                                                                }
+
+                                                                if (isMstscCommand)
+                                                                {
+                                                                    var lastPopup = NativeMethods.GetLastActivePopup(process.MainWindowHandle);
+                                                                    if (lastPopup != process.MainWindowHandle)
+                                                                    {
+                                                                        var mstscHandleCredDialog = _config.MstscHandleCredDialog;
+                                                                        if ((tmpUseCreds && retryOnce) || mstscHandleCredDialog)
+                                                                        {
+                                                                            try
+                                                                            {
+                                                                                var element = lastPopup == IntPtr.Zero ? null : AutomationElement.FromHandle(lastPopup);
+
+                                                                                // Enter credentials dialog.
+                                                                                if (element != null &&
+                                                                                    element.Current.ControlType == ControlType.Window &&
+                                                                                    element.Current.ClassName == "Credential Dialog Xaml Host" &&
+                                                                                    (retryOnce || mstscHandleCredDialog))
+                                                                                {
+                                                                                    timeout = timeoutInc;
+                                                                                    nextTimeout = timeout;
+
+                                                                                    var textBox = element.FindFirst(
+                                                                                        TreeScope.Subtree,
+                                                                                        new PropertyCondition(AutomationElement.AutomationIdProperty, "StaticTextField_0"));
+
+                                                                                    if (textBox != null)
+                                                                                    {
+                                                                                        setTitle = true;
+
+                                                                                        var options = element.FindFirst(
+                                                                                            TreeScope.Subtree,
+                                                                                            new PropertyCondition(AutomationElement.AutomationIdProperty, "ChooseAnotherOption"));
+
+                                                                                        if (options != null)
+                                                                                        {
+                                                                                            object pattern;
+                                                                                            if (options.TryGetCurrentPattern(InvokePattern.Pattern, out pattern))
+                                                                                            {
+                                                                                                var ip = (InvokePattern)pattern;
+
+                                                                                                var list = element.FindFirst(
+                                                                                                    TreeScope.Subtree,
+                                                                                                    new PropertyCondition(AutomationElement.ClassNameProperty, "ListView"));
+
+                                                                                                if (list == null)
+                                                                                                {
+                                                                                                    ip.Invoke();
+                                                                                                    if (process.HasExited || process.WaitForExit(25))
+                                                                                                        continue;
+
+                                                                                                    list = element.FindFirst(
+                                                                                                        TreeScope.Subtree,
+                                                                                                        new PropertyCondition(AutomationElement.ClassNameProperty, "ListView"));
+
+                                                                                                    if (list == null && (process.HasExited || process.WaitForExit(25)))
+                                                                                                        continue;
+                                                                                                }
+
+                                                                                                if (list == null)
+                                                                                                    list = element.FindFirst(
+                                                                                                        TreeScope.Subtree,
+                                                                                                        new PropertyCondition(AutomationElement.ClassNameProperty, "ListView"));
+
+                                                                                                if (list != null)
+                                                                                                {
+                                                                                                    var items = list.FindAll(
+                                                                                                        TreeScope.Subtree,
+                                                                                                        new PropertyCondition(AutomationElement.ClassNameProperty, "ListViewItem"));
+
+                                                                                                    if (items != null)
+                                                                                                    {
+                                                                                                        var last = items.OfType<AutomationElement>().LastOrDefault(x =>
+                                                                                                        {
+                                                                                                            try
+                                                                                                            {
+                                                                                                                var textBlocks = x.FindAll(
+                                                                                                                    TreeScope.Subtree,
+                                                                                                                    new PropertyCondition(AutomationElement.ClassNameProperty, "TextBlock"));
+                                                                                                                if (textBlocks == null || textBlocks.Count != 1)
+                                                                                                                    return false;
+                                                                                                                if (textBlocks.OfType<AutomationElement>().Any(y => y.Current.Name.Contains("Smartcard")))
+                                                                                                                    return false;
+                                                                                                            }
+                                                                                                            catch
+                                                                                                            {
+                                                                                                                return false;
+                                                                                                            }
+                                                                                                            return true;
+                                                                                                        });
+
+                                                                                                        if (last != null)
+                                                                                                        {
+                                                                                                            if (last.TryGetCurrentPattern(SelectionItemPattern.Pattern, out pattern))
+                                                                                                            {
+                                                                                                                var sp = (SelectionItemPattern)pattern;
+                                                                                                                sp.Select();
+                                                                                                            }
+                                                                                                        }
+                                                                                                    }
+                                                                                                }
+
+                                                                                                if (!process.HasExited)
+                                                                                                    ip.Invoke();
+
+                                                                                                if (process.HasExited || process.WaitForExit(25))
+                                                                                                    continue;
+
+                                                                                                textBox = element.FindFirst(
+                                                                                                    TreeScope.Subtree,
+                                                                                                    new PropertyCondition(AutomationElement.AutomationIdProperty, "EditField_1"));
+
+                                                                                                if (textBox == null && (process.HasExited || process.WaitForExit(25)))
+                                                                                                    continue;
+                                                                                            }
+                                                                                        }
+                                                                                    }
+
+                                                                                    var checkbox = element.FindFirst(
+                                                                                        TreeScope.Subtree,
+                                                                                        new PropertyCondition(AutomationElement.ClassNameProperty, "CheckBox"));
+
+                                                                                    if (checkbox != null)
+                                                                                    {
+                                                                                        object pattern;
+                                                                                        if (checkbox.TryGetCurrentPattern(TogglePattern.Pattern, out pattern))
+                                                                                        {
+                                                                                            var tp = (TogglePattern)pattern;
+                                                                                            if (tp.Current.ToggleState == ToggleState.On)
+                                                                                                tp.Toggle();
+                                                                                        }
+                                                                                    }
+
+                                                                                    if (retryOnce)
+                                                                                    {
+                                                                                        if (retryUsername != null)
+                                                                                        {
+                                                                                            if (textBox == null)
+                                                                                                textBox = element.FindFirst(
+                                                                                                    TreeScope.Subtree,
+                                                                                                    new PropertyCondition(AutomationElement.AutomationIdProperty, "EditField_1"));
+
+                                                                                            if (textBox != null)
+                                                                                            {
+                                                                                                object pattern;
+                                                                                                if (textBox.TryGetCurrentPattern(ValuePattern.Pattern, out pattern))
+                                                                                                {
+                                                                                                    var vp = (ValuePattern)pattern;
+                                                                                                    if (string.IsNullOrEmpty(vp.Current.Value))
+                                                                                                    {
+                                                                                                        if (retryCredEntry != null)
+                                                                                                        {
+                                                                                                            // KeePass.Util.EntryUtil.FillPlaceholders
+                                                                                                            var tmpEntry = retryCredEntry.GetResolvedReferencesEntry(new SprContext(retryCredEntry, mainForm.ActiveDatabase, kpScf)
+                                                                                                            {
+                                                                                                                ForcePlainTextPasswords = true
+                                                                                                            });
+                                                                                                            retryUsername = tmpEntry.Strings.GetSafe(PwDefs.UserNameField);
+                                                                                                            if (forceLocalUser)
+                                                                                                                retryUsername = retryUsername.ForceLocalUser(hostname);
+                                                                                                            if (forceUpn)
+                                                                                                                retryUsername = retryUsername.ForceUPN();
+                                                                                                        }
+                                                                                                        var usernameChars = retryUsername.ReadChars();
+                                                                                                        var usernameString = new string(usernameChars);
+                                                                                                        vp.SetValue(usernameString);
+                                                                                                        MemoryUtil.SecureZeroMemory(usernameString);
+                                                                                                        MemoryUtil.SecureZeroMemory(usernameChars);
+                                                                                                    }
+
+                                                                                                    if (retryOnce)
+                                                                                                        retryOnce = false;
+                                                                                                }
+                                                                                            }
+                                                                                        }
+
+                                                                                        if (retryPassword != null)
+                                                                                        {
+                                                                                            if (retryPassword.Length > 0)
+                                                                                            {
+                                                                                                var pwBox = element.FindFirst(
+                                                                                                    TreeScope.Subtree,
+                                                                                                    new PropertyCondition(AutomationElement.AutomationIdProperty, "PasswordField_2"));
+
+                                                                                                if (pwBox != null)
+                                                                                                {
+                                                                                                    object pattern;
+                                                                                                    if (pwBox.TryGetCurrentPattern(ValuePattern.Pattern, out pattern))
+                                                                                                    {
+                                                                                                        var vp = (ValuePattern)pattern;
+                                                                                                        if (string.IsNullOrEmpty(vp.Current.Value))
+                                                                                                        {
+                                                                                                            IntPtr valuePtr = IntPtr.Zero;
+                                                                                                            try
+                                                                                                            {
+                                                                                                                valuePtr = Marshal.SecureStringToGlobalAllocUnicode(retryPassword);
+                                                                                                                if (valuePtr != IntPtr.Zero)
+                                                                                                                {
+                                                                                                                    var value = Marshal.PtrToStringUni(valuePtr);
+                                                                                                                    vp.SetValue(value);
+                                                                                                                    MemoryUtil.SecureZeroMemory(value);
+                                                                                                                }
+                                                                                                            }
+                                                                                                            finally
+                                                                                                            {
+                                                                                                                if (valuePtr != IntPtr.Zero)
+                                                                                                                {
+                                                                                                                    MemoryUtil.SafeSecureZeroMemory(valuePtr, retryPassword.Length * 2);
+                                                                                                                    Marshal.ZeroFreeGlobalAllocUnicode(valuePtr);
+                                                                                                                }
+                                                                                                            }
+                                                                                                        }
+
+                                                                                                        if (retryOnce)
+                                                                                                            retryOnce = false;
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+
+                                                                                            var button = element.FindFirst(
+                                                                                                TreeScope.Children,
+                                                                                                new PropertyCondition(AutomationElement.AutomationIdProperty, "OkButton"));
+
+                                                                                            if (button != null)
+                                                                                            {
+                                                                                                object pattern;
+                                                                                                if (button.TryGetCurrentPattern(InvokePattern.Pattern, out pattern))
+                                                                                                {
+                                                                                                    var ip = (InvokePattern)pattern;
+                                                                                                    ip.Invoke();
+
+                                                                                                    retryPassword.Dispose();
+                                                                                                    retryPassword = null;
+
+                                                                                                    if (retryCredEntry != null)
+                                                                                                        retryCredEntry = null;
+
+                                                                                                    if (retryOnce)
+                                                                                                        retryOnce = false;
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                                else
+                                                                                    retryOnce = retryUsername != null;
+                                                                            }
+                                                                            catch (ElementNotAvailableException) { }
+                                                                        }
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        retryOnce = retryUsername != null;
+
+                                                                        if (!process.HasExited && !string.IsNullOrEmpty(title) && process.MainWindowHandle != IntPtr.Zero)
+                                                                        {
+                                                                            var oldTitle = new char[NativeMethods.GetWindowTextLength(process.MainWindowHandle) + 1];
+                                                                            if (NativeMethods.GetWindowText(process.MainWindowHandle, oldTitle, oldTitle.Length) == 0 ||
+                                                                                !new string(oldTitle).TrimEnd(char.MinValue).Equals(title, StringComparison.OrdinalIgnoreCase))
+                                                                                NativeMethods.SetWindowText(process.MainWindowHandle, title);
+                                                                        }
+                                                                    }
+                                                                }
+                                                                else
+                                                                {
+                                                                    if (retryPassword != null)
+                                                                    {
+                                                                        retryPassword.Dispose();
+                                                                        retryPassword = null;
+                                                                    }
+
+                                                                    if (retryCredEntry != null)
+                                                                        retryCredEntry = null;
+                                                                }
+
+                                                                process.Refresh();
+
+                                                                if (process.HasExited || process.WaitForExit(timeout))
+                                                                    continue;
+
+                                                                process.Refresh();
+
+                                                                // Assume something went wrong when threads get stuck.
+                                                                /*var allThreads = process.Threads.Cast<ProcessThread>();
+                                                                if (!allThreads.Any(thread => thread.ThreadState != ThreadState.Wait) &&
+                                                                     allThreads.Any(thread => thread.WaitReason != ThreadWaitReason.Suspended))
+                                                                {
+                                                                    if (!process.HasExited)
+                                                                        process.Kill();
+                                                                    break;
+                                                                }*/
+
+                                                                try
+                                                                {
+                                                                    // Assume something went wrong when there is no window anymore.
+                                                                    if (process.HasExited || process.MainWindowHandle == IntPtr.Zero)
+                                                                    {
+                                                                        if (!process.HasExited && !process.WaitForExit(timeout))
+                                                                        {
+                                                                            process.Refresh();
+                                                                            if (process.MainWindowHandle == IntPtr.Zero)
+                                                                            {
+                                                                                if (!process.HasExited)
+                                                                                    process.Kill();
+                                                                                break;
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                                catch { }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                try
+                                                {
+                                                    if (mstscSd)
+                                                        while (!process.WaitForExit(1000) || (!cts.IsCancellationRequested && !process.HasExited))
+                                                            ;
+
+                                                    if (!process.HasExited)
+                                                        if (!process.WaitForExit(1000) && cts.IsCancellationRequested && !process.HasExited)
+                                                            process.Kill();
+                                                }
+                                                catch { }
                                             }
                                             finally
                                             {
-                                                newTask.Dispose();
+                                                tcs.TrySetResult(null);
+                                                process.Dispose();
                                             }
-                                        });
-                                    }
-                                }, taskUuid, new CancellationTokenSource());
-                            }
-                        }
-                }
+                                        }, cts.Token, TaskCreationOptions.PreferFairness | TaskCreationOptions.AttachedToParent | TaskCreationOptions.LongRunning);
 
-                mainForm.SetStatusEx(null);
+                                        if (mstscSd)
+                                            SecureDesktop.Instance.Run(runner);
+                                        else
+                                            runner().Start(TaskScheduler.Default);
+
+                                        tcs.Task.Wait(cts.Token);
+                                    }
+                                }
+                                finally
+                                {
+                                    if (cred != null)
+                                    {
+                                        if (_config.CredVaultTtl > 0 && _config.CredVaultAdaptiveTtl)
+                                            cred.ResetTTL();
+                                        if (_config.CredVaultRemoveOnExit)
+                                            cred.Dispose();
+                                    }
+
+                                    if (gatewayCred != null)
+                                    {
+                                        if (_config.CredVaultTtl > 0 && _config.CredVaultAdaptiveTtl)
+                                            gatewayCred.ResetTTL();
+                                        if (_config.CredVaultRemoveOnExit)
+                                            gatewayCred.Dispose();
+                                    }
+
+                                    if (retryPassword != null)
+                                        retryPassword.Dispose();
+
+                                    if (rdpFile != null)
+                                        rdpFile.Dispose();
+
+                                    if (tmpUseCreds)
+                                    {
+                                        if (_config.MstscCleanupRegistry)
+                                            Util.RemoveHintFromRegistry(hostname);
+                                    }
+
+                                    TaskWithCancellationToken localOldTask = null;
+                                    try
+                                    {
+                                        if (_tasks.TryRemove(localTaskUuid, out localOldTask) && localOldTask != newTask && !localOldTask.IsCompleted)
+                                            _tasks.TryAdd(localTaskUuid, localOldTask);
+                                    }
+                                    catch { }
+
+                                    newTask.ContinueWith(t =>
+                                    {
+                                        try
+                                        {
+                                            if (_tasks.TryRemove(localTaskUuid, out localOldTask) && localOldTask != newTask && !localOldTask.IsCompleted)
+                                                _tasks.TryAdd(localTaskUuid, localOldTask);
+                                        }
+                                        catch { }
+
+                                        try
+                                        {
+                                            if (oldTask != null && !oldTask.IsCompleted && !_tasks.ContainsKey(localTaskUuid))
+                                                if (_tasks.TryAdd(localTaskUuid, oldTask))
+                                                    oldTask = null;
+                                        }
+                                        catch { }
+
+                                        try
+                                        {
+                                            t.Wait();
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Task.Factory.FromAsync(_host.MainWindow.BeginInvoke(new Action(() =>
+                                            {
+                                                Util.ShowErrorDialog(
+                                                    string.Format("{0}{1}{2}", hostname, Environment.NewLine, Util.FormatException(ex)),
+                                                    null,
+                                                    string.Format("{0} - {1}", Util.KeePassRDP, KPRes.FatalError),
+                                                    VtdIcon.Error,
+                                                    _host.MainWindow,
+                                                    null, 0, null, 0);
+                                            })), endInvoke => _host.MainWindow.EndInvoke(endInvoke), TaskCreationOptions.None, TaskScheduler.Default);
+                                        }
+                                        finally
+                                        {
+                                            newTask.Dispose();
+                                        }
+                                    });
+                                }
+
+                                try
+                                {
+                                    if (oldTask != null && !oldTask.IsCompleted)
+                                    {
+                                        if (cts.IsCancellationRequested)
+                                            oldTask.Cancel();
+                                        else if (!_tasks.ContainsKey(localTaskUuid) && _tasks.TryAdd(localTaskUuid, oldTask))
+                                            oldTask = null;
+                                    }
+                                }
+                                catch { }
+                            }, taskUuid, cts);
+                        }
+                    }
             }
+
+            mainForm.SetStatusEx(null);
         }
 
         [DllImport("KeePassRDP.unmanaged.dll", EntryPoint = "KprDoDefaultAction", SetLastError = false)]

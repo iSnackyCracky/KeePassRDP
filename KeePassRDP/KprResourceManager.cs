@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -31,9 +31,19 @@ using System.Windows.Forms;
 
 namespace KeePassRDP
 {
-    internal class KprResourceManager : IDisposable
+    internal interface IKprResourceManager
     {
-        private static readonly Lazy<KprResourceManager> _instance = new Lazy<KprResourceManager>(() =>
+        string this[string key] { get; }
+        void Translate(Control control);
+        void TranslateMany(params Control[] controls);
+        void Translate(ToolStripItem item);
+        void TranslateMany(params ToolStripItem[] items);
+        void ClearCache();
+    }
+
+    internal class KprResourceManager : IKprResourceManager, IDisposable
+    {
+        private static readonly Lazy<IKprResourceManager> _instance = new Lazy<IKprResourceManager>(() =>
         {
             try
             {
@@ -47,7 +57,40 @@ namespace KeePassRDP
             return new KprResourceManager();
         }, LazyThreadSafetyMode.ExecutionAndPublication);
 
-        public static KprResourceManager Instance { get { return _instance.Value; } }
+        private class EmptyKprResourceManager : IKprResourceManager
+        {
+            public string this[string key]
+            {
+                get
+                {
+                    return key;
+                }
+            }
+
+            public void ClearCache()
+            {
+            }
+
+            public void Translate(Control control)
+            {
+            }
+
+            public void Translate(ToolStripItem item)
+            {
+            }
+
+            public void TranslateMany(params Control[] controls)
+            {
+            }
+
+            public void TranslateMany(params ToolStripItem[] items)
+            {
+            }
+        }
+
+        private static readonly EmptyKprResourceManager _emptyInstance = new EmptyKprResourceManager();
+
+        public static IKprResourceManager Instance { get { return !KeePassRDPExt.Initialized.IsSet ? _emptyInstance : _instance.Value; } }
 
         private readonly ConcurrentDictionary<string, string> _cache;
         private readonly Lazy<ResourceManager> _fileBasedResourceManager;
@@ -56,6 +99,9 @@ namespace KeePassRDP
         {
             get
             {
+                if (!KeePassRDPExt.Initialized.IsSet)
+                    return key;
+
                 return _cache.GetOrAdd(key, k =>
                 {
                     string text = null;
@@ -68,8 +114,8 @@ namespace KeePassRDP
                     }
                     return text ??
                         Resources.Resources.ResourceManager.GetString(k, Resources.Resources.Culture) ??
-                        k;
-                });
+                        null;
+                }) ?? key;
             }
         }
 
@@ -100,7 +146,18 @@ namespace KeePassRDP
                 Translate(control);
         }
 
-        internal void ClearCache()
+        public void Translate(ToolStripItem item)
+        {
+            item.Text = this[item.Text];
+        }
+
+        public void TranslateMany(params ToolStripItem[] items)
+        {
+            foreach (var item in items)
+                Translate(item);
+        }
+
+        public void ClearCache()
         {
             _cache.Clear();
         }

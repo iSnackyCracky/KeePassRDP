@@ -1,5 +1,5 @@
 ﻿/*
- *  Copyright (C) 2018 - 2024 iSnackyCracky, NETertainer
+ *  Copyright (C) 2018 - 2025 iSnackyCracky, NETertainer
  *
  *  This file is part of KeePassRDP.
  *
@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -31,13 +32,13 @@ namespace KeePassRDP
         public const Keys DefaultOpenRdpConnectionAdminShortcut = Keys.Control | Keys.Shift | Keys.M; //393293;
 
         public const MenuItem DefaultToolbarItems = MenuItem.OpenRdpConnection | MenuItem.OpenRdpConnectionNoCred;
-        public const MenuItem DefaultContextMenuItems = DefaultToolbarItems | MenuItem.OpenRdpConnectionAdmin | MenuItem.OpenRdpConnectionNoCredAdmin | MenuItem.IgnoreCredentials;
-        public const MenuItem MaxMenuItem = MenuItem.IgnoreCredentials;
+        //public const MenuItem DefaultContextMenuItems = DefaultToolbarItems | MenuItem.OpenRdpConnectionAdmin | MenuItem.OpenRdpConnectionNoCredAdmin | MenuItem.IgnoreCredentials;
+        public const MenuItem DefaultContextMenuItems = DefaultToolbarItems | MenuItem.ShadowSession | MenuItem.IgnoreCredentials;
         #endregion
 
-        internal static readonly MenuItem[] MenuItemValues = Enum.GetValues(typeof(MenuItem))
+        internal static readonly ReadOnlyCollection<MenuItem> MenuItemValues = Enum.GetValues(typeof(MenuItem))
                         .Cast<MenuItem>()
-                        .Where(menu => menu > MenuItem.Empty && DefaultContextMenuItems.HasFlag(menu)).ToArray();
+                        .Where(menu => menu > MenuItem.Empty && menu < MenuItem.Options).ToList().AsReadOnly();
 
         [Flags]
         public enum MenuItem : byte
@@ -47,13 +48,15 @@ namespace KeePassRDP
             OpenRdpConnectionAdmin = 2,
             OpenRdpConnectionNoCred = 4,
             OpenRdpConnectionNoCredAdmin = 8,
-            IgnoreCredentials = 16,
+            ShadowSession = 16,
+            ShadowSessionNoCred = 32,
+            IgnoreCredentials = 64,
             Options = byte.MaxValue
         }
 
-        public static string GetText(MenuItem item)
+        public static string GetText(this MenuItem menuItem)
         {
-            switch (item)
+            switch (menuItem)
             {
                 case MenuItem.OpenRdpConnection:
                     return KprResourceManager.Instance["Open RDP connection"];
@@ -63,31 +66,16 @@ namespace KeePassRDP
                     return KprResourceManager.Instance["Open RDP connection without credentials"];
                 case MenuItem.OpenRdpConnectionNoCredAdmin:
                     return KprResourceManager.Instance["Open RDP connection without credentials (/admin)"];
+                case MenuItem.ShadowSession:
+                    return KprResourceManager.Instance["Shadow session over RDP connection (/shadow)"];
+                case MenuItem.ShadowSessionNoCred:
+                    return KprResourceManager.Instance["Shadow session over RDP connection without credentials (/shadow)"];
                 case MenuItem.IgnoreCredentials:
                     return KprResourceManager.Instance["Ignore entry credentials"];
                 case MenuItem.Options:
                     return KprResourceManager.Instance["KeePassRDP Options"];
                 default:
                     return string.Empty;
-            }
-        }
-
-        public static Keys GetShortcut(MenuItem item, KprConfig config)
-        {
-            switch (item)
-            {
-                case MenuItem.OpenRdpConnection:
-                    return config.ShortcutOpenRdpConnection;
-                case MenuItem.OpenRdpConnectionAdmin:
-                    return config.ShortcutOpenRdpConnectionAdmin;
-                case MenuItem.OpenRdpConnectionNoCred:
-                    return config.ShortcutOpenRdpConnectionNoCred;
-                case MenuItem.OpenRdpConnectionNoCredAdmin:
-                    return config.ShortcutOpenRdpConnectionNoCredAdmin;
-                case MenuItem.IgnoreCredentials:
-                    return config.ShortcutIgnoreCredentials;
-                default:
-                    return Keys.None;
             }
         }
     }
